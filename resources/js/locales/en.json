@@ -1,0 +1,27 @@
+{
+  "common": {
+    "search": "Search something...",
+    "notifications": "Notifications",
+    "welcome": "Welcome to Amanah Assets",
+    "viewAll": "View All",
+    "manageNotification": "Manage Notification"
+  },
+  "tabs": {
+    "viewAll": "View all",
+    "mentions": "Mentions",
+    "followers": "Followers",
+    "invites": "Invites"
+  },
+  "profile": {
+    "inbox": "Inbox",
+    "chat": "Chat",
+    "upgradePro": "Upgrade Pro",
+    "signOut": "Sign Out"
+  },
+  "languages": {
+    "english": "English",
+    "somali": "Somali",
+    "arabic": "Arabic"
+  }
+}
+

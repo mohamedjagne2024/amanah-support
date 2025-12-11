@@ -1,0 +1,27 @@
+{
+  "common": {
+    "search": "Raadi wax...",
+    "notifications": "Ogaysiisyada",
+    "welcome": "Ku soo dhawoow Amanah Assets",
+    "viewAll": "Dhammaan eeg",
+    "manageNotification": "Maamul Ogaysiisyada"
+  },
+  "tabs": {
+    "viewAll": "Dhammaan eeg",
+    "mentions": "Tilmaamo",
+    "followers": "Raacsan",
+    "invites": "Casumaadaha"
+  },
+  "profile": {
+    "inbox": "Inbox",
+    "chat": "Wada hadalka",
+    "upgradePro": "Kor u qaad Pro",
+    "signOut": "Ka bax"
+  },
+  "languages": {
+    "english": "Ingiriis",
+    "somali": "Soomaali",
+    "arabic": "Carabi"
+  }
+}
+

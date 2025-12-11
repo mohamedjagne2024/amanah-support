@@ -1,0 +1,27 @@
+{
+  "common": {
+    "search": "ابحث عن شيء...",
+    "notifications": "الإشعارات",
+    "welcome": "مرحبًا بك في Amanah Assets",
+    "viewAll": "عرض الكل",
+    "manageNotification": "إدارة الإشعارات"
+  },
+  "tabs": {
+    "viewAll": "عرض الكل",
+    "mentions": "الإشارات",
+    "followers": "المتابعون",
+    "invites": "الدعوات"
+  },
+  "profile": {
+    "inbox": "صندوق الوارد",
+    "chat": "الدردشة",
+    "upgradePro": "ترقية إلى Pro",
+    "signOut": "تسجيل الخروج"
+  },
+  "languages": {
+    "english": "الإنجليزية",
+    "somali": "الصومالية",
+    "arabic": "العربية"
+  }
+}
+

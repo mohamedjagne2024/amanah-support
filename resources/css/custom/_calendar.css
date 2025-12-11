@@ -1,0 +1,235 @@
+/*  
+_calendar.css
+*/
+
+:root .fc {
+  --fc-border-color: var(--color-default-200);
+  --fc-non-business-color: var(--color-default-100);
+  --fc-button-bg-color: var(--color-primary);
+  --fc-button-border-color: var(--color-primary);
+  --fc-button-hover-bg-color: var(--color-primary);
+  --fc-button-hover-border-color: var(--color-primary);
+  --fc-button-active-bg-color: var(--color-primary);
+  --fc-button-active-border-color: var(--color-primary);
+  --fc-neutral-bg-color: var(--color-default-300);
+  --fc-neutral-text-color: var(--color-default-700);
+  --fc-page-bg-color: var(--color-card);
+  --fc-today-bg-color: var(--color-primary);
+}
+
+/* Calendar Header */
+.fc .fc-toolbar {
+  @apply flex-wrap gap-4 mb-4;
+}
+
+.fc .fc-toolbar-title {
+  @apply text-lg font-semibold text-default-800;
+}
+
+.fc .fc-toolbar-chunk {
+  @apply flex items-center gap-2;
+}
+
+/* Add gap inside button groups (between arrows and between month/week) */
+.fc .fc-button-group {
+  @apply gap-2;
+}
+
+/* Remove the connected border-radius when buttons have gap */
+.fc .fc-button-group > .fc-button {
+  @apply !rounded;
+}
+
+/* Calendar Buttons */
+.fc .fc-button {
+  @apply !capitalize !flex items-center gap-1 !rounded !text-sm !font-medium !py-1.5 !px-3 !shadow-none;
+}
+
+.fc .fc-button-primary {
+  @apply !bg-primary !border-primary !text-white;
+}
+
+.fc .fc-button-primary:hover {
+  @apply !bg-primary/90 !border-primary/90;
+}
+
+.fc .fc-button-primary:focus {
+  @apply !shadow-none !ring-0;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  @apply !bg-primary !border-primary;
+}
+
+.fc .fc-today-button {
+  @apply !bg-transparent !border !border-dashed !border-primary !text-primary;
+}
+
+.fc .fc-today-button:hover {
+  @apply !bg-primary/10;
+}
+
+.fc .fc-today-button:disabled {
+  @apply !opacity-50 !cursor-not-allowed;
+}
+
+/* Calendar Grid */
+.fc .fc-daygrid-day {
+  @apply transition-colors;
+}
+
+.fc .fc-daygrid-day:hover {
+  @apply bg-default-50;
+}
+
+.fc .fc-daygrid-day-frame {
+  @apply min-h-24;
+}
+
+.fc .fc-daygrid-day-top {
+  @apply justify-end;
+}
+
+.fc .fc-daygrid-day-number {
+  @apply text-sm font-medium text-default-700 p-2;
+}
+
+.fc .fc-day-today {
+  @apply !bg-primary/5;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+  @apply bg-primary text-white rounded-full size-7 flex items-center justify-center;
+}
+
+.fc .fc-col-header-cell {
+  @apply bg-default-50 border-default-200;
+}
+
+.fc .fc-col-header-cell-cushion {
+  @apply py-2 text-sm font-semibold text-default-700;
+}
+
+/* External Events Sidebar */
+#external-events .fc-event {
+  text-align: left;
+  padding: 8px 16px;
+  @apply cursor-pointer rounded-sm flex items-center font-medium transition-colors;
+}
+
+.fc-event.fc-event-dragging {
+  text-align: left;
+  padding: 8px 16px;
+  @apply cursor-pointer rounded-sm flex items-center font-medium shadow-lg;
+}
+
+/* Calendar Events */
+.fc-daygrid-day-events {
+  @apply flex flex-col gap-1 p-1;
+}
+
+.fc .fc-event {
+  @apply bg-current/20 border-0 rounded-sm;
+}
+
+.fc .fc-daygrid-event {
+  @apply !rounded-sm !border-0 !px-2 !py-1;
+}
+
+.fc .fc-event-draggable.fc-event {
+  padding: 4px 8px;
+  @apply text-current border-none rounded-sm font-medium;
+}
+
+.fc .fc-daygrid-event-dot {
+  @apply hidden border-current;
+}
+
+.fc .fc-event-main {
+  @apply !text-current text-xs font-medium;
+}
+
+.fc .fc-event-title {
+  @apply truncate;
+}
+
+/* More events link */
+.fc .fc-daygrid-more-link {
+  @apply text-xs font-medium text-primary hover:text-primary/80 mt-1;
+}
+
+/* Week view */
+.fc .fc-timegrid-slot {
+  @apply h-10;
+}
+
+.fc .fc-timegrid-slot-label {
+  @apply text-xs text-default-600;
+}
+
+.fc .fc-timegrid-col.fc-day-today {
+  @apply !bg-primary/5;
+}
+
+/* Week numbers */
+.fc .fc-daygrid-week-number {
+  @apply text-xs font-medium text-default-500 bg-default-100 rounded px-1.5 py-0.5;
+}
+
+/* Dark mode support */
+[data-theme='dark'] .fc {
+  --fc-page-bg-color: var(--color-default-100);
+  --fc-border-color: var(--color-default-200);
+  --fc-non-business-color: var(--color-default-50);
+}
+
+[data-theme='dark'] .fc .fc-toolbar-title {
+  @apply text-default-100;
+}
+
+[data-theme='dark'] .fc .fc-daygrid-day-number {
+  @apply text-default-300;
+}
+
+[data-theme='dark'] .fc .fc-col-header-cell {
+  @apply bg-default-200;
+}
+
+[data-theme='dark'] .fc .fc-col-header-cell-cushion {
+  @apply text-default-300;
+}
+
+[data-theme='dark'] .fc .fc-today-button {
+  @apply !bg-default-200 !border-default-300 !text-default-300;
+}
+
+/* Popover styles */
+.fc .fc-popover {
+  @apply bg-card border border-default-200 shadow-lg rounded-md;
+}
+
+.fc .fc-popover-header {
+  @apply bg-default-100 px-3 py-2 font-semibold text-sm text-default-800;
+}
+
+.fc .fc-popover-body {
+  @apply p-2;
+}
+
+/* Scrollbar styling for calendar */
+.fc-scroller::-webkit-scrollbar {
+  @apply w-1.5 h-1.5;
+}
+
+.fc-scroller::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb {
+  @apply bg-default-300 rounded-full;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb:hover {
+  @apply bg-default-400;
+}
