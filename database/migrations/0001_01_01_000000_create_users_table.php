@@ -14,9 +14,15 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('title', 100)->default('Engineer')->nullable();
+            $table->integer('country_id')->default(null)->nullable()->index();
+            $table->string('address', 200)->default(null)->nullable();
+            $table->string('city', 50)->default(null)->nullable();
+            $table->string('phone', 20)->default(null)->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('is_super_admin')->default(false);
+            $table->string('photo_path', 100)->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
