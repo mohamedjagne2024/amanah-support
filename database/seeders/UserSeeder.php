@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Database\Factories\UserFactory;
+use App\Models\User;
 
 class UserSeeder extends Seeder
 {
@@ -14,10 +14,11 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        UserFactory::new([
+        User::query()->create([
             'name' => 'Administrator',
             'email' => 'admin@mohamed.dev',
             'is_super_admin' => true,
-        ])->createOne();
+            'password' => bcrypt('password'),
+        ]);
     }
 }

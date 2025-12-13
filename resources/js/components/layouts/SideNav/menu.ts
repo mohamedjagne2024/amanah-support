@@ -1,12 +1,10 @@
+import { LucideBook, LucideBuilding, LucideFileText, LucideHelpCircle, LucideMessageCircle, LucideNotebook, LucideTicket, LucideUser } from 'lucide-react';
 import type { IconType } from 'react-icons/lib';
 import {
-  LuChartArea,
   LuMonitorDot,
-  LuPictureInPicture2,
   LuSettings,
   LuShield,
   LuUser,
-  LuWrench,
 } from 'react-icons/lu';
 
 export type MenuItemType = {
@@ -24,15 +22,57 @@ export type MenuItemType = {
 
 export const menuItemsData: MenuItemType[] = [
   {
-    key: 'Overview',
-    label: 'Overview',
+    key: 'Main',
+    label: 'Main',
     isTitle: true,
   },
   {
     key: 'Dashboard',
     label: 'Dashboard',
     icon: LuMonitorDot,
-    href: '/',
+    href: '/dashboard',
+  },
+  {
+    key: 'Tickets',
+    label: 'Tickets',
+    icon: LucideTicket,
+    href: '/tickets',
+  },
+  {
+    key: 'Content',
+    label: 'Content',
+    isTitle: true,
+  },
+  {
+    key: 'Chat',
+    label: 'Chat',
+    icon: LucideMessageCircle,
+    href: '/chat',
+  },
+  {
+    key: 'Knowledge Base',
+    label: 'Knowledge Base',
+    icon: LucideBook,
+    href: '/knowledge-base',
+  },
+  {
+    key: 'FAQs',
+    label: 'FAQs',
+    icon: LucideHelpCircle,
+    href: '/faqs',
+  },
+  {
+    key: 'Front Pages',
+    label: 'Front Pages',
+    icon: LucideFileText,
+    children: [
+      { key: 'Home', label: 'Home', href: '/front-pages/home'},
+      { key: 'Contact', label: 'Contact', href: '/front-pages/contact'},
+      { key: 'Services', label: 'Services', href: '/front-pages/services'},
+      { key: 'Privacy Policy', label: 'Privacy Policy', href: '/front-pages/privacy-policy'},
+      { key: 'Terms of Services', label: 'Terms of Services', href: '/front-pages/terms-of-services'},
+      { key: 'Footer', label: 'Footer', href: '/front-pages/footer'},
+    ],
   },
   {
     key: 'Management',
@@ -40,50 +80,49 @@ export const menuItemsData: MenuItemType[] = [
     isTitle: true,
   },
   {
-    key: 'Asset Management',
-    label: 'Asset Management',
-    icon: LuPictureInPicture2,
-    children: [
-      { key: 'Purchase Orders', label: 'Purchase Orders', href: '/purchase-orders'},
-      { key: 'All Assets', label: 'All Assets', href: '/asset-management'},
-      { key: 'Categories', label: 'Categories', href: '/categories'},
-      { key: 'Subcategories', label: 'Subcategories', href: '/subcategories'},
-      { key: 'Departments', label: 'Departments', href: '/departments'},
-      { key: 'Locations', label: 'Locations', href: '/locations'},
-      { key: 'Staff', label: 'Staff', href: '/staffs'},
-    ],
+    key: 'Customers',
+    label: 'Customers',
+    icon: LucideUser,
+    href: '/customers',
   },
   {
-    key: 'Maintenance',
-    label: 'Maintenance',
-    icon: LuWrench,
-    children: [
-      { key: 'Work Orders', label: 'Work Orders', href: '/work-orders'},
-      { key: 'Request', label: 'Request', href: '/work-orders/request'},
-    ],
+    key: 'Notes',
+    label: 'Notes',
+    icon: LucideNotebook,
+    href: '/notes',
   },
   {
-    key: 'Reports',
-    label: 'Reports',
-    icon: LuChartArea,
-    children: [
-      { key: 'Asset Summary', label: 'Asset Summary', href: '/reports/asset-summary'},
-      { key: 'Maintenance Insights', label: 'Maintenance Insights', href: '/reports/maintenance-insights'},
-      { key: 'Maintenance Activity Report', label: 'Maintenance Activity Report', href: '/reports/maintenance-activity-report'},
-      { key: 'Maintenance by Staff', label: 'Maintenance by Staff', href: '/reports/maintenance-by-staff'},
-      { key: 'Purchase Order', label: 'Purchase Order', href: '/reports/purchase-order-report'},
-    ],
+    key: 'Contacts',
+    label: 'Contacts',
+    icon: LucideUser,
+    href: '/contacts',
+  },
+  {
+    key: 'Organizations',
+    label: 'Organizations',
+    icon: LucideBuilding,
+    href: '/categories',
+  },
+  {
+    key: 'Configuration',
+    label: 'Configuration',
+    isTitle: true,
   },
   {
     key: 'Settings',
     label: 'Settings',
-    isTitle: true,
-  },
-  {
-    key: 'General Settings',
-    label: 'General Settings',
     icon: LuSettings,
-    href: '/settings/general',
+    children: [
+      { key: 'General', label: 'General', href: '/settings/general'},
+      { key: 'Departments', label: 'Departments', href: '/settings/departments'},
+      { key: 'Categories', label: 'Categories', href: '/settings/categories'},
+      { key: 'Priorities', label: 'Priorities', href: '/settings/priorities'},
+      { key: 'Status', label: 'Status', href: '/settings/status'},
+      { key: 'Types', label: 'Types', href: '/settings/types'},
+      { key: 'Email Templates', label: 'Email Templates', href: '/settings/email-templates'},
+      { key: 'SMTP Mail', label: 'SMTP', href: '/settings/smtp'},
+      { key: 'Pusher Chat', label: 'Pusher Chat', href: '/settings/pusher-chat'},
+    ],
   },
   {
     key: 'User Management',

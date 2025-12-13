@@ -2,7 +2,7 @@
   "common": {
     "search": "ابحث عن شيء...",
     "notifications": "الإشعارات",
-    "welcome": "مرحبًا بك في Amanah Assets",
+    "welcome": "مرحبًا بك في Amanah Support",
     "viewAll": "عرض الكل",
     "manageNotification": "إدارة الإشعارات"
   },
@@ -24,4 +24,3 @@
     "arabic": "العربية"
   }
 }
-

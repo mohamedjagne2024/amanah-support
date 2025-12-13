@@ -5,8 +5,8 @@ const PageMeta = ({ title }: Pagedata) => {
   return (
     <title>
       {title
-        ? `${title} | Amanah Assets - Asset Management System for Amanah insurance`
-        : ' Amanah Assets - Asset Management System for Amanah insurance'}
+        ? `${title} | Amanah Support - Asset Management System for Amanah insurance`
+        : ' Amanah Support - Asset Management System for Amanah insurance'}
     </title>
   );
 };

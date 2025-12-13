@@ -73,7 +73,7 @@ return [
     |
     */
 
-    'home' => '/',
+    'home' => '/dashboard',
 
     /*
     |--------------------------------------------------------------------------
@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        // Features::registration(),
+        Features::registration(),
         Features::resetPasswords(),
         Features::updateProfileInformation(),
         Features::emailVerification(),

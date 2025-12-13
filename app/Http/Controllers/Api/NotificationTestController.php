@@ -28,7 +28,7 @@ final class NotificationTestController extends Controller
         ]);
 
         $title = $validated['title'] ?? 'Test Notification';
-        $body = $validated['body'] ?? 'This is a broadcast test notification from Amanah Assets.';
+        $body = $validated['body'] ?? 'This is a broadcast test notification from Amanah Support.';
         $data = $validated['data'] ?? [];
 
         $tokens = FcmToken::pluck('token')->toArray();
