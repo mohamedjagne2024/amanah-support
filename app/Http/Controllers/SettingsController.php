@@ -18,6 +18,7 @@ use App\Http\Requests\AssignPermissionRequest;
 use App\Http\Requests\AssignRolesAndPermissionsRequest;
 use App\Http\Requests\StoreUserRequest;
 use Illuminate\Support\Facades\Hash;
+use Pusher\Pusher;
 
 final class SettingsController extends Controller
 {
@@ -243,5 +244,145 @@ final class SettingsController extends Controller
         Gate::authorize('settings.roles-permissions');
         
         return redirect()->route('roles.index');
+    }
+
+    /**
+     * Display the SMTP settings page.
+     */
+    public function smtp(): Response
+    {
+        Gate::authorize('settings.smtp');
+        
+        $settings = Settings::all()->pluck('value', 'name')->toArray();
+
+        return Inertia::render('smtp/index', [
+            'settings' => [
+                'smtp_host' => $settings['smtp_host'] ?? null,
+                'smtp_port' => $settings['smtp_port'] ?? null,
+                'smtp_security' => $settings['smtp_security'] ?? null,
+                'smtp_from_name' => $settings['smtp_from_name'] ?? null,
+                'smtp_from_email' => $settings['smtp_from_email'] ?? null,
+                'smtp_username' => $settings['smtp_username'] ?? null,
+                'smtp_password' => $settings['smtp_password'] ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * Update the SMTP settings.
+     */
+    public function updateSmtp(): RedirectResponse
+    {
+        Gate::authorize('settings.smtp');
+        
+        $validated = request()->validate([
+            'smtp_host' => ['nullable', 'string', 'max:255'],
+            'smtp_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
+            'smtp_security' => ['nullable', 'string', 'in:tls,ssl,none'],
+            'smtp_from_name' => ['nullable', 'string', 'max:255'],
+            'smtp_from_email' => ['nullable', 'email', 'max:255'],
+            'smtp_username' => ['nullable', 'string', 'max:255'],
+            'smtp_password' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        foreach ($validated as $name => $value) {
+            Settings::updateOrCreate(
+                ['name' => $name],
+                ['value' => $value === '' ? null : $value]
+            );
+        }
+
+        return redirect()->route('settings.smtp')->with('success', 'SMTP settings updated successfully.');
+    }
+
+    /**
+     * Display the Pusher settings page.
+     */
+    public function pusher(): Response
+    {
+        Gate::authorize('settings.pusher');
+        
+        $settings = Settings::all()->pluck('value', 'name')->toArray();
+
+        return Inertia::render('pusher/index', [
+            'settings' => [
+                'pusher_app_id' => $settings['pusher_app_id'] ?? null,
+                'pusher_app_key' => $settings['pusher_app_key'] ?? null,
+                'pusher_app_secret' => $settings['pusher_app_secret'] ?? null,
+                'pusher_app_cluster' => $settings['pusher_app_cluster'] ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * Update the Pusher settings.
+     */
+    public function updatePusher(): RedirectResponse
+    {
+        Gate::authorize('settings.pusher');
+        
+        $validated = request()->validate([
+            'pusher_app_id' => ['nullable', 'string', 'max:255'],
+            'pusher_app_key' => ['nullable', 'string', 'max:255'],
+            'pusher_app_secret' => ['nullable', 'string', 'max:255'],
+            'pusher_app_cluster' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        foreach ($validated as $name => $value) {
+            Settings::updateOrCreate(
+                ['name' => $name],
+                ['value' => $value === '' ? null : $value]
+            );
+        }
+
+        return redirect()->route('settings.pusher')->with('success', 'Pusher settings updated successfully.');
+    }
+
+    /**
+     * Test Pusher connection.
+     */
+    public function testPusherConnection(): \Illuminate\Http\JsonResponse
+    {
+        Gate::authorize('settings.pusher');
+        
+        try {
+            $settings = Settings::all()->pluck('value', 'name')->toArray();
+            
+            $appId = $settings['pusher_app_id'] ?? null;
+            $appKey = $settings['pusher_app_key'] ?? null;
+            $appSecret = $settings['pusher_app_secret'] ?? null;
+            $appCluster = $settings['pusher_app_cluster'] ?? null;
+
+            if (!$appId || !$appKey || !$appSecret || !$appCluster) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please fill in all Pusher credentials before testing the connection.',
+                ], 400);
+            }
+
+            // Create Pusher instance
+            $pusher = new Pusher(
+                $appKey,
+                $appSecret,
+                $appId,
+                [
+                    'cluster' => $appCluster,
+                    'useTLS' => true
+                ]
+            );
+
+            // Try to get channel info to test connection
+            $pusher->getChannelInfo('test-channel');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pusher connection successful! Your credentials are valid.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection failed: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

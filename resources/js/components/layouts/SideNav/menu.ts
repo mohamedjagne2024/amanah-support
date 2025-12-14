@@ -121,7 +121,7 @@ export const menuItemsData: MenuItemType[] = [
       { key: 'Types', label: 'Types', href: '/settings/types'},
       { key: 'Email Templates', label: 'Email Templates', href: '/settings/templates'},
       { key: 'SMTP Mail', label: 'SMTP', href: '/settings/smtp'},
-      { key: 'Pusher Chat', label: 'Pusher Chat', href: '/settings/pusher-chat'},
+      { key: 'Pusher Chat', label: 'Pusher Chat', href: '/settings/pusher'},
     ],
   },
   {

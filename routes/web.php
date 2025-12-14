@@ -553,7 +553,12 @@ $router->prefix('/')->group(static function (Router $router): void {
 
 
         $router->get('/settings/general', [SettingsController::class, 'general'])->name('settings.general');
+        $router->get('/settings/smtp', [SettingsController::class, 'smtp'])->name('settings.smtp');
+        $router->get('/settings/pusher', [SettingsController::class, 'pusher'])->name('settings.pusher');
         $router->put('/settings/general', [SettingsController::class, 'update'])->name('settings.general.update');
+        $router->put('/settings/smtp', [SettingsController::class, 'updateSmtp'])->name('settings.smtp.update');
+        $router->put('/settings/pusher', [SettingsController::class, 'updatePusher'])->name('settings.pusher.update');
+        $router->post('/settings/pusher/test', [SettingsController::class, 'testPusherConnection'])->name('settings.pusher.test');
         $router->get('/settings/user-management', [SettingsController::class, 'userManagement'])->name('settings.user-management');
         $router->post('/settings/users', [SettingsController::class, 'store'])->name('settings.users.store');
         $router->post('/settings/users/{user}/roles', [SettingsController::class, 'assignRoles'])->name('settings.users.assign-roles');
