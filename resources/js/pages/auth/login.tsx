@@ -18,7 +18,7 @@ export default function Login({
     return (
         <AuthSimpleLayout
             title="Welcome Back !"
-            description="Sign in to continue to Amanah Support."
+            description="Sign in to continue to Amanah Assets."
         >
             <Head title="Log in" />
 

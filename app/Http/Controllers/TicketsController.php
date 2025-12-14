@@ -6,7 +6,6 @@ use App\Events\AssignedUser;
 use App\Events\TicketCreated;
 use App\Events\TicketNewComment;
 use App\Events\TicketUpdated;
-use App\Http\Middleware\RedirectIfNotParmitted;
 use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Comment;
@@ -36,19 +35,13 @@ use Inertia\Inertia;
 
 class TicketsController extends Controller
 {
-
-    public function __construct(){
-        $this->middleware(RedirectIfNotParmitted::class.':ticket');
-    }
-
     public function index(){
         $byCustomer = null;
         $byAssign = null;
         $user = Auth()->user();
-        $hiddenFields = Setting::where('slug', 'hide_ticket_fields')->first();
-        if(in_array($user['role']['slug'], ['customer'])){
+        if($user->hasRole('customer')){
             $byCustomer = $user['id'];
-        }elseif(in_array($user['role']['slug'], ['manager'])){
+        }elseif($user->hasRole('manager')){
             $byAssign = $user['id'];
         }else{
             $byAssign = Request::input('assigned_to');
@@ -85,10 +78,9 @@ class TicketsController extends Controller
             $ticketQuery->orderBy('updated_at', 'DESC');
         }
 
-        return Inertia::render('Tickets/Index', [
+        return Inertia::render('ticket/index', [
             'title' => 'Tickets',
             'filters' => Request::all(),
-            'hidden_fields' => $hiddenFields && $hiddenFields->value ? json_decode($hiddenFields->value) : null ,
             'priorities' => Priority::orderBy('name')
                 ->get()
                 ->map
@@ -205,19 +197,24 @@ class TicketsController extends Controller
 
     public function create(){
         $user = Auth()->user();
-        $roles = Role::pluck('id', 'slug')->all();
-        $hiddenFields = Setting::where('slug', 'hide_ticket_fields')->first();
-        $custom_fields = TicketField::get();
-        return Inertia::render('Tickets/Create', [
+        return Inertia::render('ticket/create', [
             'title' => 'Create a new ticket',
-            'custom_fields' => $custom_fields,
-            'hidden_fields' => $hiddenFields && $hiddenFields->value ? json_decode($hiddenFields->value) : null ,
-            'customers' => User::where('role_id', $roles['customer'] ?? 0)->orWhere('id', Request::input('customer_id'))->orderBy('first_name')
+            'customers' => User::role('user')
+                ->when(Request::input('customer_id'), function($query) {
+                    $query->orWhere('id', Request::input('customer_id'));
+                })
+                ->orderBy('name')
                 ->limit(6)
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'usersExceptCustomers' => User::where('role_id', '!=', $roles['customer'] ?? 0)->orWhere('id', Request::input('user_id'))->orderBy('first_name')
+            'usersExceptCustomers' => User::whereDoesntHave('roles', function($query) {
+                    $query->where('name', 'customer');
+                })
+                ->when(Request::input('user_id'), function($query) {
+                    $query->orWhere('id', Request::input('user_id'));
+                })
+                ->orderBy('name')
                 ->limit(6)
                 ->get()
                 ->map
@@ -264,7 +261,7 @@ class TicketsController extends Controller
             'details' => ['required'],
         ]);
 
-        if(in_array($user['role']['slug'], ['customer'])){
+        if($user->hasRole('user')){
             $request_data['user_id'] = $user['id'];
         }
 
@@ -318,9 +315,9 @@ class TicketsController extends Controller
         $user = Auth()->user();
         $byCustomer = null;
         $byAssign = null;
-        if(in_array($user['role']['slug'], ['customer'])){
+        if($user->hasRole('customer')){
             $byCustomer = $user['id'];
-        }elseif(in_array($user['role']['slug'], ['manager'])){
+        }elseif($user->hasRole('manager')){
             $byAssign = $user['id'];
         }else{
             $byAssign = Request::input('assigned_to');
@@ -334,18 +331,16 @@ class TicketsController extends Controller
         if(empty($ticket)){
             abort(404);
         }
-        $hiddenFields = Setting::where('slug', 'hide_ticket_fields')->first();
         $comment_access = 'read';
-        if($user['role']['slug'] === 'admin'){
+        if($user->hasRole('admin')){
             $comment_access = 'delete';
-        }elseif($user['role']['slug'] === 'manager'){
+        }elseif($user->hasRole('manager')){
             $comment_access = 'view';
         }
 
         $roles = Role::pluck('id', 'slug')->all();
 
         return Inertia::render('Tickets/Edit', [
-            'hidden_fields' => $hiddenFields ? json_decode($hiddenFields->value) : null ,
             'title' => $ticket->subject ? '#'.$ticket->uid.' '.$ticket->subject : '',
             'entries' => TicketEntry::where('ticket_id', $ticket->id)->get(),
             'customers' => User::where('role_id', $roles['customer'] ?? 0)->orWhere('id', Request::input('customer_id'))->orderBy('first_name')
@@ -452,7 +447,7 @@ class TicketsController extends Controller
             $update_message = 'The priority has been changed for this ticket.';
         }
 
-        if(empty($ticket->response) && $user['role']['slug'] === 'admin'){
+        if(empty($ticket->response) && $user->hasRole('admin')){
             $request_data['response'] = date('Y-m-d H:i:s');
         }
 

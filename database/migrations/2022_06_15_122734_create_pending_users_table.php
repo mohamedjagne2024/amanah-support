@@ -18,8 +18,7 @@ class CreatePendingUsersTable extends Migration
             $table->increments('id');
             $table->integer('user_id')->default(null)->nullable()->index();
             $table->integer('ticket_id')->default(null)->nullable()->index();
-            $table->string('first_name', 50);
-            $table->string('last_name', 50);
+            $table->string('name', 50);
             $table->string('phone', 25)->nullable();
             $table->string('email', 50)->unique();
             $table->string('password', 200)->nullable();

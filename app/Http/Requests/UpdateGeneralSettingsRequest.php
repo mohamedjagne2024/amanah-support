@@ -33,16 +33,6 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'decimal_sep' => ['nullable', 'string', 'max:10'],
             'decimal_places' => ['nullable', 'integer', 'min:0', 'max:10'],
             'currency' => ['nullable', 'string', 'max:10'],
-            'purchase_order_number' => ['nullable', 'integer', 'min:1'],
-            'fcm_server_key' => ['nullable', 'string', 'max:255'],
-            'email_type' => ['nullable', 'string', 'max:50'],
-            'email_from' => ['nullable', 'email', 'max:255'],
-            'email_from_name' => ['nullable', 'string', 'max:255'],
-            'email_username' => ['nullable', 'string', 'max:255'],
-            'email_password' => ['nullable', 'string', 'max:255'],
-            'email_host' => ['nullable', 'string', 'max:255'],
-            'email_port' => ['nullable', 'string', 'max:10'],
-            'email_security' => ['nullable', 'string', 'max:50'],
         ];
     }
 

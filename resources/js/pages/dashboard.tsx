@@ -1,10 +1,10 @@
 import { LuTicket, LuUserX, LuCircleCheck, LuCircleAlert } from 'react-icons/lu';
-import PageBreadcrumb from '@/components/PageBreadcrumb';
 import PageMeta from '@/components/PageMeta';
 import AppLayout from '@/layouts/app-layout';
 import ApexChartClient from '@/components/client-wrapper/ApexChartClient';
 import type { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
+import PageHeader from '@/components/Pageheader';
 
 interface DashboardProps {
   userName: string;
@@ -192,9 +192,8 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
   return (
     <AppLayout>
       <PageMeta title="Dashboard" />
-      <main className="w-full">
-        <PageBreadcrumb title="Dashboard" subtitle="Overview of support tickets and performance" />
-        
+      <main className="w-full">        
+      <PageHeader title="Dashboard" subtitle="Overview of your support tickets" />
         <div className="space-y-6 mt-6">
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

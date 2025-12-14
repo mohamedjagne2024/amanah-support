@@ -43,7 +43,6 @@ final class SettingsController extends Controller
         return Inertia::render('settings/general', [
             'settings' => [
                 'timezone' => $settings['timezone'] ?? null,
-                'language' => $settings['language'] ?? null,
                 'date_format' => $settings['date_format'] ?? null,
                 'time_format' => $settings['time_format'] ?? null,
                 'currency_position' => $settings['currency_position'] ?? null,
@@ -51,16 +50,6 @@ final class SettingsController extends Controller
                 'decimal_sep' => $settings['decimal_sep'] ?? null,
                 'decimal_places' => $settings['decimal_places'] ?? null,
                 'currency' => $settings['currency'] ?? null,
-                'purchase_order_number' => $settings['purchase_order_number'] ?? null,
-                'fcm_server_key' => $settings['fcm_server_key'] ?? null,
-                'email_type' => $settings['email_type'] ?? null,
-                'email_from' => $settings['email_from'] ?? null,
-                'email_from_name' => $settings['email_from_name'] ?? null,
-                'email_username' => $settings['email_username'] ?? null,
-                'email_password' => $settings['email_password'] ?? null,
-                'email_host' => $settings['email_host'] ?? null,
-                'email_port' => $settings['email_port'] ?? null,
-                'email_security' => $settings['email_security'] ?? null,
             ],
             'currencies' => $currencies,
         ]);

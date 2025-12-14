@@ -407,8 +407,8 @@ export const DataTable = <TData,>({
   return (
     <div className="card">
       {/* Card Header */}
-      <div className="card-header">
-        <div className="flex gap-3 items-center">
+      <div className="card-header p-2">
+        <div className="flex flex-wrap gap-3 items-center">
           {/* Search Input */}
           {onSearchChange && (
             <div className="relative">

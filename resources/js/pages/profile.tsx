@@ -1,9 +1,9 @@
 import { useForm } from '@inertiajs/react';
 import { Save } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
-import PageBreadcrumb from '@/components/PageBreadcrumb';
 import PageMeta from '@/components/PageMeta';
 import InputError from '@/components/input-error';
+import PageHeader from '@/components/Pageheader';
 
 interface User {
   id: number;
@@ -48,7 +48,7 @@ export default function Profile({ user }: ProfileProps) {
     <AppLayout>
       <PageMeta title="Profile" />
       <main className='max-w-4xl'>
-        <PageBreadcrumb title="Profile" subtitle="Manage your account settings" />
+        <PageHeader title="Profile" subtitle="Manage your account settings" />
         <div className="space-y-6">
           {/* Personal Information Section */}
           <div className="card">

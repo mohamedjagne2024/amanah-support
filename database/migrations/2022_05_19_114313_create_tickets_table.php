@@ -27,7 +27,7 @@ class CreateTicketsTable extends Migration
             $table->integer('contact_id')->nullable()->index();
             $table->integer('client_type')->nullable();
             $table->string('email')->nullable();
-            $table->string('created_by', 50)->nullable()->index();
+            $table->string('created_user_id', 50)->nullable()->index();
             $table->string('location', 200)->nullable();
             $table->integer('priority_id')->nullable()->index();
             $table->integer('department_id')->nullable()->index();
