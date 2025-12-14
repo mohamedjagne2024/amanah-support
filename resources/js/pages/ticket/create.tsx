@@ -53,9 +53,6 @@ export default function Create({
     type_id: '',
     department_id: '',
     assigned_to: '',
-    router: '',
-    rev: '',
-    ntp: '',
     subject: '',
     details: '',
     files: [] as File[],
@@ -271,58 +268,6 @@ export default function Create({
                       error={errors.assigned_to}
                     />
                   </div>
-                </div>
-
-                {/* Third 2-Column Grid: Router (optional), Rev (optional) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block font-medium text-default-900 text-sm mb-2">
-                      Router <span className="text-default-500">(optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="router"
-                      value={data.router}
-                      onChange={(e) => setData('router', e.target.value)}
-                      placeholder="Enter router"
-                      disabled={processing}
-                      className="form-input"
-                    />
-                    <InputError message={errors.router} />
-                  </div>
-
-                  <div>
-                    <label className="block font-medium text-default-900 text-sm mb-2">
-                      Rev <span className="text-default-500">(optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="rev"
-                      value={data.rev}
-                      onChange={(e) => setData('rev', e.target.value)}
-                      placeholder=""
-                      disabled={processing}
-                      className="form-input"
-                    />
-                    <InputError message={errors.rev} />
-                  </div>
-                </div>
-
-                {/* Ntp Field - Half Width */}
-                <div className="w-full md:w-1/2">
-                  <label className="block font-medium text-default-900 text-sm mb-2">
-                    Ntp
-                  </label>
-                  <input
-                    type="text"
-                    name="ntp"
-                    value={data.ntp}
-                    onChange={(e) => setData('ntp', e.target.value)}
-                    placeholder="ICE"
-                    disabled={processing}
-                    className="form-input"
-                  />
-                  <InputError message={errors.ntp} />
                 </div>
 
                 {/* Subject Field - Full Width */}

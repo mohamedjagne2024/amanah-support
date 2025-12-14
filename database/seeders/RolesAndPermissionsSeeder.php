@@ -386,6 +386,25 @@ final class RolesAndPermissionsSeeder extends Seeder
             'images.view',
         ]);
 
+        $customer = Role::firstOrCreate(['name' => 'Customer', 'guard_name' => 'web']);
+        $customer->givePermissionTo([
+            'dashboard.view',
+            'tickets.view',
+            'tickets.create',
+            'tickets.comment',
+            'notes.view',
+            'notes.save',
+            'contacts.view',
+            'chat.view',
+            'chat.message',
+            'chat.init',
+            'chat.conversation',
+            'chat.send_message',
+            'faqs.view',
+            'knowledge_base.view',
+            'images.view',
+        ]);
+
         // Assign Super Admin role to existing super admin users
         User::where('is_super_admin', true)->each(function (User $user): void {
             $user->assignRole('Super Admin');

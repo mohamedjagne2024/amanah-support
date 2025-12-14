@@ -33,6 +33,8 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'decimal_sep' => ['nullable', 'string', 'max:10'],
             'decimal_places' => ['nullable', 'integer', 'min:0', 'max:10'],
             'currency' => ['nullable', 'string', 'max:10'],
+            'required_ticket_fields' => ['nullable', 'array'],
+            'required_ticket_fields.*' => ['string', 'in:department,category,sub_category,ticket_type,assigned_to'],
         ];
     }
 

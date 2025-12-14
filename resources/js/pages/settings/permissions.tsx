@@ -2,8 +2,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { DataTable, Badge } from "@/components/DataTable";
 import AppLayout from "@/layouts/app-layout";
-import PageBreadcrumb from "@/components/PageBreadcrumb";
 import PageMeta from "@/components/PageMeta";
+import PageHeader from "@/components/Pageheader";
 
 type Permission = {
   id: number;
@@ -104,7 +104,7 @@ export default function Permissions({ permissions, roles }: PermissionsPageProps
     <AppLayout>
       <PageMeta title="Permissions" />
       <main>
-        <PageBreadcrumb title="Permissions" subtitle="Settings" />
+        <PageHeader title="Permissions" />
         <div className="space-y-6">
           {permissions.map((group) => (
             <div key={group.group} className="bg-card border border-default-200 rounded-lg p-6">

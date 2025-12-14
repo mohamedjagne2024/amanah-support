@@ -5,8 +5,8 @@ import { DataTable, Badge, type DataTableRowAction } from "@/components/DataTabl
 import { ConfirmDialog } from "@/components/Dialog";
 import Drawer from "@/components/Drawer";
 import AppLayout from "@/layouts/app-layout";
-import PageBreadcrumb from "@/components/PageBreadcrumb";
 import PageMeta from "@/components/PageMeta";
+import PageHeader from "@/components/Pageheader";
 
 type Role = {
   id: number;
@@ -187,7 +187,7 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
     <AppLayout>
       <PageMeta title="Roles" />
       <main>
-        <PageBreadcrumb title="Roles" subtitle="Settings" />
+        <PageHeader title="Roles" />
         <div className="space-y-6">
           <DataTable<Role>
             data={roles}

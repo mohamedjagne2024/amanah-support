@@ -21,6 +21,7 @@ type GeneralSettingsPageProps = {
     decimal_sep: string | null;
     decimal_places: number | null;
     currency: string | null;
+    required_ticket_fields: string[];
   };
   currencies: CurrencyOption[];
   users: Array<{
@@ -40,6 +41,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
     thousand_sep: string;
     decimal_sep: string;
     decimal_places: string;
+    required_ticket_fields: string[];
   }>({
     timezone: settings.timezone ?? '',
     date_format: settings.date_format ?? '',
@@ -49,6 +51,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
     thousand_sep: settings.thousand_sep ?? '',
     decimal_sep: settings.decimal_sep ?? '',
     decimal_places: settings.decimal_places !== null ? String(settings.decimal_places) : '',
+    required_ticket_fields: settings.required_ticket_fields ?? [],
   });
 
   const timezoneOptions = useMemo<SelectOption[]>(() => [
@@ -110,6 +113,19 @@ export default function General({ settings, currencies, users }: GeneralSettings
       value: currency.value
     }));
   }, [currencies]);
+
+  const handleTicketFieldToggle = (fieldName: string) => {
+    const currentFields = data.required_ticket_fields || [];
+    const isCurrentlyRequired = currentFields.includes(fieldName);
+    
+    if (isCurrentlyRequired) {
+      // Remove the field from required fields
+      setData('required_ticket_fields', currentFields.filter(f => f !== fieldName));
+    } else {
+      // Add the field to required fields
+      setData('required_ticket_fields', [...currentFields, fieldName]);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -277,6 +293,108 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     />
                     <InputError message={errors.decimal_places} />
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h6 className="card-title">Ticket Field Configuration</h6>
+              <p className="text-sm text-default-600 mt-1">
+                Select which fields should be required when creating a new ticket
+              </p>
+            </div>
+            <div className="card-body">
+              <div className="space-y-4">
+                {/* Department */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="field_department"
+                    checked={data.required_ticket_fields?.includes('department') || false}
+                    onChange={() => handleTicketFieldToggle('department')}
+                    disabled={processing}
+                    className="text-primary"
+                  />
+                  <label
+                    htmlFor="field_department"
+                    className="ml-3 block text-sm font-medium text-default-900"
+                  >
+                    Department
+                  </label>
+                </div>
+
+                {/* Category */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="field_category"
+                    checked={data.required_ticket_fields?.includes('category') || false}
+                    onChange={() => handleTicketFieldToggle('category')}
+                    disabled={processing}
+                    className="text-primary"
+                  />
+                  <label
+                    htmlFor="field_category"
+                    className="ml-3 block text-sm font-medium text-default-900"
+                  >
+                    Category
+                  </label>
+                </div>
+
+                {/* Sub Category */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="field_sub_category"
+                    checked={data.required_ticket_fields?.includes('sub_category') || false}
+                    onChange={() => handleTicketFieldToggle('sub_category')}
+                    disabled={processing}
+                    className="text-primary"
+                  />
+                  <label
+                    htmlFor="field_sub_category"
+                    className="ml-3 block text-sm font-medium text-default-900"
+                  >
+                    Sub Category
+                  </label>
+                </div>
+
+                {/* Ticket Type */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="field_ticket_type"
+                    checked={data.required_ticket_fields?.includes('ticket_type') || false}
+                    onChange={() => handleTicketFieldToggle('ticket_type')}
+                    disabled={processing}
+                    className="text-primary"
+                  />
+                  <label
+                    htmlFor="field_ticket_type"
+                    className="ml-3 block text-sm font-medium text-default-900"
+                  >
+                    Ticket Type
+                  </label>
+                </div>
+
+                {/* Assigned To */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="field_assigned_to"
+                    checked={data.required_ticket_fields?.includes('assigned_to') || false}
+                    onChange={() => handleTicketFieldToggle('assigned_to')}
+                    disabled={processing}
+                    className="text-primary"
+                  />
+                  <label
+                    htmlFor="field_assigned_to"
+                    className="ml-3 block text-sm font-medium text-default-900"
+                  >
+                    Assigned To
+                  </label>
                 </div>
               </div>
             </div>

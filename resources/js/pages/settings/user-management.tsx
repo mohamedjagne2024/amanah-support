@@ -4,8 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import { DataTable, Badge, type DataTableRowAction } from "@/components/DataTable";
 import Drawer from "@/components/Drawer";
 import AppLayout from "@/layouts/app-layout";
-import PageBreadcrumb from "@/components/PageBreadcrumb";
 import PageMeta from "@/components/PageMeta";
+import PageHeader from "@/components/Pageheader";
 
 type User = {
   id: number;
@@ -283,7 +283,7 @@ export default function UserManagement({ users, roles, permissions, filters }: U
     <AppLayout>
       <PageMeta title="User Management" />
       <main>
-        <PageBreadcrumb title="User Management" subtitle="Settings" />
+        <PageHeader title="User Management" />
         <div className="space-y-6">
           <DataTable<User>
             data={users}

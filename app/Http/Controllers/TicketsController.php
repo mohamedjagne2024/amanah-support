@@ -199,7 +199,7 @@ class TicketsController extends Controller
         $user = Auth()->user();
         return Inertia::render('ticket/create', [
             'title' => 'Create a new ticket',
-            'customers' => User::role('user')
+            'customers' => User::role('customer')
                 ->when(Request::input('customer_id'), function($query) {
                     $query->orWhere('id', Request::input('customer_id'));
                 })
@@ -240,10 +240,10 @@ class TicketsController extends Controller
         ]);
     }
 
-    public function store(Request $request) {
+    public function store() {
         $required_fields = [];
 
-        $get_required_fields = Setting::where('slug', 'required_ticket_fields')->first();
+        $get_required_fields = Setting::where('name', 'required_ticket_fields')->first();
         if(!empty($get_required_fields)){
             $required_fields = json_decode($get_required_fields->value, true);
         }
@@ -261,7 +261,7 @@ class TicketsController extends Controller
             'details' => ['required'],
         ]);
 
-        if($user->hasRole('user')){
+        if($user->hasRole('customer')){
             $request_data['user_id'] = $user['id'];
         }
 

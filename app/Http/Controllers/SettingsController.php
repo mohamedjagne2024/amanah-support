@@ -51,6 +51,9 @@ final class SettingsController extends Controller
                 'decimal_sep' => $settings['decimal_sep'] ?? null,
                 'decimal_places' => $settings['decimal_places'] ?? null,
                 'currency' => $settings['currency'] ?? null,
+                'required_ticket_fields' => isset($settings['required_ticket_fields']) 
+                    ? json_decode($settings['required_ticket_fields'], true) ?? []
+                    : [],
             ],
             'currencies' => $currencies,
         ]);
@@ -66,6 +69,11 @@ final class SettingsController extends Controller
         $validated = $request->validated();
 
         foreach ($validated as $name => $value) {
+            // Handle array values (like required_ticket_fields) by JSON encoding
+            if (is_array($value)) {
+                $value = json_encode($value);
+            }
+            
             Settings::updateOrCreate(
                 ['name' => $name],
                 ['value' => $value === '' ? null : $value]
