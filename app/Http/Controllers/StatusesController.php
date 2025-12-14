@@ -2,86 +2,108 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\RedirectIfNotAdmin;
 use App\Models\Status;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 
 class StatusesController extends Controller
 {
-    public function __construct(){
-        $this->middleware(RedirectIfNotAdmin::class);
-    }
-
-    public function index(){
-        return Inertia::render('Statuses/Index', [
-            'title' => 'Statuses',
-            'filters' => Request::all(['search']),
-            'statuses' => Status::orderBy('name')
-                ->filter(Request::all(['search']))
-                ->paginate(10)
-                ->withQueryString()
-                ->through(function ($priority) {
-                    return [
-                        'id' => $priority->id,
-                        'name' => $priority->name,
-                        'slug' => $priority->slug,
-                    ];
-                } ),
-        ]);
-    }
-
-    public function create()
+    public function index()
     {
-        return Inertia::render('Statuses/Create',[
-            'title' => 'Create a new status',
+        Gate::authorize('status.view');
+        
+        $filters = Request::only(['search', 'sort_by', 'sort_direction']);
+        
+        $query = Status::query();
+        
+        // Apply search filter
+        if ($search = Request::input('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('slug', 'like', '%' . $search . '%');
+            });
+        }
+        
+        // Apply sorting
+        $sortBy = Request::input('sort_by', 'name');
+        $sortDirection = Request::input('sort_direction', 'asc');
+        
+        // Only allow sorting by valid columns
+        if (in_array($sortBy, ['name', 'slug', 'id'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        
+        $perPage = Request::input('perPage', 10);
+        
+        return Inertia::render('status/index', [
+            'statuses' => $query->paginate($perPage)->withQueryString()->through(function ($status) {
+                return [
+                    'id' => $status->id,
+                    'name' => $status->name,
+                    'slug' => $status->slug,
+                ];
+            }),
+            'filters' => $filters,
         ]);
     }
 
     public function store()
     {
-        $request_data = Request::validate([
-            'name' => ['required', 'max:50'],
+        Gate::authorize('status.create');
+        
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:50'],
         ]);
-        $slug = strtolower(preg_replace('/\s+/', '_', $request_data['name']));
 
-        Status::create([ 'name' => $request_data['name'], 'slug' => $slug ]);
-
-        return Redirect::route('statuses')->with('success', 'Status created.');
-    }
-
-    public function edit(Status $status)
-    {
-        return Inertia::render('Statuses/Edit', [
-            'title' => 'Status',
-            'status' => [
-                'id' => $status->id,
-                'name' => $status->name,
-                'slug' => $status->slug,
-            ],
+        // Auto-generate slug from name
+        $slug = strtolower(preg_replace('/\s+/', '_', $validated['name']));
+        
+        Status::create([
+            'name' => $validated['name'],
+            'slug' => $slug,
         ]);
+
+        return Redirect::back()->with('success', 'Status created successfully.');
     }
 
     public function update(Status $status)
     {
-        $status->update(
-            Request::validate([
-                'name' => ['required', 'max:50'],
-                'slug' => ['required', 'max:50'],
-            ])
-        );
+        Gate::authorize('status.edit');
+        
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:50'],
+            'slug' => ['required', 'string', 'max:50'],
+        ]);
 
-        return Redirect::back()->with('success', 'Status updated.');
+        $status->update($validated);
+
+        return Redirect::back()->with('success', 'Status updated successfully.');
     }
 
-    public function destroy(Status $status){
+    public function destroy(Status $status)
+    {
+        Gate::authorize('status.delete');
+        
         $status->delete();
-        return Redirect::route('statuses')->with('success', 'Status deleted.');
+        
+        return Redirect::back()->with('success', 'Status deleted successfully.');
     }
 
-    public function restore(Status $status){
-        $status->restore();
-        return Redirect::back()->with('success', 'Status restored.');
+    public function bulkDelete()
+    {
+        Gate::authorize('status.delete');
+        
+        $validated = Request::validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'integer', 'exists:statuses,id'],
+        ]);
+
+        Status::whereIn('id', $validated['ids'])->delete();
+
+        return Redirect::back()->with('success', count($validated['ids']) . ' status(es) deleted successfully.');
     }
 }

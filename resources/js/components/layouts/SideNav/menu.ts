@@ -117,7 +117,7 @@ export const menuItemsData: MenuItemType[] = [
       { key: 'Departments', label: 'Departments', href: '/settings/departments'},
       { key: 'Categories', label: 'Categories', href: '/settings/categories'},
       { key: 'Priorities', label: 'Priorities', href: '/settings/priorities'},
-      { key: 'Status', label: 'Status', href: '/settings/status'},
+      { key: 'Status', label: 'Status', href: '/settings/statuses'},
       { key: 'Types', label: 'Types', href: '/settings/types'},
       { key: 'Email Templates', label: 'Email Templates', href: '/settings/email-templates'},
       { key: 'SMTP Mail', label: 'SMTP', href: '/settings/smtp'},
