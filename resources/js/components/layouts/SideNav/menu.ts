@@ -119,7 +119,7 @@ export const menuItemsData: MenuItemType[] = [
       { key: 'Priorities', label: 'Priorities', href: '/settings/priorities'},
       { key: 'Status', label: 'Status', href: '/settings/statuses'},
       { key: 'Types', label: 'Types', href: '/settings/types'},
-      { key: 'Email Templates', label: 'Email Templates', href: '/settings/email-templates'},
+      { key: 'Email Templates', label: 'Email Templates', href: '/settings/templates'},
       { key: 'SMTP Mail', label: 'SMTP', href: '/settings/smtp'},
       { key: 'Pusher Chat', label: 'Pusher Chat', href: '/settings/pusher-chat'},
     ],

@@ -2,48 +2,65 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\RedirectIfNotAdmin;
-use App\Http\Middleware\RedirectIfNotParmitted;
 use App\Models\EmailTemplate;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 class EmailTemplatesController extends Controller {
 
-    public function __construct(){
-        $this->middleware(RedirectIfNotParmitted::class.':email_template');
-    }
-
     public function index(){
-        return Inertia::render('EmailTemplates/Index', [
-            'title' => 'Email Templates',
-            'filters' => Request::all('search'),
-            'templates' => EmailTemplate::orderBy('name')
-                ->filter(Request::only('search'))
-                ->paginate(10)
-                ->withQueryString()
-                ->through(function ($template) {
-                    return [
-                        'id' => $template->id,
-                        'name' => $template->name,
-                        'language' => $template->en,
-                        'details' => $template->details,
-                        'slug' => $template->slug,
-                        'html' => $template->html,
-                    ];
-                } ),
+        Gate::authorize('email_template.view');
+        
+        $filters = Request::only(['search', 'sort_by', 'sort_direction']);
+        
+        $query = EmailTemplate::query();
+        
+        // Apply search filter
+        if ($search = Request::input('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('details', 'like', '%' . $search . '%')
+                  ->orWhere('slug', 'like', '%' . $search . '%');
+            });
+        }
+        
+        // Apply sorting
+        $sortBy = Request::input('sort_by', 'name');
+        $sortDirection = Request::input('sort_direction', 'asc');
+        
+        // Only allow sorting by valid columns
+        if (in_array($sortBy, ['name', 'slug', 'id'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        
+        $perPage = Request::input('perPage', 10);
+        
+        return Inertia::render('email-template/index', [
+            'templates' => $query->paginate($perPage)->withQueryString()->through(function ($template) {
+                return [
+                    'id' => $template->id,
+                    'name' => $template->name,
+                    'details' => $template->details,
+                    'slug' => $template->slug,
+                    'html' => $template->html,
+                ];
+            }),
+            'filters' => $filters,
         ]);
     }
 
     public function edit(EmailTemplate $emailTemplate){
-        return Inertia::render('EmailTemplates/Edit', [
-            'title' => $emailTemplate->name,
+        Gate::authorize('email_template.edit');
+        
+        return Inertia::render('email-template/edit', [
             'template' => [
                 'id' => $emailTemplate->id,
                 'name' => $emailTemplate->name,
                 'details' => $emailTemplate->details,
-                'language' => $emailTemplate->en,
                 'slug' => $emailTemplate->slug,
                 'html' => $emailTemplate->html,
             ],
@@ -51,15 +68,20 @@ class EmailTemplatesController extends Controller {
     }
 
     public function update(EmailTemplate $emailTemplate) {
+        Gate::authorize('email_template.edit');
+        
         if (config('app.demo')) {
             return Redirect::back()->with('error', 'Updating template are not allowed for the live demo.');
         }
-        $emailTemplate->update(
-            Request::validate([
-                'html' => ['required'],
-            ])
-        );
+        
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:255'],
+            'html' => ['required', 'string'],
+        ]);
+        
+        $emailTemplate->update($validated);
 
-        return Redirect::back()->with('success', 'Email template updated.');
+        return Redirect::back()->with('success', 'Email template updated successfully.');
     }
 }
+

@@ -2,83 +2,98 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\RedirectIfNotAdmin;
-use App\Http\Middleware\RedirectIfNotParmitted;
 use App\Models\Type;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 
 class TypesController extends Controller
 {
-    public function __construct(){
-        $this->middleware(RedirectIfNotParmitted::class.':type');
-    }
-
-    public function index(){
-        return Inertia::render('Types/Index', [
-            'title' => 'Ticket Types',
-            'filters' => Request::all(['search']),
-            'types' => Type::orderBy('name')
-                ->filter(Request::all(['search']))
-                ->paginate(10)
-                ->withQueryString()
-                ->through(function ($type) {
-                    return [
-                        'id' => $type->id,
-                        'name' => $type->name,
-                    ];
-                } ),
-        ]);
-    }
-
-    public function create()
+    public function index()
     {
-        return Inertia::render('Types/Create',[
-            'title' => 'Create a new type',
+        Gate::authorize('type.view');
+        
+        $filters = Request::only(['search', 'sort_by', 'sort_direction']);
+        
+        $query = Type::query();
+        
+        // Apply search filter
+        if ($search = Request::input('search')) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+        
+        // Apply sorting
+        $sortBy = Request::input('sort_by', 'name');
+        $sortDirection = Request::input('sort_direction', 'asc');
+        
+        // Only allow sorting by valid columns
+        if (in_array($sortBy, ['name', 'id'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        
+        $perPage = Request::input('perPage', 10);
+        
+        return Inertia::render('type/index', [
+            'types' => $query->paginate($perPage)->withQueryString()->through(function ($type) {
+                return [
+                    'id' => $type->id,
+                    'name' => $type->name,
+                ];
+            }),
+            'filters' => $filters,
         ]);
     }
 
     public function store()
     {
-        Type::create(
-            Request::validate([
-                'name' => ['required', 'max:100'],
-            ])
-        );
-
-        return Redirect::route('types')->with('success', 'Type created.');
-    }
-
-    public function edit(Type $type)
-    {
-        return Inertia::render('Types/Edit', [
-            'title' => $type->name,
-            'type' => [
-                'id' => $type->id,
-                'name' => $type->name,
-            ],
+        Gate::authorize('type.create');
+        
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:100'],
         ]);
+
+        Type::create($validated);
+
+        return Redirect::back()->with('success', 'Type created successfully.');
     }
 
     public function update(Type $type)
     {
-        $type->update(
-            Request::validate([
-                'name' => ['required', 'max:100'],
-            ])
-        );
+        Gate::authorize('type.edit');
+        
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:100'],
+        ]);
 
-        return Redirect::back()->with('success', 'Type updated.');
+        $type->update($validated);
+
+        return Redirect::back()->with('success', 'Type updated successfully.');
     }
 
-    public function destroy(Type $type) {
+    public function destroy(Type $type)
+    {
+        Gate::authorize('type.delete');
+        
         $type->delete();
-        return Redirect::route('types')->with('success', 'Type deleted.');
+        
+        return Redirect::back()->with('success', 'Type deleted successfully.');
     }
 
-    public function restore(Type $type){
-        $type->restore();
-        return Redirect::back()->with('success', 'Department restored.');
+    public function bulkDelete()
+    {
+        Gate::authorize('type.delete');
+        
+        $validated = Request::validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'integer', 'exists:types,id'],
+        ]);
+
+        Type::whereIn('id', $validated['ids'])->delete();
+
+        return Redirect::back()->with('success', count($validated['ids']) . ' type(s) deleted successfully.');
     }
 }
+
