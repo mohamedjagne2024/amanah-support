@@ -143,6 +143,10 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('categories.update')
             ->middleware('auth');
 
+        $router->post('settings/categories/bulk-delete', [CategoriesController::class, 'bulkDelete'])
+            ->name('categories.bulk-delete')
+            ->middleware('auth');
+
         $router->delete('settings/categories/{category}', [CategoriesController::class, 'destroy'])
             ->name('categories.destroy')
             ->middleware('auth');
@@ -339,6 +343,10 @@ $router->prefix('/')->group(static function (Router $router): void {
 
         $router->put('settings/departments/{department}', [DepartmentsController::class, 'update'])
             ->name('departments.update')
+            ->middleware('auth');
+
+        $router->post('settings/departments/bulk-delete', [DepartmentsController::class, 'bulkDelete'])
+            ->name('departments.bulk-delete')
             ->middleware('auth');
 
         $router->delete('settings/departments/{department}', [DepartmentsController::class, 'destroy'])

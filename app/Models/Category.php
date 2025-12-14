@@ -9,6 +9,8 @@ class Category extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['name', 'color', 'department_id', 'parent_id'];
+
     public $timestamps = false;
 
     public function resolveRouteBinding($value, $field = null)

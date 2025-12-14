@@ -2,82 +2,97 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\RedirectIfNotAdmin;
-use App\Http\Middleware\RedirectIfNotParmitted;
 use App\Models\Department;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 
 class DepartmentsController extends Controller
 {
-    public function __construct(){
-        $this->middleware(RedirectIfNotParmitted::class.':department');
-    }
-
-    public function index(){
-        return Inertia::render('Departments/Index', [
-            'title' => 'Departments',
-            'filters' => Request::all(['search']),
-            'departments' => Department::orderBy('name')
-                ->filter(Request::all(['search']))
-                ->paginate(10)
-                ->withQueryString()
-                ->through(function ($department) {
-                    return [
-                        'id' => $department->id,
-                        'name' => $department->name,
-                    ];
-                } ),
-        ]);
-    }
-
-    public function create()
+    public function index()
     {
-        return Inertia::render('Departments/Create',[
-            'title' => 'Create a new department',
+        Gate::authorize('department.view');
+        
+        $filters = Request::only(['search', 'sort_by', 'sort_direction']);
+        
+        $query = Department::query();
+        
+        // Apply search filter
+        if ($search = Request::input('search')) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+        
+        // Apply sorting
+        $sortBy = Request::input('sort_by', 'name');
+        $sortDirection = Request::input('sort_direction', 'asc');
+        
+        // Only allow sorting by valid columns
+        if (in_array($sortBy, ['name', 'id'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+        
+        $perPage = Request::input('perPage', 10);
+        
+        return Inertia::render('department/index', [
+            'departments' => $query->paginate($perPage)->withQueryString()->through(function ($department) {
+                return [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                ];
+            }),
+            'filters' => $filters,
         ]);
     }
 
     public function store()
     {
-        Department::create(
-            Request::validate([
-                'name' => ['required', 'max:100'],
-            ])
-        );
-
-        return Redirect::route('departments')->with('success', 'Department created.');
-    }
-
-    public function edit(Department $department){
-        return Inertia::render('Departments/Edit', [
-            'title' => $department->name,
-            'department' => [
-                'id' => $department->id,
-                'name' => $department->name,
-            ],
+        Gate::authorize('department.create');
+        
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:50'],
         ]);
+
+        Department::create($validated);
+
+        return Redirect::back()->with('success', 'Department created successfully.');
     }
 
     public function update(Department $department)
     {
-        $department->update(
-            Request::validate([
-                'name' => ['required', 'max:100'],
-            ])
-        );
+        Gate::authorize('department.edit');
+        
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:50'],
+        ]);
 
-        return Redirect::back()->with('success', 'Department updated.');
+        $department->update($validated);
+
+        return Redirect::back()->with('success', 'Department updated successfully.');
     }
 
-    public function destroy(Department $department) {
+    public function destroy(Department $department)
+    {
+        Gate::authorize('department.delete');
+        
         $department->delete();
-        return Redirect::route('departments')->with('success', 'Department deleted.');
+        
+        return Redirect::back()->with('success', 'Department deleted successfully.');
     }
 
-    public function restore(Department $department){
-        $department->restore();
-        return Redirect::back()->with('success', 'Department restored.');
+    public function bulkDelete()
+    {
+        Gate::authorize('department.delete');
+        
+        $validated = Request::validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'integer', 'exists:departments,id'],
+        ]);
+
+        Department::whereIn('id', $validated['ids'])->delete();
+
+        return Redirect::back()->with('success', count($validated['ids']) . ' department(s) deleted successfully.');
     }
 }

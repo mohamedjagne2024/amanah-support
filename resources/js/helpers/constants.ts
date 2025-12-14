@@ -16,7 +16,7 @@ export const basePath = '';
 
 export const appName = 'Amanah Support';
 
-export const DEFAULT_PAGE_TITLE = 'Amanah Support - Asset Management System for Amanah insurance';
+export const DEFAULT_PAGE_TITLE = 'Amanah Support Management';
 export const authorWebsite: string = 'https://amanahinsurance.com/';
 export const appAuthor: string = 'Amanah Insurance';
 

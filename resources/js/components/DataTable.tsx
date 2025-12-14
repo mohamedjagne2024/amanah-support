@@ -207,6 +207,7 @@ export const DataTable = <TData,>({
   columns,
   pagination,
   onPageChange,
+  onPerPageChange,
   searchValue = "",
   onSearchChange,
   searchDebounceMs = 300,
@@ -602,61 +603,81 @@ export const DataTable = <TData,>({
       </div>
 
       {/* Card Footer - Pagination */}
-      <div className="card-footer">
+      <div className="card-footer flex items-center justify-between">
         <p className="text-default-500 text-sm">
-          Showing <b>{from.toLocaleString()}</b> of <b>{pagination.total.toLocaleString()}</b> Results
+          Showing <b>{from.toLocaleString()}</b> to <b>{to.toLocaleString()}</b> of <b>{pagination.total.toLocaleString()}</b> Results
         </p>
-        <nav className="flex items-center gap-2" aria-label="Pagination">
-          <button
-            type="button"
-            className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary hover:border-primary/10"
-            onClick={() => onPageChange?.(Math.max(currentPage - 1, 1))}
-            disabled={currentPage === 1 || isTableBusy}
-          >
-            <ChevronLeft className="size-4 me-1" />
-            Prev
-          </button>
-
-          {/* Page Numbers */}
-          {Array.from({ length: Math.min(3, pageCount) }, (_, i) => {
-            let pageNum: number;
-            if (pageCount <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage === 1) {
-              pageNum = i + 1;
-            } else if (currentPage === pageCount) {
-              pageNum = pageCount - 2 + i;
-            } else {
-              pageNum = currentPage - 1 + i;
-            }
-            
-            return (
-              <button
-                key={pageNum}
-                type="button"
-                className={`btn size-7.5 ${
-                  pageNum === currentPage
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-transparent border border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary hover:border-primary/10'
-                }`}
-                onClick={() => onPageChange?.(pageNum)}
-                disabled={isTableBusy}
+        
+        <div className="flex items-center gap-3">
+          {onPerPageChange && (
+            <div className="flex items-center gap-2">
+              <span className="text-default-500 text-sm">Show:</span>
+              <select
+                className="form-input form-input-sm w-16"
+                value={pagination.perPage}
+                onChange={(e) => onPerPageChange(Number(e.target.value))}
+                disabled={isLoading || isProcessingAction}
               >
-                {pageNum}
-              </button>
-            );
-          })}
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          )}
+          
+          <nav className="flex items-center gap-2" aria-label="Pagination">
+            <button
+              type="button"
+              className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary hover:border-primary/10"
+              onClick={() => onPageChange?.(Math.max(currentPage - 1, 1))}
+              disabled={currentPage === 1 || isTableBusy}
+            >
+              <ChevronLeft className="size-4 me-1" />
+              Prev
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary hover:border-primary/10"
-            onClick={() => onPageChange?.(Math.min(currentPage + 1, pageCount))}
-            disabled={currentPage >= pageCount || isTableBusy}
-          >
-            Next
-            <ChevronRight className="size-4 ms-1" />
-          </button>
-        </nav>
+            {/* Page Numbers */}
+            {Array.from({ length: Math.min(3, pageCount) }, (_, i) => {
+              let pageNum: number;
+              if (pageCount <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage === 1) {
+                pageNum = i + 1;
+              } else if (currentPage === pageCount) {
+                pageNum = pageCount - 2 + i;
+              } else {
+                pageNum = currentPage - 1 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  className={`btn size-7.5 ${
+                    pageNum === currentPage
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-transparent border border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary hover:border-primary/10'
+                  }`}
+                  onClick={() => onPageChange?.(pageNum)}
+                  disabled={isTableBusy}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary hover:border-primary/10"
+              onClick={() => onPageChange?.(Math.min(currentPage + 1, pageCount))}
+              disabled={currentPage >= pageCount || isTableBusy}
+            >
+              Next
+              <ChevronRight className="size-4 ms-1" />
+            </button>
+          </nav>
+        </div>
       </div>
     </div>
   );
