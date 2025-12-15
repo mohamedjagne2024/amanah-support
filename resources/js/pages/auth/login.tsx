@@ -1,8 +1,9 @@
 import InputError from '@/components/input-error';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Link } from '@inertiajs/react';
 import AuthSimpleLayout from '@/layouts/auth/auth-simple-layout';
+import PageMeta from '@/components/PageMeta';
 
 interface LoginProps {
     status?: string;
@@ -20,7 +21,7 @@ export default function Login({
             title="Welcome Back !"
             description="Sign in to continue to Amanah Assets."
         >
-            <Head title="Log in" />
+            <PageMeta title="Log in" />
 
             <Form
                 {...store.form()}

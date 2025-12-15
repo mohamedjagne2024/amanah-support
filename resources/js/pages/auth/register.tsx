@@ -1,9 +1,10 @@
 import { login } from '@/routes';
 import { store } from '@/routes/register';
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Link } from '@inertiajs/react';
 
 import InputError from '@/components/input-error';
 import AuthSimpleLayout from '@/layouts/auth/auth-simple-layout';
+import PageMeta from '@/components/PageMeta';
 
 export default function Register() {
     return (
@@ -11,7 +12,7 @@ export default function Register() {
             title="Create an account"
             description="Enter your details below to create your account"
         >
-            <Head title="Register" />
+            <PageMeta title="Register" />
             <Form
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
