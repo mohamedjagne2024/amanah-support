@@ -35,11 +35,12 @@ use App\Http\Controllers\FrontPagesController;
 use App\Http\Controllers\PageController;
 
 $router->prefix('/')->group(static function (Router $router): void {
+    $router->get('/', [HomeController::class, 'index'])->name('home');
     $router->middleware('auth')->group(static function (Router $router): void {
-        $router->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        $router->get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         if (Features::enabled(Features::updateProfileInformation())) {
-            $router->get('/profile', [ProfileInformationController::class, 'show']);
+            $router->get('profile', [ProfileInformationController::class, 'show']);
         }
 
         /** Ticket Functions */
@@ -504,8 +505,7 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('chat.send_message');
 
         /** Site Front-Landing */
-        $router->get('/', [HomeController::class, 'index'])
-            ->name('home');
+        // Note: The '/' route is defined at the top of the file, outside this auth middleware group
 
         $router->get('terms-of-services', [PageController::class, 'terms'])
             ->name('terms_service');

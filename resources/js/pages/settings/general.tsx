@@ -315,7 +315,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     checked={data.required_ticket_fields?.includes('department') || false}
                     onChange={() => handleTicketFieldToggle('department')}
                     disabled={processing}
-                    className="text-primary"
+                    className="size-4 rounded border-default-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed"
                   />
                   <label
                     htmlFor="field_department"
@@ -333,7 +333,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     checked={data.required_ticket_fields?.includes('category') || false}
                     onChange={() => handleTicketFieldToggle('category')}
                     disabled={processing}
-                    className="text-primary"
+                    className="size-4 rounded border-default-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed"
                   />
                   <label
                     htmlFor="field_category"
@@ -351,7 +351,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     checked={data.required_ticket_fields?.includes('sub_category') || false}
                     onChange={() => handleTicketFieldToggle('sub_category')}
                     disabled={processing}
-                    className="text-primary"
+                    className="size-4 rounded border-default-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed"
                   />
                   <label
                     htmlFor="field_sub_category"
@@ -369,7 +369,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     checked={data.required_ticket_fields?.includes('ticket_type') || false}
                     onChange={() => handleTicketFieldToggle('ticket_type')}
                     disabled={processing}
-                    className="text-primary"
+                    className="size-4 rounded border-default-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed"
                   />
                   <label
                     htmlFor="field_ticket_type"
@@ -387,7 +387,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     checked={data.required_ticket_fields?.includes('assigned_to') || false}
                     onChange={() => handleTicketFieldToggle('assigned_to')}
                     disabled={processing}
-                    className="text-primary"
+                    className="size-4 rounded border-default-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed"
                   />
                   <label
                     htmlFor="field_assigned_to"
