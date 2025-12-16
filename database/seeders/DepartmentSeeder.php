@@ -17,10 +17,10 @@ class DepartmentSeeder extends Seeder
     {
         DB::table('departments')->truncate();
         Department::factory()->createMany([
-            ['id' => 1, 'name' => 'Sales'],
-            ['id' => 2, 'name' => 'Management'],
-            ['id' => 3, 'name' => 'Technical'],
-            ['id' => 4, 'name' => 'Billing'],
+            ['id' => 1, 'name' => 'Claims'],
+            ['id' => 2, 'name' => 'Policy Services'],
+            ['id' => 3, 'name' => 'Billing & Payments'],
+            ['id' => 4, 'name' => 'General Inquiries'],
         ]);
     }
 }

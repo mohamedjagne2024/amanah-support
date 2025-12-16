@@ -9,23 +9,17 @@ use App\Events\TicketUpdated;
 use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Comment;
-use App\Models\Contact;
 use App\Models\Department;
 use App\Models\PendingEmail;
 use App\Models\Priority;
 use App\Models\Review;
-use App\Models\Role;
-use App\Models\Setting;
+use App\Models\Settings;
 use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\TicketEntry;
 use App\Models\TicketField;
 use App\Models\Type;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Response;
@@ -113,14 +107,14 @@ class TicketsController extends Controller
                         'id' => $ticket->id,
                         'uid' => $ticket->uid,
                         'subject' => $ticket->subject,
-                        'user' => $ticket->user ? $ticket->user->first_name.' '.$ticket->user->last_name : null,
+                        'user' => $ticket->user ? $ticket->user->name : null,
                         'priority' => $ticket->priority ? $ticket->priority->name : null,
                         'category' => $ticket->category ? $ticket->category->name: null,
                         'sub_category' => $ticket->subCategory ? $ticket->subCategory->name: null,
                         'rating' => $ticket->review ? $ticket->review->rating : 0,
                         'status' => $ticket->status ? $ticket->status->name : null,
                         'due' => $ticket->due,
-                        'assigned_to' => $ticket->assignedTo? $ticket->assignedTo->first_name.' '.$ticket->assignedTo->last_name : null,
+                        'assigned_to' => $ticket->assignedTo? $ticket->assignedTo->name : null,
                         'created_at' => $ticket->created_at,
                         'updated_at' => $ticket->updated_at,
                     ];
@@ -197,6 +191,13 @@ class TicketsController extends Controller
 
     public function create(){
         $user = Auth()->user();
+        
+        $required_fields = [];
+        $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
+        if(!empty($get_required_fields)){
+            $required_fields = json_decode($get_required_fields->value, true);
+        }
+        
         return Inertia::render('ticket/create', [
             'title' => 'Create a new ticket',
             'customers' => User::role('customer')
@@ -237,13 +238,14 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
+            'requiredFields' => $required_fields,
         ]);
     }
 
     public function store() {
         $required_fields = [];
 
-        $get_required_fields = Setting::where('name', 'required_ticket_fields')->first();
+        $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
         if(!empty($get_required_fields)){
             $required_fields = json_decode($get_required_fields->value, true);
         }
@@ -265,21 +267,20 @@ class TicketsController extends Controller
             $request_data['user_id'] = $user['id'];
         }
 
-        if(is_null($request_data['priority_id'])){
+        if(empty($request_data['priority_id'])){
             $priority = Priority::orderBy('name')->first();
             if(!empty($priority)){
                 $request_data['priority_id'] = $priority->id;
             }
         }
 
-        if(is_null($request_data['status_id'])){
+        if(empty($request_data['status_id'])){
             $status = Status::where('slug', 'like', '%active%')->first();
             if(!empty($status)){
                 $request_data['status_id'] = $status->id;
             }
         }
 
-        $request_data['created_by'] = $user['id'];
         $ticket = Ticket::create($request_data);
 
         if(Request::hasFile('files')){
@@ -301,7 +302,7 @@ class TicketsController extends Controller
             }
         }
 
-        event(new TicketCreated(['ticket_id' => $ticket->id]));
+        event(new TicketCreated(['ticket_id' => $ticket->id, 'source' => 'dashboard']));
 
         if(!empty($ticket->assigned_to)){
             event(new AssignedUser($ticket->id));
@@ -309,6 +310,81 @@ class TicketsController extends Controller
 
 
         return Redirect::route('tickets')->with('success', 'Ticket created.');
+    }
+
+    public function show($uid)
+    {
+        $user = Auth()->user();
+        $byCustomer = null;
+        $byAssign = null;
+        
+        if ($user->hasRole('customer')) {
+            $byCustomer = $user['id'];
+        } elseif ($user->hasRole('manager')) {
+            $byAssign = $user['id'];
+        } else {
+            $byAssign = Request::input('assigned_to');
+        }
+        
+        $ticket = Ticket::byCustomer($byCustomer)
+            ->byAssign($byAssign)
+            ->where(function ($query) use ($uid) {
+                $query->where('uid', $uid);
+                $query->orWhere('id', $uid);
+            })->first();
+        
+        if (empty($ticket)) {
+            abort(404);
+        }
+
+        return Inertia::render('ticket/view', [
+            'title' => $ticket->subject ? '#TKT-'.$ticket->uid.' '.$ticket->subject : '',
+            'attachments' => Attachment::orderBy('name')
+                ->with('user')
+                ->where('ticket_id', $ticket->id ?? null)
+                ->get(),
+            'comments' => Comment::orderBy('created_at', 'asc')
+                ->with('user')
+                ->where('ticket_id', $ticket->id ?? null)
+                ->get(),
+            'ticket' => [
+                'id' => $ticket->id,
+                'uid' => $ticket->uid,
+                'user_id' => $ticket->user_id,
+                'contact_id' => $ticket->contact_id,
+                'user' => $ticket->user ? $ticket->user->name : 'N/A',
+                'contact' => $ticket->contact ?: null,
+                'priority_id' => $ticket->priority_id,
+                'created_at' => $ticket->created_at,
+                'updated_at' => $ticket->updated_at,
+                'priority' => $ticket->priority ? $ticket->priority->name : 'N/A',
+                'status_id' => $ticket->status_id,
+                'status' => $ticket->status ?: null,
+                'closed' => $ticket->status && $ticket->status->slug == 'closed',
+                'review' => $ticket->review,
+                'department_id' => $ticket->department_id,
+                'department' => $ticket->department ? $ticket->department->name : 'N/A',
+                'category_id' => $ticket->category_id,
+                'sub_category_id' => $ticket->sub_category_id,
+                'category' => $ticket->category ? $ticket->category->name : 'N/A',
+                'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : 'N/A',
+                'assigned_to' => $ticket->assigned_to,
+                'assigned_user' => $ticket->assignedTo ? $ticket->assignedTo->name : 'Unassigned',
+                'type_id' => $ticket->type_id,
+                'type' => $ticket->ticketType ? $ticket->ticketType->name : 'N/A',
+                'subject' => $ticket->subject,
+                'details' => $ticket->details,
+                'due' => $ticket->due,
+                'source' => $ticket->source ?? 'Email',
+                'tags' => $ticket->tags ?? '',
+                'impact_level' => $ticket->impact_level ?? 'Medium',
+                'urgency_level' => $ticket->urgency_level ?? 'Medium',
+                'estimated_hours' => $ticket->estimated_hours ?? '',
+                'actual_hours' => $ticket->actual_hours ?? '',
+                'files' => [],
+                'comment_access' => 'read',
+            ],
+        ]);
     }
 
     public function edit($uid){
@@ -338,17 +414,30 @@ class TicketsController extends Controller
             $comment_access = 'view';
         }
 
-        $roles = Role::pluck('id', 'slug')->all();
+        $required_fields = [];
+        $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
+        if(!empty($get_required_fields)){
+            $required_fields = json_decode($get_required_fields->value, true);
+        }
 
-        return Inertia::render('Tickets/Edit', [
+        return Inertia::render('ticket/edit', [
             'title' => $ticket->subject ? '#'.$ticket->uid.' '.$ticket->subject : '',
-            'entries' => TicketEntry::where('ticket_id', $ticket->id)->get(),
-            'customers' => User::where('role_id', $roles['customer'] ?? 0)->orWhere('id', Request::input('customer_id'))->orderBy('first_name')
+            'customers' => User::role('customer')
+                ->when(Request::input('customer_id'), function($query) {
+                    $query->orWhere('id', Request::input('customer_id'));
+                })
+                ->orderBy('name')
                 ->limit(6)
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'usersExceptCustomers' => User::where('role_id', '!=', $roles['customer'] ?? 0)->orWhere('id', Request::input('user_id'))->orderBy('first_name')
+            'usersExceptCustomers' => User::whereDoesntHave('roles', function($query) {
+                    $query->where('name', 'customer');
+                })
+                ->when(Request::input('user_id'), function($query) {
+                    $query->orWhere('id', Request::input('user_id'));
+                })
+                ->orderBy('name')
                 ->limit(6)
                 ->get()
                 ->map
@@ -373,6 +462,7 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
+            'requiredFields' => $required_fields,
             'ticket' => [
                 'id' => $ticket->id,
                 'uid' => $ticket->uid,
@@ -382,6 +472,7 @@ class TicketsController extends Controller
                 'contact' => $ticket->contact?: null,
                 'priority_id' => $ticket->priority_id,
                 'created_at' => $ticket->created_at,
+                'updated_at' => $ticket->updated_at,
                 'priority' => $ticket->priority? $ticket->priority->name : 'N/A',
                 'status_id' => $ticket->status_id,
                 'status' => $ticket->status?: null,
@@ -394,12 +485,18 @@ class TicketsController extends Controller
                 'category' => $ticket->category ? $ticket->category->name : 'N/A',
                 'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : 'N/A',
                 'assigned_to' => $ticket->assigned_to,
-                'assigned_user' => $ticket->assignedTo ? $ticket->assignedTo->first_name .' '.$ticket->assignedTo->last_name : 'N/A',
+                'assigned_user' => $ticket->assignedTo ? $ticket->assignedTo->name : 'N/A',
                 'type_id' => $ticket->type_id,
                 'type' => $ticket->ticketType ? $ticket->ticketType->name : 'N/A',
-                'ticket_id' => $ticket->ticket_id,
                 'subject' => $ticket->subject,
                 'details' => $ticket->details,
+                'due' => $ticket->due,
+                'source' => $ticket->source ?? 'Email',
+                'tags' => $ticket->tags ?? '',
+                'impact_level' => $ticket->impact_level ?? 'Medium',
+                'urgency_level' => $ticket->urgency_level ?? 'Medium',
+                'estimated_hours' => $ticket->estimated_hours ?? '',
+                'actual_hours' => $ticket->actual_hours ?? '',
                 'files' => [],
                 'comment_access' => $comment_access,
             ],
@@ -407,20 +504,33 @@ class TicketsController extends Controller
     }
 
     public function update(Ticket $ticket){
+        $required_fields = [];
+
+        $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
+        if(!empty($get_required_fields)){
+            $required_fields = json_decode($get_required_fields->value, true);
+        }
+        
         $user = Auth()->user();
         $request_data = Request::validate([
             'user_id' => ['nullable', Rule::exists('users', 'id')],
             'contact_id' => ['nullable', Rule::exists('contacts', 'id')],
             'priority_id' => ['nullable', Rule::exists('priorities', 'id')],
             'status_id' => ['nullable', Rule::exists('status', 'id')],
-            'department_id' => ['nullable', Rule::exists('departments', 'id')],
-            'assigned_to' => ['nullable', Rule::exists('users', 'id')],
-            'category_id' => ['nullable', Rule::exists('categories', 'id')],
-            'sub_category_id' => ['nullable', Rule::exists('categories', 'id')],
-            'type_id' => ['nullable', Rule::exists('types', 'id')],
+            'department_id' => [in_array('department', $required_fields)?'required':'nullable', Rule::exists('departments', 'id')],
+            'assigned_to' => [in_array('assigned_to', $required_fields)?'required':'nullable', Rule::exists('users', 'id')],
+            'category_id' => [in_array('category', $required_fields)?'required':'nullable', Rule::exists('categories', 'id')],
+            'sub_category_id' => [in_array('sub_category', $required_fields)?'required':'nullable', Rule::exists('categories', 'id')],
+            'type_id' => [in_array('ticket_type', $required_fields)?'required':'nullable', Rule::exists('types', 'id')],
             'subject' => ['required'],
             'due' => ['nullable'],
             'details' => ['required'],
+            'source' => ['nullable', 'string', 'max:50'],
+            'tags' => ['nullable', 'string', 'max:500'],
+            'impact_level' => ['nullable', 'string', 'max:50'],
+            'urgency_level' => ['nullable', 'string', 'max:50'],
+            'estimated_hours' => ['nullable', 'numeric', 'min:0'],
+            'actual_hours' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         if(!empty(Request::input('review')) || !empty(Request::input('rating'))){
@@ -437,13 +547,13 @@ class TicketsController extends Controller
         $closed_status = Status::where('slug', 'like', '%close%')->first();
 
         $update_message = null;
-        if($closed_status && ($ticket->status_id != $closed_status->id) && $request_data['status_id'] == $closed_status->id){
+        if($closed_status && ($ticket->status_id != $closed_status->id) && ($request_data['status_id'] ?? null) == $closed_status->id){
             $update_message = 'The ticket has been closed.';
-        }elseif($ticket->status_id != $request_data['status_id']){
+        }elseif($ticket->status_id != ($request_data['status_id'] ?? null)){
             $update_message = 'The status has been changed for this ticket.';
         }
 
-        if($ticket->priority_id != $request_data['priority_id']){
+        if($ticket->priority_id != ($request_data['priority_id'] ?? null)){
             $update_message = 'The priority has been changed for this ticket.';
         }
 
@@ -561,5 +671,27 @@ class TicketsController extends Controller
         $last_name = (!str_contains($name, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $name);
         $first_name = trim( preg_replace('#'.preg_quote($last_name,'#').'#', '', $name ) );
         return array($first_name, $last_name);
+    }
+
+    /**
+     * Add a comment to a ticket from the view page.
+     */
+    public function addComment(Ticket $ticket)
+    {
+        $request = Request::all();
+        
+        // Check if this is the first comment for the ticket
+        $existingComments = Comment::where('ticket_id', $ticket->id)->count();
+        if (empty($existingComments)) {
+            event(new TicketNewComment(['ticket_id' => $ticket->id, 'comment' => $request['comment'] ?? '']));
+        }
+
+        $newComment = new Comment;
+        $newComment->user_id = Auth()->id();
+        $newComment->ticket_id = $ticket->id;
+        $newComment->details = $request['comment'] ?? '';
+        $newComment->save();
+
+        return Redirect::back()->with('success', 'Comment added successfully.');
     }
 }

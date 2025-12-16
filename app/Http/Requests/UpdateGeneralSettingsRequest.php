@@ -35,6 +35,13 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'currency' => ['nullable', 'string', 'max:10'],
             'required_ticket_fields' => ['nullable', 'array'],
             'required_ticket_fields.*' => ['string', 'in:department,category,sub_category,ticket_type,assigned_to'],
+            'email_notifications' => ['nullable', 'array'],
+            'email_notifications.ticket_by_customer' => ['nullable', 'boolean'],
+            'email_notifications.ticket_from_dashboard' => ['nullable', 'boolean'],
+            'email_notifications.first_comment' => ['nullable', 'boolean'],
+            'email_notifications.user_assigned' => ['nullable', 'boolean'],
+            'email_notifications.status_priority_changes' => ['nullable', 'boolean'],
+            'email_notifications.new_user' => ['nullable', 'boolean'],
         ];
     }
 

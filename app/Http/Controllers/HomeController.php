@@ -163,12 +163,13 @@ class HomeController extends Controller
         $variables = [
             'name' => $user->first_name,
             'email' => $user->email,
-            'password' => $plain_password??null,
+            'password' => $plain_password ?? null,
             'login_url' => URL::to('login'),
             'sender_name' => config('mail.from.name', 'support@web.com'),
             'ticket_id' => $ticket->id,
             'uid' => $ticket->uid,
             'subject' => $ticket->subject,
+            'source' => 'public_form',
         ];
         event(new TicketCreated($variables));
 

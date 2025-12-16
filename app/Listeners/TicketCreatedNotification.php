@@ -4,21 +4,17 @@ namespace App\Listeners;
 
 use App\Events\TicketCreated;
 use App\Mail\SendMailFromHtml;
-use App\Mail\TicketCreatedMessage;
 use App\Models\EmailTemplate;
-use App\Models\Setting;
+use App\Models\Settings;
 use App\Models\Ticket;
 use App\Models\User;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class TicketCreatedNotification
 {
     /**
      * Create the event listener.
-     *
-     * @return void
      */
     public function __construct()
     {
@@ -27,58 +23,135 @@ class TicketCreatedNotification
 
     /**
      * Handle the event.
-     *
-     * @param  \App\Events\TicketCreated  $event
-     * @return void
      */
-    public function handle(TicketCreated $event) {
+    public function handle(TicketCreated $event): void
+    {
         $data = $event->data;
-        $ticket = Ticket::where('id', $data['ticket_id'])->with(['user','ticketType'])->first();
-        $notifications = app('App\HelpDesk')->getSettingsEmailNotifications();
-        $ticket_slug = !empty($data['password']) ? 'create_ticket_new_customer' : 'create_ticket_dashboard';
-        $setting = Setting::where('slug','default_recipient')->first();
-        if($ticket->user){
-            $user = User::where('id', $ticket->user->id)->first();
-        }elseif(!empty($setting)){
-            $user = User::where('id', $setting->value)->first();
-        }else{
-            $user = User::orderBy('id')->first();
+        
+        // Get email notification settings
+        $notifications = app('App\AmanahSupport')->getSettingsEmailNotifications();
+        
+        // Get ticket with relationships
+        $ticket = Ticket::where('id', $data['ticket_id'] ?? null)
+            ->with(['user', 'ticketType'])
+            ->first();
+        
+        if (!$ticket) {
+            Log::warning('TicketCreatedNotification: Ticket not found', ['data' => $data]);
+            return;
         }
-        if(!empty($ticket) && $notifications[$ticket_slug]){
-            $template = EmailTemplate::where('slug', $ticket_slug)->first();
-            if(!empty($template)){
-                $this->sendMailWithTemplate($template, $ticket, $user, $data['password']??'');
-            }
-            if($ticket_slug == 'create_ticket_new_customer'){
-                $this->sendMailWithTemplate($template, $ticket, $user);
-            }
+        
+        // Determine the source of ticket creation and corresponding notification type
+        // - 'public_form' = customer submitted ticket (with or without being a new user)
+        // - 'dashboard' = admin/staff created ticket from dashboard
+        $source = $data['source'] ?? 'public_form';
+        $isFromPublicForm = $source === 'public_form';
+        
+        $notificationKey = $isFromPublicForm ? 'ticket_by_customer' : 'ticket_from_dashboard';
+        $templateSlug = $isFromPublicForm ? 'create_ticket_new_customer' : 'create_ticket_dashboard';
+        
+        // Check if this notification type is enabled
+        if (empty($notifications[$notificationKey])) {
+            Log::info("TicketCreatedNotification: {$notificationKey} notification is disabled");
+            return;
         }
+        
+        // Get the recipient user
+        $user = $this->getRecipientUser($ticket, $data);
+        
+        if (!$user) {
+            Log::warning('TicketCreatedNotification: No recipient user found', ['ticket_id' => $ticket->id]);
+            return;
+        }
+        
+        // Get the email template
+        $template = EmailTemplate::where('slug', $templateSlug)->first();
+        
+        if (!$template) {
+            Log::warning("TicketCreatedNotification: Email template '{$templateSlug}' not found");
+            return;
+        }
+        
+        // Send the notification email
+        $this->sendMailWithTemplate($template, $ticket, $user, $data['password'] ?? '');
     }
 
-    private function sendMailWithTemplate($template, $ticket, $user, $password = '')
+    /**
+     * Get the recipient user for the notification.
+     */
+    private function getRecipientUser(Ticket $ticket, array $data): ?User
     {
-        $template = $template->html;
-        $variables = [
-            'name' => $user->first_name,
-            'email' => $user->email,
-            'password' => $password ?? '',
-            'url' => config('app.url').'/dashboard/tickets/'.$ticket->uid,
-            'sender_name' => 'Manager',
-            'ticket_id' => $ticket->id,
-            'uid' => $ticket->uid,
-            'subject' => $ticket->subject,
-            'type' => $ticket->ticketType ? $ticket->ticketType->name: '',
-        ];
-        if (preg_match_all("/{(.*?)}/", $template, $m)) {
-            foreach ($m[1] as $i => $varname) {
-                $template = str_replace($m[0][$i], sprintf($variables[$m[1][$i]], $varname), $template);
+        // First, try to use the ticket's user
+        if ($ticket->user) {
+            return $ticket->user;
+        }
+        
+        // If no ticket user, try to get from the default recipient setting
+        $defaultRecipientSetting = Settings::where('name', 'default_recipient')->first();
+        
+        if ($defaultRecipientSetting && $defaultRecipientSetting->value) {
+            $user = User::find($defaultRecipientSetting->value);
+            if ($user) {
+                return $user;
             }
         }
-        $messageData = ['html' => $template, 'subject' => '[Ticket#'.$ticket->uid.'] - '.$ticket->subject];
-        if(config('queue.enable')){
-            Mail::to($user->email)->queue(new SendMailFromHtml($messageData));
-        }else{
-            Mail::to($user->email)->send(new SendMailFromHtml($messageData));
+        
+        // Fallback to first user in the system
+        return User::orderBy('id')->first();
+    }
+
+    /**
+     * Send email using the template with variable substitution.
+     */
+    private function sendMailWithTemplate(EmailTemplate $template, Ticket $ticket, User $user, string $password = ''): void
+    {
+        $html = $template->html;
+        
+        // Build variables for template substitution
+        $variables = [
+            'name' => $user->name ?? '',
+            'email' => $user->email ?? '',
+            'password' => $password,
+            'url' => config('app.url') . '/dashboard/tickets/' . $ticket->uid,
+            'sender_name' => config('mail.from.name', 'Support'),
+            'ticket_id' => (string) $ticket->id,
+            'uid' => $ticket->uid ?? '',
+            'subject' => $ticket->subject ?? '',
+            'type' => $ticket->ticketType?->name ?? '',
+        ];
+        
+        // Replace template variables
+        if (preg_match_all("/{(.*?)}/", $html, $matches)) {
+            foreach ($matches[1] as $index => $varname) {
+                $value = $variables[$varname] ?? '';
+                $html = str_replace($matches[0][$index], $value, $html);
+            }
+        }
+        
+        // Build message data
+        $messageData = [
+            'html' => $html,
+            'subject' => '[Ticket#' . $ticket->uid . '] - ' . $ticket->subject,
+        ];
+        
+        // Send email (queued or immediate based on config)
+        try {
+            if (config('queue.enable')) {
+                Mail::to($user->email)->queue(new SendMailFromHtml($messageData));
+            } else {
+                Mail::to($user->email)->send(new SendMailFromHtml($messageData));
+            }
+            
+            Log::info('TicketCreatedNotification: Email sent successfully', [
+                'ticket_id' => $ticket->id,
+                'recipient' => $user->email,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('TicketCreatedNotification: Failed to send email', [
+                'ticket_id' => $ticket->id,
+                'recipient' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

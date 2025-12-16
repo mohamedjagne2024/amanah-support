@@ -29,12 +29,20 @@ type TypeOption = {
   name: string;
 };
 
+type CategoryOption = {
+  id: number;
+  name: string;
+  parent_id: number | null;
+};
+
 type CreateTicketPageProps = {
   customers: CustomerOption[];
   usersExceptCustomers: CustomerOption[];
   departments: DepartmentOption[];
   priorities: PriorityOption[];
   types: TypeOption[];
+  all_categories: CategoryOption[];
+  requiredFields: string[];
 };
 
 export default function Create({
@@ -43,6 +51,8 @@ export default function Create({
   departments,
   priorities,
   types,
+  all_categories,
+  requiredFields = [],
 }: CreateTicketPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -53,6 +63,8 @@ export default function Create({
     type_id: '',
     department_id: '',
     assigned_to: '',
+    category_id: '',
+    sub_category_id: '',
     subject: '',
     details: '',
     files: [] as File[],
@@ -101,6 +113,28 @@ export default function Create({
         value: type.id,
       })),
     [types]
+  );
+
+  const categoryOptions = useMemo<SelectOption[]>(
+    () =>
+      all_categories
+        .filter((cat) => cat.parent_id === null)
+        .map((category) => ({
+          label: category.name,
+          value: category.id,
+        })),
+    [all_categories]
+  );
+
+  const subCategoryOptions = useMemo<SelectOption[]>(
+    () =>
+      all_categories
+        .filter((cat) => cat.parent_id === Number(data.category_id))
+        .map((subCategory) => ({
+          label: subCategory.name,
+          value: subCategory.id,
+        })),
+    [all_categories, data.category_id]
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,7 +219,11 @@ export default function Create({
                   <div>
                     <input type="hidden" name="priority_id" value={data.priority_id} />
                     <Combobox
-                      label="Priority"
+                      label={
+                        <>
+                          Priority{requiredFields.includes('priority') && <span className="text-danger">*</span>}
+                        </>
+                      }
                       options={priorityOptions}
                       value={
                         priorityOptions.find(
@@ -206,7 +244,11 @@ export default function Create({
                   <div>
                     <input type="hidden" name="type_id" value={data.type_id} />
                     <Combobox
-                      label="Type"
+                      label={
+                        <>
+                          Type{requiredFields.includes('ticket_type') && <span className="text-danger">*</span>}
+                        </>
+                      }
                       options={typeOptions}
                       value={
                         typeOptions.find(
@@ -230,7 +272,11 @@ export default function Create({
                   <div>
                     <input type="hidden" name="department_id" value={data.department_id} />
                     <Combobox
-                      label="Department"
+                      label={
+                        <>
+                          Department{requiredFields.includes('department') && <span className="text-danger">*</span>}
+                        </>
+                      }
                       options={departmentOptions}
                       value={
                         departmentOptions.find(
@@ -251,7 +297,11 @@ export default function Create({
                   <div>
                     <input type="hidden" name="assigned_to" value={data.assigned_to} />
                     <Combobox
-                      label="Assigned to"
+                      label={
+                        <>
+                          Assigned to{requiredFields.includes('assigned_to') && <span className="text-danger">*</span>}
+                        </>
+                      }
                       options={assigneeOptions}
                       value={
                         assigneeOptions.find(
@@ -266,6 +316,64 @@ export default function Create({
                       isClearable
                       isSearchable
                       error={errors.assigned_to}
+                    />
+                  </div>
+                </div>
+
+                {/* Third 2-Column Grid: Category, Sub-category */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <input type="hidden" name="category_id" value={data.category_id} />
+                    <Combobox
+                      label={
+                        <>
+                          Category{requiredFields.includes('category') && <span className="text-danger">*</span>}
+                        </>
+                      }
+                      options={categoryOptions}
+                      value={
+                        categoryOptions.find(
+                          (opt) => String(opt.value) === data.category_id
+                        ) || null
+                      }
+                      onChange={(option) => {
+                        const newCategoryId = option?.value?.toString() || '';
+                        setData((prev) => ({
+                          ...prev,
+                          category_id: newCategoryId,
+                          sub_category_id: '', // Clear sub-category when category changes
+                        }));
+                      }}
+                      placeholder="Select a category"
+                      disabled={processing}
+                      isClearable
+                      isSearchable
+                      error={errors.category_id}
+                    />
+                  </div>
+
+                  <div>
+                    <input type="hidden" name="sub_category_id" value={data.sub_category_id} />
+                    <Combobox
+                      label={
+                        <>
+                          Sub-category{requiredFields.includes('sub_category') && <span className="text-danger">*</span>}
+                        </>
+                      }
+                      options={subCategoryOptions}
+                      value={
+                        subCategoryOptions.find(
+                          (opt) => String(opt.value) === data.sub_category_id
+                        ) || null
+                      }
+                      onChange={(option) =>
+                        setData('sub_category_id', option?.value?.toString() || '')
+                      }
+                      placeholder={data.category_id ? "Select a sub-category" : "Select category first"}
+                      disabled={processing || !data.category_id}
+                      isClearable
+                      isSearchable
+                      error={errors.sub_category_id}
                     />
                   </div>
                 </div>

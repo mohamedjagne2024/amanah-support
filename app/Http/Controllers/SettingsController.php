@@ -54,6 +54,23 @@ final class SettingsController extends Controller
                 'required_ticket_fields' => isset($settings['required_ticket_fields']) 
                     ? json_decode($settings['required_ticket_fields'], true) ?? []
                     : [],
+                'email_notifications' => isset($settings['email_notifications']) 
+                    ? json_decode($settings['email_notifications'], true) ?? [
+                        'ticket_by_customer' => false,
+                        'ticket_from_dashboard' => false,
+                        'first_comment' => false,
+                        'user_assigned' => false,
+                        'status_priority_changes' => false,
+                        'new_user' => false,
+                    ]
+                    : [
+                        'ticket_by_customer' => false,
+                        'ticket_from_dashboard' => false,
+                        'first_comment' => false,
+                        'user_assigned' => false,
+                        'status_priority_changes' => false,
+                        'new_user' => false,
+                    ],
             ],
             'currencies' => $currencies,
         ]);

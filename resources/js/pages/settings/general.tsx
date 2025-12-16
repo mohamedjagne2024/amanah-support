@@ -11,6 +11,15 @@ type CurrencyOption = {
   value: string;
 };
 
+type EmailNotificationsType = {
+  ticket_by_customer: boolean;
+  ticket_from_dashboard: boolean;
+  first_comment: boolean;
+  user_assigned: boolean;
+  status_priority_changes: boolean;
+  new_user: boolean;
+};
+
 type GeneralSettingsPageProps = {
   settings: {
     timezone: string | null;
@@ -22,6 +31,7 @@ type GeneralSettingsPageProps = {
     decimal_places: number | null;
     currency: string | null;
     required_ticket_fields: string[];
+    email_notifications: EmailNotificationsType;
   };
   currencies: CurrencyOption[];
   users: Array<{
@@ -42,6 +52,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
     decimal_sep: string;
     decimal_places: string;
     required_ticket_fields: string[];
+    email_notifications: EmailNotificationsType;
   }>({
     timezone: settings.timezone ?? '',
     date_format: settings.date_format ?? '',
@@ -52,7 +63,55 @@ export default function General({ settings, currencies, users }: GeneralSettings
     decimal_sep: settings.decimal_sep ?? '',
     decimal_places: settings.decimal_places !== null ? String(settings.decimal_places) : '',
     required_ticket_fields: settings.required_ticket_fields ?? [],
+    email_notifications: settings.email_notifications ?? {
+      ticket_by_customer: false,
+      ticket_from_dashboard: false,
+      first_comment: false,
+      user_assigned: false,
+      status_priority_changes: false,
+      new_user: false,
+    },
   });
+
+  const handleEmailNotificationToggle = (key: keyof EmailNotificationsType) => {
+    setData('email_notifications', {
+      ...data.email_notifications,
+      [key]: !data.email_notifications[key],
+    });
+  };
+
+  const emailNotificationItems = [
+    {
+      key: 'ticket_by_customer' as keyof EmailNotificationsType,
+      title: 'Create ticket by new customer',
+      description: 'Configure email notification settings',
+    },
+    {
+      key: 'ticket_from_dashboard' as keyof EmailNotificationsType,
+      title: 'Create ticket from dashboard',
+      description: 'Configure email notification settings',
+    },
+    {
+      key: 'first_comment' as keyof EmailNotificationsType,
+      title: 'Notification for the first comment',
+      description: 'Configure email notification settings',
+    },
+    {
+      key: 'user_assigned' as keyof EmailNotificationsType,
+      title: 'User got assigned for a task',
+      description: 'Configure email notification settings',
+    },
+    {
+      key: 'status_priority_changes' as keyof EmailNotificationsType,
+      title: 'Status or priority changes',
+      description: 'Configure email notification settings',
+    },
+    {
+      key: 'new_user' as keyof EmailNotificationsType,
+      title: 'Create a new user',
+      description: 'Configure email notification settings',
+    },
+  ];
 
   const timezoneOptions = useMemo<SelectOption[]>(() => [
     { label: "UTC", value: "UTC" },
@@ -396,6 +455,75 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     Assigned To
                   </label>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Email Notifications Section */}
+          <div className="card">
+            <div className="card-header">
+              <h6 className="card-title">Email Notifications</h6>
+              <p className="text-sm text-default-600 mt-1">
+                Configure email notification for different actions
+              </p>
+            </div>
+            <div className="card-body">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {emailNotificationItems.map((item) => (
+                  <div
+                    key={item.key}
+                    className="flex items-center justify-between p-4 bg-default-50 rounded-lg border border-default-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Toggle Switch */}
+                      <button
+                        type="button"
+                        onClick={() => handleEmailNotificationToggle(item.key)}
+                        disabled={processing}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                          data.email_notifications[item.key]
+                            ? 'bg-primary'
+                            : 'bg-default-200'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            data.email_notifications[item.key]
+                              ? 'translate-x-5'
+                              : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                      <div>
+                        <p className="text-sm font-medium text-default-900">
+                          {item.title}
+                        </p>
+                        <p className="text-xs text-default-500">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Status Indicator */}
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`size-2 rounded-full ${
+                          data.email_notifications[item.key]
+                            ? 'bg-green-500'
+                            : 'bg-default-300'
+                        }`}
+                      />
+                      <span
+                        className={`text-xs font-medium ${
+                          data.email_notifications[item.key]
+                            ? 'text-green-600'
+                            : 'text-default-500'
+                        }`}
+                      >
+                        {data.email_notifications[item.key] ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

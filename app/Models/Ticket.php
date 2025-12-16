@@ -13,6 +13,36 @@ class Ticket extends Model
 {
     use HasFactory, MultiTenant;
 
+    protected $fillable = [
+        'uid',
+        'subject',
+        'status_id',
+        'open',
+        'due',
+        'close',
+        'response',
+        'user_id',
+        'contact_id',
+        'client_type',
+        'email',
+        'created_user_id',
+        'location',
+        'priority_id',
+        'department_id',
+        'category_id',
+        'sub_category_id',
+        'assigned_to',
+        'type_id',
+        'details',
+        'review_id',
+        'source',
+        'tags',
+        'impact_level',
+        'urgency_level',
+        'estimated_hours',
+        'actual_hours',
+    ];
+
     protected static function booted()
     {
 

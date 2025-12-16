@@ -62,7 +62,11 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('tickets.store')
             ->middleware('auth');
 
-        $router->get('tickets/{uid}', [TicketsController::class, 'edit'])
+        $router->get('tickets/{uid}', [TicketsController::class, 'show'])
+            ->name('tickets.show')
+            ->middleware('auth');
+
+        $router->get('tickets/{uid}/edit', [TicketsController::class, 'edit'])
             ->name('tickets.edit')
             ->middleware('auth');
 
@@ -80,6 +84,10 @@ $router->prefix('/')->group(static function (Router $router): void {
 
         $router->post('ticket/comment', [TicketsController::class, 'newComment'])
             ->name('ticket.comment')
+            ->middleware('auth');
+
+        $router->post('tickets/{ticket}/comment', [TicketsController::class, 'addComment'])
+            ->name('tickets.comment')
             ->middleware('auth');
 
         /** Contact Functions */

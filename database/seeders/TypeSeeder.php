@@ -17,10 +17,12 @@ class TypeSeeder extends Seeder
     {
         DB::table('types')->truncate();
         Type::factory()->createMany([
-            ['name' => 'Service'],
-            ['name' => 'Hardware'],
-            ['name' => 'Software'],
-            ['name' => 'Issues'],
+            ['id' => 1, 'name' => 'Inquiry'],
+            ['id' => 2, 'name' => 'Request'],
+            ['id' => 3, 'name' => 'Complaint'],
+            ['id' => 4, 'name' => 'Claim Follow-up'],
+            ['id' => 5, 'name' => 'Urgent'],
+            ['id' => 6, 'name' => 'Feedback'],
         ]);
     }
 }
