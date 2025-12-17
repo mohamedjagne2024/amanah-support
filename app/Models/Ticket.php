@@ -57,7 +57,6 @@ class Ticket extends Model
             $ticket->comments()->delete();
             $ticket->attachments()->delete();
             $ticket->reviews()->delete();
-            $ticket->ticketEntries()->delete();
         });
     }
 

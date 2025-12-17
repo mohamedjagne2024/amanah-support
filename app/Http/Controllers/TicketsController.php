@@ -20,6 +20,7 @@ use App\Models\TicketEntry;
 use App\Models\TicketField;
 use App\Models\Type;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Response;
@@ -52,13 +53,19 @@ class TicketsController extends Controller
         if($type == 'un_assigned'){
             $whereAll[] = ['assigned_to', '=', null];
         }elseif ($type == 'open'){
-            $opened_status = Status::where('slug', 'like', '%closed%')->first();
-            $whereAll[] = ['status_id', '!=', $opened_status->id];
+            $whereAll[] = ['close', '=', null];
         }elseif ($type == 'new'){
             $whereAll[] = ['created_at', '>=', date('Y-m-d').' 00:00:00'];
         }
 
         $ticketQuery = Ticket::where($whereAll);
+
+        // Handle high priority filter
+        if($type == 'high_priority'){
+            $ticketQuery->whereHas('priority', function($query) {
+                $query->where('name', 'like', '%high%');
+            });
+        }
 
         if (Request::has(['field', 'direction'])) {
             if(Request::input('field') == 'tech'){
@@ -113,10 +120,10 @@ class TicketsController extends Controller
                         'sub_category' => $ticket->subCategory ? $ticket->subCategory->name: null,
                         'rating' => $ticket->review ? $ticket->review->rating : 0,
                         'status' => $ticket->status ? $ticket->status->name : null,
-                        'due' => $ticket->due,
+                        'due' => Carbon::parse($ticket->due)->format(Settings::get('date_format')),
                         'assigned_to' => $ticket->assignedTo? $ticket->assignedTo->name : null,
-                        'created_at' => $ticket->created_at,
-                        'updated_at' => $ticket->updated_at,
+                        'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
+                        'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format')),
                     ];
                 }),
         ]);
@@ -471,8 +478,8 @@ class TicketsController extends Controller
                 'user' => $ticket->user?$ticket->user->name: 'N/A',
                 'contact' => $ticket->contact?: null,
                 'priority_id' => $ticket->priority_id,
-                'created_at' => $ticket->created_at,
-                'updated_at' => $ticket->updated_at,
+                'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
+                'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format')),
                 'priority' => $ticket->priority? $ticket->priority->name : 'N/A',
                 'status_id' => $ticket->status_id,
                 'status' => $ticket->status?: null,
@@ -490,7 +497,7 @@ class TicketsController extends Controller
                 'type' => $ticket->ticketType ? $ticket->ticketType->name : 'N/A',
                 'subject' => $ticket->subject,
                 'details' => $ticket->details,
-                'due' => $ticket->due,
+                'due' => Carbon::parse($ticket->due)->format(Settings::get('date_format')),
                 'source' => $ticket->source ?? 'Email',
                 'tags' => $ticket->tags ?? '',
                 'impact_level' => $ticket->impact_level ?? 'Medium',
@@ -629,10 +636,45 @@ class TicketsController extends Controller
         return response()->json($newComment);
     }
 
-    public function destroy(Ticket $ticket)
+    public function destroy($uid)
     {
+        $user = Auth()->user();
+        $byCustomer = null;
+        $byAssign = null;
+        
+        if ($user->hasRole('customer')) {
+            $byCustomer = $user['id'];
+        } elseif ($user->hasRole('manager')) {
+            $byAssign = $user['id'];
+        } else {
+            $byAssign = Request::input('assigned_to');
+        }
+        
+        $ticket = Ticket::byCustomer($byCustomer)
+            ->byAssign($byAssign)
+            ->where(function ($query) use ($uid) {
+                $query->where('uid', $uid);
+                $query->orWhere('id', $uid);
+            })->first();
+        
+        if (empty($ticket)) {
+            abort(404);
+        }
+        
         $ticket->delete();
         return Redirect::route('tickets')->with('success', 'Ticket deleted.');
+    }
+
+    public function bulkDelete()
+    {
+        $validated = Request::validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'integer', 'exists:tickets,id'],
+        ]);
+
+        Ticket::whereIn('id', $validated['ids'])->delete();
+
+        return Redirect::back()->with('success', count($validated['ids']) . ' ticket(s) deleted successfully.');
     }
 
     public function restore(Ticket $ticket){

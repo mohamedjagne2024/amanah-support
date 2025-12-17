@@ -31,8 +31,7 @@ class Conversation extends Model {
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->whereHas('creator', function($q) use($search){
-                $q->where('first_name', 'like', '%'.$search.'%')
-                ->orWhere('last_name', 'like', '%'.$search.'%')
+                $q->where('name', 'like', '%'.$search.'%')
                 ->orWhere('email', 'like', '%'.$search.'%');
             });
         });

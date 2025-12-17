@@ -2,10 +2,11 @@ import { Link, router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { DataTable, Badge, type DataTableBulkAction, type DataTableFilter, type DataTableRowAction } from "@/components/DataTable";
+import { ConfirmDialog } from "@/components/Dialog";
 import AppLayout from "@/layouts/app-layout";
 import PageMeta from "@/components/PageMeta";
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { Download, Upload, FileSpreadsheet, ChevronDown, CircleCheck, AlertTriangle, UserX, Clock, Star, Ticket } from "lucide-react";
+import { Download, Upload, FileSpreadsheet, ChevronDown, CircleCheck, AlertTriangle, UserX, Clock, Ticket } from "lucide-react";
 import PageHeader from "@/components/Pageheader";
 
 type Priority = {
@@ -66,6 +67,7 @@ type TicketFilters = {
   type_id?: string | null;
   category_id?: string | null;
   department_id?: string | null;
+  type?: string | null;
   sort_by?: string | null;
   sort_direction?: 'asc' | 'desc' | null;
 };
@@ -113,13 +115,37 @@ export default function Index({
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
+  
+  // Delete dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingTicket, setDeletingTicket] = useState<TicketRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Bulk delete dialog state
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [bulkDeleteIds, setBulkDeleteIds] = useState<number[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Derive active quick filter from actual filter values
+  const activeQuickFilter = useMemo(() => {
+    // Check if type filter is set
+    if (filters?.type === 'open') {
+      return 'open';
+    }
+    if (filters?.type === 'high_priority') {
+      return 'highPriority';
+    }
+    if (filters?.type === 'un_assigned') {
+      return 'unassigned';
+    }
+    if (filters?.type === 'new') {
+      return 'recent';
+    }
+    return null;
+  }, [filters?.type]);
 
   // Compute quick filter counts
   const quickFilterCounts = useMemo(() => {
-    const openStatus = statuses.find(s => s.name.toLowerCase().includes('open'));
-    const highPriority = priorities.find(p => p.name.toLowerCase().includes('high'));
-    
     return {
       open: safeTickets.data.filter(t => t.status?.toLowerCase().includes('open')).length,
       highPriority: safeTickets.data.filter(t => t.priority?.toLowerCase().includes('high')).length,
@@ -131,8 +157,61 @@ export default function Index({
         return createdDate >= today;
       }).length,
     };
-  }, [safeTickets.data, statuses, priorities]);
+  }, [safeTickets.data]);
 
+  // Delete handlers
+  const handleOpenDeleteDialog = useCallback((ticket: TicketRecord) => {
+    setDeletingTicket(ticket);
+    setIsDeleteDialogOpen(true);
+  }, []);
+
+  const handleCloseDeleteDialog = useCallback(() => {
+    setIsDeleteDialogOpen(false);
+    setTimeout(() => {
+      setDeletingTicket(null);
+    }, 300);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deletingTicket) return;
+
+    router.delete(`/tickets/${deletingTicket.uid}`, {
+      preserveScroll: true,
+      onStart: () => setIsDeleting(true),
+      onFinish: () => {
+        setIsDeleting(false);
+        handleCloseDeleteDialog();
+      }
+    });
+  }, [deletingTicket, handleCloseDeleteDialog]);
+
+  // Bulk delete handlers
+  const handleOpenBulkDeleteDialog = useCallback((ids: number[]) => {
+    setBulkDeleteIds(ids);
+    setIsBulkDeleteDialogOpen(true);
+  }, []);
+
+  const handleCloseBulkDeleteDialog = useCallback(() => {
+    setIsBulkDeleteDialogOpen(false);
+    setTimeout(() => {
+      setBulkDeleteIds([]);
+    }, 300);
+  }, []);
+
+  const handleConfirmBulkDelete = useCallback(() => {
+    if (bulkDeleteIds.length === 0) return;
+
+    router.post('/tickets/bulk-delete', {
+      ids: bulkDeleteIds
+    }, {
+      preserveScroll: true,
+      onStart: () => setIsBulkDeleting(true),
+      onFinish: () => {
+        setIsBulkDeleting(false);
+        handleCloseBulkDeleteDialog();
+      }
+    });
+  }, [bulkDeleteIds, handleCloseBulkDeleteDialog]);
 
   // Helper functions for badge colors
   const getPriorityVariant = (priority: string | null): 'danger' | 'warning' | 'info' | 'success' | 'default' => {
@@ -454,15 +533,31 @@ export default function Index({
       {
         label: "Edit",
         value: "edit",
-        href: (ticket) => `/tickets/${ticket.uid}`
+        href: (ticket) => `/tickets/${ticket.uid}/edit`
+      },
+      {
+        label: "Delete",
+        value: "delete",
+        onSelect: (ticket) => {
+          handleOpenDeleteDialog(ticket);
+        }
       }
     ],
-    []
+    [handleOpenDeleteDialog]
   );
 
   const bulkActions = useMemo<DataTableBulkAction<TicketRecord>[]>(
-    () => [],
-    []
+    () => [
+      {
+        label: "Delete selection",
+        value: "delete",
+        onSelect: async (selectedRows) => {
+          const ids = selectedRows.map(row => row.id);
+          handleOpenBulkDeleteDialog(ids);
+        }
+      }
+    ],
+    [handleOpenBulkDeleteDialog]
   );
 
   return (
@@ -475,11 +570,12 @@ export default function Index({
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
-                const openStatus = statuses.find(s => s.name.toLowerCase().includes('open'));
-                if (openStatus) {
-                  submitQuery({ status_id: String(openStatus.id), page: 1 });
-                  setActiveQuickFilter('open');
-                }
+                router.get('/tickets', { type: 'open', page: 1 }, {
+                  preserveScroll: true,
+                  preserveState: true,
+                  onStart: () => setIsLoading(true),
+                  onFinish: () => setIsLoading(false)
+                });
               }}
               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 activeQuickFilter === 'open'
@@ -498,11 +594,12 @@ export default function Index({
 
             <button
               onClick={() => {
-                const highPriority = priorities.find(p => p.name.toLowerCase().includes('high'));
-                if (highPriority) {
-                  submitQuery({ priority_id: String(highPriority.id), page: 1 });
-                  setActiveQuickFilter('highPriority');
-                }
+                router.get('/tickets', { type: 'high_priority', page: 1 }, {
+                  preserveScroll: true,
+                  preserveState: true,
+                  onStart: () => setIsLoading(true),
+                  onFinish: () => setIsLoading(false)
+                });
               }}
               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 activeQuickFilter === 'highPriority'
@@ -521,14 +618,12 @@ export default function Index({
 
             <button
               onClick={() => {
-                // This requires backend support for filtering unassigned
                 router.get('/tickets', { type: 'un_assigned', page: 1 }, {
                   preserveScroll: true,
                   preserveState: true,
                   onStart: () => setIsLoading(true),
                   onFinish: () => setIsLoading(false)
                 });
-                setActiveQuickFilter('unassigned');
               }}
               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 activeQuickFilter === 'unassigned'
@@ -547,14 +642,12 @@ export default function Index({
 
             <button
               onClick={() => {
-                // This requires backend support for filtering recent (created today)
                 router.get('/tickets', { type: 'new', page: 1 }, {
                   preserveScroll: true,
                   preserveState: true,
                   onStart: () => setIsLoading(true),
                   onFinish: () => setIsLoading(false)
                 });
-                setActiveQuickFilter('recent');
               }}
               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 activeQuickFilter === 'recent'
@@ -580,7 +673,6 @@ export default function Index({
                     onStart: () => setIsLoading(true),
                     onFinish: () => setIsLoading(false)
                   });
-                  setActiveQuickFilter(null);
                 }}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-default-100 text-default-600 hover:bg-default-200 transition-all"
               >
@@ -690,6 +782,42 @@ export default function Index({
           />
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseDeleteDialog();
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Delete"
+        description={`Are you sure you want to delete the ticket "${deletingTicket?.subject}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        isLoading={isDeleting}
+        size="lg"
+      />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseBulkDeleteDialog();
+          }
+        }}
+        onConfirm={handleConfirmBulkDelete}
+        title="Confirm Bulk Delete"
+        description={`Are you sure you want to delete ${bulkDeleteIds.length} ticket(s)? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        isLoading={isBulkDeleting}
+        size="lg"
+      />
     </AppLayout>
   );
 }

@@ -12,7 +12,6 @@ import {
   Edit3, 
   Tag,
   ChevronRight,
-  Home,
   Ticket
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
@@ -21,6 +20,7 @@ import InputError from '@/components/input-error';
 import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
 import DatePicker from '@/components/DatePicker';
+import { ConfirmDialog } from '@/components/Dialog';
 
 type CustomerOption = {
   id: number;
@@ -151,6 +151,10 @@ export default function Edit({
   const [removedFileIds, setRemovedFileIds] = useState<number[]>([]);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  
+  // Delete dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, setData, post, processing, errors, reset } = useForm({
     user_id: ticket.user_id?.toString() || '',
@@ -311,27 +315,6 @@ export default function Edit({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return 'a few seconds ago';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    return formatDate(dateString);
-  };
-
   const handleDetailsChange = (content: string) => {
     setData('details', content);
   };
@@ -365,9 +348,21 @@ export default function Edit({
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
-      router.delete(`/tickets/${ticket.id}`);
-    }
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+  };
+
+  const handleConfirmDelete = () => {
+    router.delete(`/tickets/${ticket.uid}`, {
+      onStart: () => setIsDeleting(true),
+      onFinish: () => {
+        setIsDeleting(false);
+        handleCloseDeleteDialog();
+      }
+    });
   };
 
   const getPriorityBadgeClass = (priority: string) => {
@@ -433,12 +428,12 @@ export default function Edit({
               <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-default-500">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="size-4" />
-                  <span>Created {formatDate(ticket.created_at)}</span>
+                  <span>Created {ticket.created_at}</span>
                 </div>
                 {ticket.due && (
                   <div className="flex items-center gap-1.5">
                     <Clock className="size-4" />
-                    <span>Due {formatDate(ticket.due)}</span>
+                    <span>Due {ticket.due}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -447,7 +442,7 @@ export default function Edit({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Clock className="size-4" />
-                  <span>Last modified {formatTimeAgo(ticket.updated_at)}</span>
+                  <span>Last modified {ticket.updated_at}</span>
                 </div>
               </div>
 
@@ -673,7 +668,7 @@ export default function Edit({
                                 {comment.user?.name || 'Unknown User'}
                               </span>
                               <span className="text-xs text-default-500">
-                                {formatTimeAgo(comment.created_at)}
+                                {comment.created_at}
                               </span>
                             </div>
                             <div 
@@ -948,7 +943,6 @@ export default function Edit({
                       disabled={processing}
                       options={{
                         enableTime: true,
-                        dateFormat: 'd/m/Y H:i',
                       }}
                     />
                   </div>
@@ -1129,6 +1123,24 @@ export default function Edit({
           </div>
         </form>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseDeleteDialog();
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Delete"
+        description={`Are you sure you want to delete the ticket "${ticket.subject}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        isLoading={isDeleting}
+        size="lg"
+      />
     </AppLayout>
   );
 }

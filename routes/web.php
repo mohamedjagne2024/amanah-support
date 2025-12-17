@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Laravel\Fortify\Features;
 use Illuminate\Routing\Router;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
@@ -62,6 +61,10 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('tickets.store')
             ->middleware('auth');
 
+        $router->post('tickets/bulk-delete', [TicketsController::class, 'bulkDelete'])
+            ->name('tickets.bulk-delete')
+            ->middleware('auth');
+
         $router->get('tickets/{uid}', [TicketsController::class, 'show'])
             ->name('tickets.show')
             ->middleware('auth');
@@ -74,7 +77,7 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('tickets.update')
             ->middleware('auth');
 
-        $router->delete('tickets/{ticket}', [TicketsController::class, 'destroy'])
+        $router->delete('tickets/{uid}', [TicketsController::class, 'destroy'])
             ->name('tickets.destroy')
             ->middleware('auth');
 
