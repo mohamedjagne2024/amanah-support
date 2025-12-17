@@ -6,9 +6,9 @@ use App\Events\ContactMessage;
 use App\Models\Faq;
 use App\Models\FrontPage;
 use App\Models\KnowledgeBase;
-use App\Models\Setting;
 use App\Models\Settings;
 use App\Models\Type;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
@@ -54,8 +54,8 @@ class PageController extends Controller {
                         'title' => $post->title,
                         'type' => $post->type?$post->type->name:'',
                         'typeId' => $post->type_id,
-                        'updated_at' => $post->updated_at,
-                        'created_at' => $post->created_at,
+                        'updated_at' => Carbon::parse($post->updated_at)->format(Settings::where('name', 'date_format')->first()->value),
+                        'created_at' => Carbon::parse($post->created_at)->format(Settings::where('name', 'date_format')->first()->value),
                         'details' => strip_tags($post->details),
                     ];
                 } ),
@@ -84,20 +84,20 @@ class PageController extends Controller {
     }
 
     public function kbDetails(KnowledgeBase $kb_item){
-        return Inertia::render('Landing/KnowledgeBase/Details', [
+        return Inertia::render('landing/kb-details', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
             'title' => $kb_item->title,
             'kb' => [
                 'id' => $kb_item->id,
                 'title' => $kb_item->title,
-                'type' => $kb_item->type?$kb_item->type->name:'',
+                'type' => $kb_item->type ? $kb_item->type->name : '',
                 'typeId' => $kb_item->type_id,
                 'updated_at' => $kb_item->updated_at,
                 'created_at' => $kb_item->created_at,
                 'details' => $kb_item->details,
             ],
-            'types' => Type::whereHas('kb')->get(),
-            'random_kb' => KnowledgeBase::where( 'id', '!=', $kb_item->id )
+            'types' => Type::whereHas('kb')->get()->map->only('id', 'name'),
+            'random_kb' => KnowledgeBase::where('id', '!=', $kb_item->id)
                 ->inRandomOrder()
                 ->limit(5)
                 ->get()

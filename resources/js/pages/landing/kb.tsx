@@ -59,14 +59,6 @@ export default function KnowledgeBase({ title, kb, types = [], filters, footer }
     return items;
   }, [kbData, searchQuery, selectedType]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   const truncateText = (text: string, maxLength: number = 150) => {
     const stripped = text.replace(/<[^>]*>/g, '');
     if (stripped.length <= maxLength) return stripped;
@@ -176,7 +168,7 @@ export default function KnowledgeBase({ title, kb, types = [], filters, footer }
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-xs text-default-400">
                           <Calendar className="size-3.5" />
-                          {formatDate(article.created_at)}
+                          {article.created_at}
                         </div>
                         <span className="inline-flex items-center gap-1 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                           Read more <ChevronRight className="size-4" />

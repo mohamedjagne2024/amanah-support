@@ -41,18 +41,30 @@ class ContactMessageNotification
 
 
         if(!empty($contactPage)){
-            $contactHtml = json_decode($contactPage->html, true);
-            if(isset($contactHtml['contact_recipient']) && !empty($contactHtml['contact_recipient'])){
+            // html is already cast to array in the FrontPage model
+            $contactHtml = $contactPage->html;
+            
+            // Check for recipient email in contact_form settings first
+            if(isset($contactHtml['contact_form']['recipient_email']) && !empty($contactHtml['contact_form']['recipient_email'])){
+                $res_email = $contactHtml['contact_form']['recipient_email'];
+            }
+            // Fallback to email address field
+            elseif(isset($contactHtml['email']['address']) && !empty($contactHtml['email']['address'])){
+                $res_email = $contactHtml['email']['address'];
+            }
+            // Legacy field names for backwards compatibility
+            elseif(isset($contactHtml['contact_recipient']) && !empty($contactHtml['contact_recipient'])){
                 $res_email = $contactHtml['contact_recipient'];
-            }elseif(!empty($contactHtml['email'])){
+            }
+            elseif(isset($contactHtml['email']) && is_string($contactHtml['email']) && !empty($contactHtml['email'])){
                 $res_email = $contactHtml['email'];
-            }else{
+            }
+            else{
                 $res_email = $res_user->email;
             }
 
-
             $appName = Settings::where('name', 'app_name')->first();
-            $res_name = $appName?$appName->name:'Amanah Support';
+            $res_name = $appName ? $appName->value : 'Amanah Support';
         }else{
             $res_email = $res_user->email;
             $res_name = $res_user->name;

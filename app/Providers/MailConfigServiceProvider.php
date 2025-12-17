@@ -34,11 +34,7 @@ final class MailConfigServiceProvider extends ServiceProvider
         try {
             $this->configureMailFromDatabase();
         } catch (\Exception $e) {
-            // Silently fail if there's an issue loading settings
-            // This allows the app to still function with .env settings as fallback
-            \Log::warning('MailConfigServiceProvider: Failed to load mail settings from database', [
-                'error' => $e->getMessage(),
-            ]);
+
         }
     }
 
@@ -97,15 +93,17 @@ final class MailConfigServiceProvider extends ServiceProvider
             Config::set('mail.mailers.smtp.password', $settings['smtp_password']);
         }
 
-        // Configure encryption/security
+        // Configure encryption/security (Laravel 11+ uses 'scheme' instead of 'encryption')
+        // Valid schemes: 'smtp' (for STARTTLS/TLS on port 587), 'smtps' (for SSL on port 465)
         if (!empty($settings['smtp_security']) && $settings['smtp_security'] !== 'none') {
-            Config::set('mail.mailers.smtp.encryption', $settings['smtp_security']);
-            // For TLS, set the scheme
-            if ($settings['smtp_security'] === 'tls') {
-                Config::set('mail.mailers.smtp.scheme', 'tls');
+            if ($settings['smtp_security'] === 'ssl' || $settings['smtp_security'] === 'smtps') {
+                Config::set('mail.mailers.smtp.scheme', 'smtps');
+            } else {
+                Config::set('mail.mailers.smtp.scheme', 'smtp');
             }
         } else {
-            Config::set('mail.mailers.smtp.encryption', null);
+            // No encryption
+            Config::set('mail.mailers.smtp.scheme', 'smtp');
         }
 
         // Configure "From" address

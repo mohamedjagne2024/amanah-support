@@ -34,6 +34,50 @@ use App\Http\Controllers\PageController;
 
 $router->prefix('/')->group(static function (Router $router): void {
     $router->get('/', [HomeController::class, 'index'])->name('home');
+
+    /** Site Front-Landing */
+        // Note: The '/' route is defined at the top of the file, outside this auth middleware group
+
+        $router->get('terms', [PageController::class, 'terms'])
+            ->name('terms_service');
+
+        $router->get('privacy', [PageController::class, 'privacy'])
+            ->name('privacy');
+
+        $router->get('contact', [PageController::class, 'contact'])
+            ->name('contact');
+
+        $router->get('services', [PageController::class, 'services'])
+            ->name('services');
+
+        $router->post('contact', [PageController::class, 'contactPost'])
+            ->name('contact.send');
+
+        $router->get('faq', [PageController::class, 'faq'])
+            ->name('faq');
+
+        $router->get('team', [PageController::class, 'team'])
+            ->name('team');
+
+        $router->get('kb', [PageController::class, 'kb'])
+            ->name('kb');
+
+        $router->get('kb/{kb_item}', [PageController::class, 'kbDetails'])
+            ->name('kb.details');
+
+        $router->get('blog/type/{typeId}', [PageController::class, 'blogByType'])
+            ->name('blog.by_type');
+
+        $router->get('kb/type/{typeId}', [PageController::class, 'kbByType'])
+            ->name('kb.by_type');
+
+        $router->get('blog', [PageController::class, 'blog'])
+            ->name('blog');
+
+        $router->get('blog/{post}', [PageController::class, 'blogDetails'])
+            ->name('blog.details');
+
+            
     $router->middleware('auth')->group(static function (Router $router): void {
         $router->get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -485,48 +529,6 @@ $router->prefix('/')->group(static function (Router $router): void {
 
         $router->post('chat/sendMessage', [ChatController::class, 'sendPublicMessage'])
             ->name('chat.send_message');
-
-        /** Site Front-Landing */
-        // Note: The '/' route is defined at the top of the file, outside this auth middleware group
-
-        $router->get('terms', [PageController::class, 'terms'])
-            ->name('terms_service');
-
-        $router->get('privacy', [PageController::class, 'privacy'])
-            ->name('privacy');
-
-        $router->get('contact', [PageController::class, 'contact'])
-            ->name('contact');
-
-        $router->get('services', [PageController::class, 'services'])
-            ->name('services');
-
-        $router->post('contact', [PageController::class, 'contactPost'])
-            ->name('contact.send');
-
-        $router->get('faq', [PageController::class, 'faq'])
-            ->name('faq');
-
-        $router->get('team', [PageController::class, 'team'])
-            ->name('team');
-
-        $router->get('kb', [PageController::class, 'kb'])
-            ->name('kb');
-
-        $router->get('kb/{kb_item}', [PageController::class, 'kbDetails'])
-            ->name('kb.details');
-
-        $router->get('blog/type/{typeId}', [PageController::class, 'blogByType'])
-            ->name('blog.by_type');
-
-        $router->get('kb/type/{typeId}', [PageController::class, 'kbByType'])
-            ->name('kb.by_type');
-
-        $router->get('blog', [PageController::class, 'blog'])
-            ->name('blog');
-
-        $router->get('blog/{post}', [PageController::class, 'blogDetails'])
-            ->name('blog.details');
 
         // IMAP Custom
         $router->get('/cron/imap/direct/run', [ImapController::class, 'run'])->name('cron.imap.run');

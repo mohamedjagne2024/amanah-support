@@ -18,7 +18,7 @@ class EmailTemplateSeeder extends Seeder
     public function run(){
 
         DB::table('email_templates')->truncate();
-        $logo = URL::to('/images/logo.png');
+        $logo = URL::to('/assets/images/logo-dark.png');
         $html = File::get(public_path('html/email_templates/create_ticket_new_customer.html'));
         EmailTemplate::factory()->create([
             'name' => 'Create ticket by new customer',
