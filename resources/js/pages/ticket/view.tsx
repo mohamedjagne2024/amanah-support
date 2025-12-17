@@ -7,18 +7,19 @@ import {
   Clock, 
   Edit3, 
   Tag,
-  ChevronRight,
   Ticket,
   Copy,
   Check,
   MessageSquare,
   Plus,
   Star,
-  ExternalLink,
   UserPlus,
+  Eye,
+  Download,
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
+import Breadcrumb from '@/components/BreadCrumb';
 import TextEditor from '@/components/TextEditor';
 
 type AttachmentType = {
@@ -26,6 +27,7 @@ type AttachmentType = {
   name: string;
   size: number;
   path: string;
+  url: string;
   user?: {
     id: number;
     name: string;
@@ -83,6 +85,10 @@ type TicketData = {
   actual_hours: string;
   files: File[];
   comment_access: string;
+  created_by: {
+    id: number;
+    name: string;
+  } | null;
 };
 
 type ViewTicketPageProps = {
@@ -114,19 +120,19 @@ export default function View({
   const activityLog = useMemo(() => {
     const activities: Array<{
       id: number;
-      type: 'system' | 'comment' | 'assignment';
+      type: 'system' | 'comment' | 'assignment' | 'created';
       message: string;
       created_at: string;
       user?: { id: number; name: string };
     }> = [];
     
-    // Add ticket created event
+    // Add ticket created event with the user who created it
     activities.push({
       id: 0,
-      type: 'system',
+      type: 'created',
       message: 'Ticket created',
       created_at: ticket.created_at,
-      user: undefined,
+      user: ticket.created_by || undefined,
     });
 
     // Add assignment event if assigned
@@ -238,16 +244,13 @@ export default function View({
     <AppLayout>
       <PageMeta title={`Ticket #${ticket.uid} - ${ticket.subject}`} />
       <main className="pb-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm mb-4">
-          <Link href="/tickets" className="text-default-500 hover:text-primary flex items-center gap-1">
-            Tickets
-          </Link>
-          <ChevronRight className="size-4 text-default-400" />
-          <span className="text-default-700 font-medium">
-            #{ticket.uid}
-          </span>
-        </nav>
+        <Breadcrumb 
+          items={[
+            { label: 'Tickets', href: '/tickets' },
+            { label: `#${ticket.uid}` }
+          ]}
+          className="mb-4"
+        />
 
         {/* Page Header */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
@@ -393,6 +396,10 @@ export default function View({
                         <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
                           {activity.user.name.charAt(0)}
                         </div>
+                      ) : activity.type === 'created' && activity.user ? (
+                        <div className="size-8 rounded-full bg-success/10 flex items-center justify-center text-success font-semibold text-sm uppercase shrink-0">
+                          {activity.user.name.charAt(0)}
+                        </div>
                       ) : activity.type === 'assignment' ? (
                         <div className="size-8 rounded-full bg-info/10 flex items-center justify-center shrink-0">
                           <UserPlus className="size-4 text-info" />
@@ -419,6 +426,20 @@ export default function View({
                               dangerouslySetInnerHTML={{ __html: activity.message }}
                             />
                           </>
+                        ) : activity.type === 'created' ? (
+                          <div className="flex items-center justify-between py-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-default-900 text-sm">
+                                {activity.message}
+                              </span>
+                              <span className="px-2 py-0.5 rounded text-xs bg-success/10 text-success font-medium">
+                                Created
+                              </span>
+                            </div>
+                            <span className="text-xs text-default-400">
+                              by {activity.user?.name || 'Unknown'} • {formatDateTime(activity.created_at)}
+                            </span>
+                          </div>
                         ) : (
                           <div className="flex items-center justify-between py-1">
                             <div className="flex items-center gap-2">
@@ -635,14 +656,11 @@ export default function View({
                 <div className="card-body">
                   <div className="space-y-2">
                     {attachments.map((attachment) => (
-                      <a
+                      <div
                         key={attachment.id}
-                        href={`/storage/${attachment.path}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 rounded-lg bg-default-50 hover:bg-default-100 transition-colors group"
+                        className="flex items-center gap-3 p-3 rounded-lg bg-default-50 border border-default-200"
                       >
-                        <FileText className="size-5 text-default-500 group-hover:text-primary" />
+                        <FileText className="size-5 text-default-500" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-default-900 truncate">
                             {attachment.name}
@@ -651,8 +669,24 @@ export default function View({
                             {formatFileSize(attachment.size)}
                           </p>
                         </div>
-                        <ExternalLink className="size-4 text-default-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </a>
+                        <a
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 size-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center hover:bg-primary hover:text-white transition-colors"
+                          title="View"
+                        >
+                          <Eye className="size-4" />
+                        </a>
+                        <a
+                          href={attachment.url}
+                          download={attachment.name}
+                          className="flex-shrink-0 size-8 bg-success/10 text-success rounded-lg flex items-center justify-center hover:bg-success hover:text-white transition-colors"
+                          title="Download"
+                        >
+                          <Download className="size-4" />
+                        </a>
+                      </div>
                     ))}
                   </div>
                 </div>

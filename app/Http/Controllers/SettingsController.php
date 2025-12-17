@@ -71,6 +71,11 @@ final class SettingsController extends Controller
                         'status_priority_changes' => false,
                         'new_user' => false,
                     ],
+                'gcs_project_id' => $settings['gcs_project_id'] ?? null,
+                'gcs_key_file_path' => $settings['gcs_key_file_path'] ?? null,
+                'gcs_bucket' => $settings['gcs_bucket'] ?? null,
+                'gcs_path_prefix' => $settings['gcs_path_prefix'] ?? null,
+                'gcs_api_uri' => $settings['gcs_api_uri'] ?? null,
             ],
             'currencies' => $currencies,
         ]);

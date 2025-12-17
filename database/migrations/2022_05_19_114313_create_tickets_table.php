@@ -39,8 +39,6 @@ class CreateTicketsTable extends Migration
             $table->integer('review_id')->nullable();
             $table->string('source', 50)->nullable()->default('Email');
             $table->string('tags', 500)->nullable();
-            $table->string('impact_level', 50)->nullable()->default('Medium');
-            $table->string('urgency_level', 50)->nullable()->default('Medium');
             $table->decimal('estimated_hours', 8, 2)->nullable();
             $table->decimal('actual_hours', 8, 2)->nullable();
             $table->timestamps();

@@ -7,6 +7,7 @@ import InputError from '@/components/input-error';
 import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
 import PageHeader from '@/components/Pageheader';
+import Breadcrumb from '@/components/BreadCrumb';
 
 
 type CustomerOption = {
@@ -181,6 +182,13 @@ export default function Create({
     <AppLayout>
       <PageMeta title="Create Ticket" />
       <main className="max-w-5xl">
+        <Breadcrumb
+          items={[
+            { label: 'Tickets', href: '/tickets' },
+            { label: 'Create Ticket' }
+          ]}
+          className="mb-4"
+        />
         <PageHeader title="Create Ticket" />
         <form onSubmit={handleSubmit} className="space-y-6 pb-8">
           <div className="card">

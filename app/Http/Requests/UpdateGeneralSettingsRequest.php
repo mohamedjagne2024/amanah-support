@@ -42,6 +42,11 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'email_notifications.user_assigned' => ['nullable', 'boolean'],
             'email_notifications.status_priority_changes' => ['nullable', 'boolean'],
             'email_notifications.new_user' => ['nullable', 'boolean'],
+            'gcs_project_id' => ['nullable', 'string', 'max:255'],
+            'gcs_key_file_path' => ['nullable', 'string', 'max:500'],
+            'gcs_bucket' => ['nullable', 'string', 'max:255'],
+            'gcs_path_prefix' => ['nullable', 'string', 'max:255'],
+            'gcs_api_uri' => ['nullable', 'string', 'max:255', 'url'],
         ];
     }
 

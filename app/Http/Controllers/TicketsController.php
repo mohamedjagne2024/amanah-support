@@ -27,9 +27,12 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Traits\HasGoogleCloudStorage;
 
 class TicketsController extends Controller
 {
+    use HasGoogleCloudStorage;
+
     public function index(){
         $byCustomer = null;
         $byAssign = null;
@@ -127,6 +130,27 @@ class TicketsController extends Controller
                     ];
                 }),
         ]);
+    }
+
+    private function handleAttachmentUploads(Ticket $ticket, array $files): void
+    {
+        // Configure GCS from database settings
+        $this->configureGCS();
+
+        foreach ($files as $file) {            
+            // Upload to Google Cloud Storage
+            $path = $this->uploadToStorage($file, 'tickets');
+
+            if($path){
+                Attachment::create([
+                    'ticket_id' => $ticket->id,
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'path' => $path,
+                    'user_id' => auth()->user()->id ?? null,
+                ]);
+            }
+        }
     }
 
     public function csvImport()
@@ -292,10 +316,7 @@ class TicketsController extends Controller
 
         if(Request::hasFile('files')){
             $files = Request::file('files');
-            foreach($files as $file){
-                $file_path = $file->store('tickets', ['disk' => 'file_uploads']);
-                Attachment::create(['ticket_id' => $ticket->id, 'name' => $file->getClientOriginalName(), 'size' => $file->getSize(), 'path' => $file_path]);
-            }
+            $this->handleAttachmentUploads($ticket, $files);
         }
 
         $custom_inputs = Request::input('custom_field');
@@ -344,12 +365,28 @@ class TicketsController extends Controller
             abort(404);
         }
 
+        // Get attachments with signed URLs
+        $attachments = Attachment::orderBy('name')
+            ->with('user')
+            ->where('ticket_id', $ticket->id ?? null)
+            ->get()
+            ->map(function ($attachment) {
+                return [
+                    'id' => $attachment->id,
+                    'name' => $attachment->name,
+                    'size' => $attachment->size,
+                    'path' => $attachment->path,
+                    'url' => $this->getStorageUrl($attachment->path),
+                    'user' => $attachment->user ? [
+                        'id' => $attachment->user->id,
+                        'name' => $attachment->user->name,
+                    ] : null,
+                ];
+            });
+
         return Inertia::render('ticket/view', [
             'title' => $ticket->subject ? '#TKT-'.$ticket->uid.' '.$ticket->subject : '',
-            'attachments' => Attachment::orderBy('name')
-                ->with('user')
-                ->where('ticket_id', $ticket->id ?? null)
-                ->get(),
+            'attachments' => $attachments,
             'comments' => Comment::orderBy('created_at', 'asc')
                 ->with('user')
                 ->where('ticket_id', $ticket->id ?? null)
@@ -390,6 +427,10 @@ class TicketsController extends Controller
                 'actual_hours' => $ticket->actual_hours ?? '',
                 'files' => [],
                 'comment_access' => 'read',
+                'created_by' => $ticket->createdBy ? [
+                    'id' => $ticket->createdBy->id,
+                    'name' => $ticket->createdBy->name,
+                ] : null,
             ],
         ]);
     }
@@ -463,7 +504,23 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'attachments' => Attachment::orderBy('name')->with('user')->where('ticket_id', $ticket->id??null)->get(),
+            'attachments' => Attachment::orderBy('name')
+                ->with('user')
+                ->where('ticket_id', $ticket->id ?? null)
+                ->get()
+                ->map(function ($attachment) {
+                    return [
+                        'id' => $attachment->id,
+                        'name' => $attachment->name,
+                        'size' => $attachment->size,
+                        'path' => $attachment->path,
+                        'url' => $this->getStorageUrl($attachment->path),
+                        'user' => $attachment->user ? [
+                            'id' => $attachment->user->id,
+                            'name' => $attachment->user->name,
+                        ] : null,
+                    ];
+                }),
             'comments' => Comment::orderBy('created_at', 'asc')->with('user')->where('ticket_id', $ticket->id??null)->get(),
             'types' => Type::orderBy('name')
                 ->get()
@@ -534,8 +591,6 @@ class TicketsController extends Controller
             'details' => ['required'],
             'source' => ['nullable', 'string', 'max:50'],
             'tags' => ['nullable', 'string', 'max:500'],
-            'impact_level' => ['nullable', 'string', 'max:50'],
-            'urgency_level' => ['nullable', 'string', 'max:50'],
             'estimated_hours' => ['nullable', 'numeric', 'min:0'],
             'actual_hours' => ['nullable', 'numeric', 'min:0'],
         ]);
@@ -597,19 +652,15 @@ class TicketsController extends Controller
         if(!empty($removedFiles)){
             $attachments = Attachment::where('ticket_id', $ticket->id)->whereIn('id', $removedFiles)->get();
             foreach ($attachments as $attachment){
-                if(Storage::disk('file_uploads')->exists($attachment->path)){
-                    Storage::disk('file_uploads')->delete($attachment->path);
-                }
+                // Delete from Google Cloud Storage
+                $this->deleteFromStorage($attachment->path);
                 $attachment->delete();
             }
         }
 
         if(Request::hasFile('files')){
             $files = Request::file('files');
-            foreach($files as $file){
-                $file_path = $file->store('tickets', ['disk' => 'file_uploads']);
-                Attachment::create(['ticket_id' => $ticket->id, 'user_id' => $user['id'], 'name' => $file->getClientOriginalName(), 'size' => $file->getSize(), 'path' => $file_path]);
-            }
+            $this->handleAttachmentUploads($ticket, $files);
         }
 
         return Redirect::route('tickets.edit', $ticket->uid)->with('success', 'Ticket updated.');

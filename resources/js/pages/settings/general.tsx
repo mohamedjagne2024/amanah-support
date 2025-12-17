@@ -32,6 +32,11 @@ type GeneralSettingsPageProps = {
     currency: string | null;
     required_ticket_fields: string[];
     email_notifications: EmailNotificationsType;
+    gcs_project_id: string | null;
+    gcs_key_file_path: string | null;
+    gcs_bucket: string | null;
+    gcs_path_prefix: string | null;
+    gcs_api_uri: string | null;
   };
   currencies: CurrencyOption[];
   users: Array<{
@@ -53,6 +58,11 @@ export default function General({ settings, currencies, users }: GeneralSettings
     decimal_places: string;
     required_ticket_fields: string[];
     email_notifications: EmailNotificationsType;
+    gcs_project_id: string;
+    gcs_key_file_path: string;
+    gcs_bucket: string;
+    gcs_path_prefix: string;
+    gcs_api_uri: string;
   }>({
     timezone: settings.timezone ?? '',
     date_format: settings.date_format ?? '',
@@ -71,6 +81,11 @@ export default function General({ settings, currencies, users }: GeneralSettings
       status_priority_changes: false,
       new_user: false,
     },
+    gcs_project_id: settings.gcs_project_id ?? '',
+    gcs_key_file_path: settings.gcs_key_file_path ?? '',
+    gcs_bucket: settings.gcs_bucket ?? '',
+    gcs_path_prefix: settings.gcs_path_prefix ?? '',
+    gcs_api_uri: settings.gcs_api_uri ?? '',
   });
 
   const handleEmailNotificationToggle = (key: keyof EmailNotificationsType) => {
@@ -524,6 +539,106 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Google Cloud Storage Configuration Section */}
+          <div className="card">
+            <div className="card-header">
+              <h6 className="card-title">Google Cloud Storage Configuration</h6>
+              <p className="text-sm text-default-600 mt-1">
+                Configure Google Cloud Storage settings for file uploads
+              </p>
+            </div>
+            <div className="card-body">
+              <div className="space-y-6">
+                {/* GCS Project ID & GCS Bucket - 2 Column Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block font-medium text-default-900 text-sm mb-2">
+                      GCS Project ID
+                    </label>
+                    <input
+                      type="text"
+                      name="gcs_project_id"
+                      value={data.gcs_project_id}
+                      onChange={(e) => setData('gcs_project_id', e.target.value)}
+                      placeholder="Enter GCS project ID"
+                      disabled={processing}
+                      className="form-input"
+                    />
+                    <InputError message={errors.gcs_project_id} />
+                  </div>
+
+                  <div>
+                    <label className="block font-medium text-default-900 text-sm mb-2">
+                      GCS Bucket
+                    </label>
+                    <input
+                      type="text"
+                      name="gcs_bucket"
+                      value={data.gcs_bucket}
+                      onChange={(e) => setData('gcs_bucket', e.target.value)}
+                      placeholder="Enter GCS bucket name"
+                      disabled={processing}
+                      className="form-input"
+                    />
+                    <InputError message={errors.gcs_bucket} />
+                  </div>
+                </div>
+
+                {/* GCS Key File Path - Full Width */}
+                <div>
+                  <label className="block font-medium text-default-900 text-sm mb-2">
+                    GCS Key File Path
+                  </label>
+                  <input
+                    type="text"
+                    name="gcs_key_file_path"
+                    value={data.gcs_key_file_path}
+                    onChange={(e) => setData('gcs_key_file_path', e.target.value)}
+                    placeholder="Enter path to GCS key file (e.g., /path/to/service-account.json)"
+                    disabled={processing}
+                    className="form-input"
+                  />
+                  <InputError message={errors.gcs_key_file_path} />
+                </div>
+
+                {/* GCS Path Prefix & GCS API URI - 2 Column Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block font-medium text-default-900 text-sm mb-2">
+                      GCS Path Prefix
+                    </label>
+                    <input
+                      type="text"
+                      name="gcs_path_prefix"
+                      value={data.gcs_path_prefix}
+                      onChange={(e) => setData('gcs_path_prefix', e.target.value)}
+                      placeholder="Enter path prefix (optional)"
+                      disabled={processing}
+                      className="form-input"
+                    />
+                    <InputError message={errors.gcs_path_prefix} />
+                  </div>
+
+                  <div>
+                    <label className="block font-medium text-default-900 text-sm mb-2">
+                      GCS API URI
+                    </label>
+                    <input
+                      type="url"
+                      name="gcs_api_uri"
+                      value={data.gcs_api_uri}
+                      onChange={(e) => setData('gcs_api_uri', e.target.value)}
+                      placeholder="Enter GCS API URI (optional)"
+                      disabled={processing}
+                      className="form-input"
+                    />
+                    <InputError message={errors.gcs_api_uri} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

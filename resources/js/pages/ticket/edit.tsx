@@ -11,8 +11,8 @@ import {
   Trash2, 
   Edit3, 
   Tag,
-  ChevronRight,
-  Ticket
+  Ticket,
+  Download
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
@@ -21,6 +21,7 @@ import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
 import DatePicker from '@/components/DatePicker';
 import { ConfirmDialog } from '@/components/Dialog';
+import Breadcrumb from '@/components/BreadCrumb';
 
 type CustomerOption = {
   id: number;
@@ -58,6 +59,7 @@ type AttachmentType = {
   name: string;
   size: number;
   path: string;
+  url: string;
   user?: {
     id: number;
     name: string;
@@ -344,6 +346,13 @@ export default function Edit({
     e.preventDefault();
     post(`/tickets/${ticket.id}`, {
       forceFormData: true,
+      onSuccess: () => {
+        // Clear the local attachments state after successful upload
+        setNewAttachments([]);
+        setRemovedFileIds([]);
+        setData('files', []);
+        setData('removedFiles', []);
+      },
     });
   };
 
@@ -392,18 +401,15 @@ export default function Edit({
     <AppLayout>
       <PageMeta title={`Edit Ticket #${ticket.uid}`} />
       <main className="pb-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm mb-4">
-          <Link href="/tickets" className="text-default-500 hover:text-primary flex items-center gap-1">
-            Tickets
-          </Link>
-          <ChevronRight className="size-4 text-default-400" />
-          <Link href={`/tickets/${ticket.uid}`} className="text-default-500 hover:text-primary">
-            #{ticket.uid}
-          </Link>
-          <ChevronRight className="size-4 text-default-400" />
-          <span className="text-default-700 font-medium">Edit</span>
-        </nav>
+        
+        <Breadcrumb 
+          items={[
+            { label: 'Tickets', href: '/tickets' },
+            { label: `#${ticket.uid}`, href: `/tickets/${ticket.uid}` },
+            { label: 'Edit' }
+          ]}
+          className="mb-4"
+        />
 
         {/* Page Header */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
@@ -598,10 +604,28 @@ export default function Edit({
                               {attachment.user && ` • Uploaded by ${attachment.user.name}`}
                             </p>
                           </div>
+                          <a
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-shrink-0 size-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center hover:bg-primary hover:text-white transition-colors"
+                            title="View"
+                          >
+                            <Eye className="size-4" />
+                          </a>
+                          <a
+                            href={attachment.url}
+                            download={attachment.name}
+                            className="flex-shrink-0 size-8 bg-success/10 text-success rounded-lg flex items-center justify-center hover:bg-success hover:text-white transition-colors"
+                            title="Download"
+                          >
+                            <Download className="size-4" />
+                          </a>
                           <button
                             type="button"
                             onClick={() => handleRemoveExistingFile(attachment.id)}
-                            className="flex-shrink-0 size-6 bg-danger text-white rounded flex items-center justify-center hover:bg-danger/80 transition-colors"
+                            className="flex-shrink-0 size-8 bg-danger/10 text-danger rounded-lg flex items-center justify-center hover:bg-danger hover:text-white transition-colors"
+                            title="Remove"
                           >
                             <X className="size-4" />
                           </button>

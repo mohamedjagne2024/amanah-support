@@ -8,6 +8,7 @@ import PageMeta from "@/components/PageMeta";
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Download, Upload, FileSpreadsheet, ChevronDown, CircleCheck, AlertTriangle, UserX, Clock, Ticket } from "lucide-react";
 import PageHeader from "@/components/Pageheader";
+import Breadcrumb from "@/components/BreadCrumb";
 
 type Priority = {
   id: number;
@@ -564,6 +565,13 @@ export default function Index({
     <AppLayout>
       <PageMeta title={title} />
       <main>
+        <Breadcrumb 
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Tickets', href: '/tickets' },
+          ]}
+          className="mb-4"
+        />
         <PageHeader title={title} count={safeTickets.total} icon={Ticket} subtitle="Manage and track support tickets efficiently" />
         <div className="space-y-6">
           {/* Quick Filter Badges */}
