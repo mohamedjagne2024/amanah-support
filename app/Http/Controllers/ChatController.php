@@ -3,27 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Events\NewPublicChatMessage;
-use App\Http\Middleware\RedirectIfCustomer;
-use App\Http\Middleware\RedirectIfNotParmitted;
-use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Participant;
-use App\Models\Role;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use App\Events\NewChatMessage;
+use Spatie\Permission\Models\Role;
 
 class ChatController extends Controller {
 
     public function index(){
-        $this->middleware(RedirectIfCustomer::class);
-        return Inertia::render('Chat/Index', [
+        return Inertia::render('chat/index', [
             'title' => 'Chat',
             'filters' => Request::all(['search']),
             'chat' => null,
@@ -52,27 +45,30 @@ class ChatController extends Controller {
 
     public function init(){
         $request = Request::all();
-        $existingContact = Contact::where('email', $request['email'])->first();
+        $existingCustomer = User::where('email', $request['email'])->first();
         $newConversation = null;
-        if(empty($existingContact)){
-            $existingContact = new Contact;
-            $existingContact->first_name = $request['firstName'];
-            $existingContact->last_name = $request['lastName'];
-            $existingContact->email = $request['email'];
-            $existingContact->save();
+        if(empty($existingCustomer)){
+            $existingCustomer = new User;
+            $existingCustomer->name = $request['name'];
+            $existingCustomer->email = $request['email'];
+            $existingCustomer->password = bcrypt('password');
+            $existingCustomer->assignRole('customer');
+            $existingCustomer->save();
         }else{
-            $newConversation = Conversation::where('contact_id', $existingContact->id)->first();
+            $newConversation = Conversation::where('customer_id', $existingCustomer->id)->first();
         }
 
         if(empty($newConversation)){
             $newConversation = new Conversation;
-            $newConversation->contact_id = $existingContact->id;
-            $initialMessage = "Hey ". $existingContact->first_name. ', welcome to HelpDesk support - how can I help?';
+            $newConversation->customer_id = $existingCustomer->id;
+            $initialMessage = "Hey ". $existingCustomer->name. ', welcome to Amanah Support - how can I help?';
             $newConversation->title = $initialMessage;
             $newConversation->save();
 
-            $adminRole = Role::where('slug', 'admin')->first();
-            $user = User::where('role_id','!=', $adminRole ? $adminRole->id : 0)->orderBy('role_id', 'ASC')->first();
+            $adminRole = Role::where('name', 'admin')->first();
+            $user = User::whereHas('roles', function ($query) use ($adminRole) {
+                $query->where('roles.id', '!=', $adminRole ? $adminRole->id : 0);
+            })->orderBy('role_id', 'ASC')->first();
             $message = new Message;
             $message->conversation_id = $newConversation->id;
             if(!empty($user)){
@@ -85,11 +81,11 @@ class ChatController extends Controller {
             if(!empty($user)){
                 $participant->user_id = $user->id;
             }
-            $participant->contact_id = $existingContact->id;
+            $participant->customer_id = $existingCustomer->id;
             $participant->conversation_id = $newConversation->id;
             $participant->save();
 
-            $message->creator = $existingContact;
+            $message->creator = $existingCustomer;
             broadcast(new NewChatMessage($message))->toOthers();
         }
 
@@ -106,8 +102,7 @@ class ChatController extends Controller {
         return response()->json($conversation);
     }
 
-    public function getConversation($id, $contact_id){
-        $this->middleware(RedirectIfCustomer::class);
+    public function getConversation($id, $customer_id){
         $conversation = Conversation::with([
             'creator',
             'messages' => function($q){
@@ -118,13 +113,13 @@ class ChatController extends Controller {
             'participant.user'
         ])->where(function ($query) use ($id) {
             $query->where('id', $id)->orWhere('slug', $id);
-        })->where('contact_id', $contact_id)->first();
+        })->where('customer_id', $customer_id)->first();
         return response()->json($conversation);
     }
 
     public function chat($id){
         Message::where(['conversation_id' => $id, 'is_read' => 0])->update(array('is_read' => 1));
-        return Inertia::render('Chat/Index', [
+        return Inertia::render('chat/index', [
             'title' => 'Chat',
             'filters' => Request::all(['search']),
             'chat' => Conversation::with([
@@ -132,11 +127,10 @@ class ChatController extends Controller {
                 'messages' => function($q){
                     $q->orderBy('updated_at', 'asc');
                 },
-                'messages.contact',
                 'messages.user',
                 'messages.attachments',
                 'participant',
-                'participant.creator'
+                'participant.user'
             ])
                 ->where(function ($query) use ($id) {
                     $query->where('id', $id)->orWhere('slug', $id);
@@ -165,18 +159,17 @@ class ChatController extends Controller {
     }
 
     public function emptyChat(){
-        return Inertia::render('Chat/Index', [
+        return Inertia::render('chat/index', [
             'filters' => Request::all('search'),
             'chat' => Conversation::with([
                 'creator',
                 'messages' => function($q){
                     $q->orderBy('updated_at', 'asc');
                 },
-                'messages.contact',
                 'messages.user',
                 'messages.attachments',
                 'participant',
-                'participant.creator'
+                'participant.user'
             ])->first(),
             'conversations' => Conversation::orderBy('updated_at', 'DESC')
                 ->filter(Request::only('search'))
@@ -201,7 +194,6 @@ class ChatController extends Controller {
     }
 
     public function newMessage(){
-        $this->middleware(RedirectIfCustomer::class);
         $request = Request::all();
         $newMessage = new Message;
         if(isset($request['user_id'])){
@@ -220,30 +212,24 @@ class ChatController extends Controller {
     public function sendPublicMessage(){
         $request = Request::all();
         $newMessage = new Message;
-        if(isset($request['contact_id'])){
-            $newMessage->contact_id = $request['contact_id'];
+        if(isset($request['customer_id'])){
+            $newMessage->customer_id = $request['customer_id'];
         }
         $newMessage->message = $request['message'];
         $newMessage->conversation_id = $request['conversation_id'];
         $newMessage->save();
 
         Conversation::where('id', $newMessage->conversation_id)->update(['title' => $newMessage->message]);
-        $message = Message::with(['contact', 'user'])->where('id', $newMessage->id)->first();
+        $message = Message::with(['customer', 'user'])->where('id', $newMessage->id)->first();
 
         broadcast(new NewChatMessage($message))->toOthers();
 
         return response()->json($message);
     }
 
-    public function create()
-    {
-        $this->middleware(RedirectIfCustomer::class);
-        return Inertia::render('Chat/Create');
-    }
 
     public function store()
     {
-        $this->middleware(RedirectIfCustomer::class);
         Conversation::create(
             Request::validate([
                 'creator' => ['required', 'max:100'],
@@ -251,31 +237,6 @@ class ChatController extends Controller {
         );
 
         return Redirect::route('chat')->with('success', 'Chat created.');
-    }
-
-    public function edit(Conversation $chat)
-    {
-        $this->middleware(RedirectIfCustomer::class);
-        return Inertia::render('Chat/Edit', [
-            'chat' => [
-                'id' => $chat->id,
-                'title' => $chat->title,
-                'creator' => $chat->creator(),
-                'created_at' => $chat->created_at,
-                'updated_at' => $chat->updated_at,
-            ],
-        ]);
-    }
-
-    public function update(Conversation $chat)
-    {
-        $chat->update(
-            Request::validate([
-                'title' => ['nullable', 'max:100']
-            ])
-        );
-
-        return Redirect::back()->with('success', 'Conversation updated.');
     }
 
     public function destroy(Conversation $chat) {

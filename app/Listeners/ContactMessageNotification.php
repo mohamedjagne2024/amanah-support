@@ -6,10 +6,8 @@ use App\Events\ContactMessage;
 use App\Mail\SendMailFromHtml;
 use App\Models\EmailTemplate;
 use App\Models\FrontPage;
-use App\Models\Setting;
+use App\Models\Settings;
 use App\Models\User;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
 
 class ContactMessageNotification
@@ -36,7 +34,9 @@ class ContactMessageNotification
         $name = $data['name'];
         $phone = $data['phone'];
         $message = $data['message'];
-        $res_user = User::where('role_id', 1)->first();
+        $res_user = User::whereHas('roles', function ($query) {
+            $query->where('roles.name', 'admin');
+        })->first();
         $contactPage = FrontPage::where('slug', 'contact')->first();
 
 
@@ -51,11 +51,11 @@ class ContactMessageNotification
             }
 
 
-            $appName = Setting::where('slug', 'app_name')->first();
-            $res_name = $appName?$appName->name:'Pro Schedule';
+            $appName = Settings::where('name', 'app_name')->first();
+            $res_name = $appName?$appName->name:'Amanah Support';
         }else{
             $res_email = $res_user->email;
-            $res_name = $res_user->first_name;
+            $res_name = $res_user->name;
         }
 
         $template = EmailTemplate::where('slug', 'custom_mail')->first();

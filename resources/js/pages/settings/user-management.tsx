@@ -68,6 +68,7 @@ export default function UserManagement({ users, roles, permissions, filters }: U
     password_confirmation: ""
   });
   const [createFormErrors, setCreateFormErrors] = useState<Record<string, string>>({});
+  const [selectedCreateRoles, setSelectedCreateRoles] = useState<string[]>([]);
 
   // Edit drawer handlers
   const handleOpenEditDrawer = useCallback((user: User) => {
@@ -118,6 +119,7 @@ export default function UserManagement({ users, roles, permissions, filters }: U
       password_confirmation: ""
     });
     setCreateFormErrors({});
+    setSelectedCreateRoles([]);
     setIsCreateDrawerOpen(true);
   }, []);
 
@@ -131,13 +133,17 @@ export default function UserManagement({ users, roles, permissions, filters }: U
         password_confirmation: ""
       });
       setCreateFormErrors({});
+      setSelectedCreateRoles([]);
     }, 300);
   }, []);
 
   const handleCreateUser = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
-    router.post("/settings/users", createFormData, {
+    router.post("/settings/users", {
+      ...createFormData,
+      roles: selectedCreateRoles,
+    }, {
       preserveScroll: true,
       onStart: () => setIsCreating(true),
       onSuccess: () => {
@@ -150,7 +156,17 @@ export default function UserManagement({ users, roles, permissions, filters }: U
         setIsCreating(false);
       }
     });
-  }, [createFormData, handleCloseCreateDrawer]);
+  }, [createFormData, selectedCreateRoles, handleCloseCreateDrawer]);
+
+  const handleToggleCreateRole = useCallback((roleName: string) => {
+    setSelectedCreateRoles(prev => {
+      if (prev.includes(roleName)) {
+        return prev.filter(r => r !== roleName);
+      } else {
+        return [...prev, roleName];
+      }
+    });
+  }, []);
 
   const handleToggleRole = useCallback((roleName: string) => {
     setSelectedRoles(prev => {
@@ -389,7 +405,7 @@ export default function UserManagement({ users, roles, permissions, filters }: U
               Roles
             </label>
             <div className="space-y-2">
-              {roles.map((role) => (
+              {roles.filter(role => role.name.toLowerCase() !== 'customer').map((role) => (
                 <label
                   key={role.id}
                   className="flex items-center gap-2 cursor-pointer hover:bg-default-50 p-2 rounded"
@@ -549,6 +565,33 @@ export default function UserManagement({ users, roles, permissions, filters }: U
             />
             {createFormErrors.password_confirmation && (
               <p className="text-danger text-sm mt-1">{createFormErrors.password_confirmation}</p>
+            )}
+          </div>
+
+          {/* Roles Section */}
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-3">
+              Roles
+            </label>
+            <div className="space-y-2 max-h-48 overflow-y-auto border border-default-200 rounded-lg p-3">
+              {roles.filter(role => role.name.toLowerCase() !== 'customer').map((role) => (
+                <label
+                  key={role.id}
+                  className="flex items-center gap-2 cursor-pointer hover:bg-default-50 p-2 rounded"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCreateRoles.includes(role.name)}
+                    onChange={() => handleToggleCreateRole(role.name)}
+                    disabled={isCreating}
+                    className="size-4 rounded border-default-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <span className="text-sm text-default-700">{role.name}</span>
+                </label>
+              ))}
+            </div>
+            {createFormErrors.roles && (
+              <p className="text-danger text-sm mt-1">{createFormErrors.roles}</p>
             )}
           </div>
         </form>

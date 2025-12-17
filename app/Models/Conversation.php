@@ -19,7 +19,7 @@ class Conversation extends Model {
 
     public function creator()
     {
-        return $this->belongsTo(Contact::class, 'contact_id');
+        return $this->belongsTo(User::class, 'customer_id');
     }
 
     public function participant()

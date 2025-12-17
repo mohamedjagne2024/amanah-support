@@ -123,6 +123,7 @@ final class SettingsController extends Controller
         $validSortDirection = in_array($sortDirection, $allowedSortDirections, true) ? $sortDirection : 'asc';
 
         $users = User::with('roles', 'permissions')
+            ->withoutRole('customer')
             ->when($search, static function ($query, string $term): void {
                 $query->where(static function ($subQuery) use ($term): void {
                     $subQuery
@@ -260,6 +261,15 @@ final class SettingsController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
+
+        // Assign roles if provided
+        if (!empty($validated['roles'])) {
+            $user->syncRoles($validated['roles']);
+            
+            // Clear permission cache
+            $user->forgetCachedPermissions();
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        }
 
         return redirect()
             ->route('settings.user-management')

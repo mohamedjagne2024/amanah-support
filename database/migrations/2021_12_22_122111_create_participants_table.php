@@ -18,7 +18,7 @@ class CreateParticipantsTable extends Migration
             $table->increments('id');
             $table->integer('conversation_id')->index();
             $table->integer('user_id')->index()->nullable();
-            $table->integer('contact_id')->index()->nullable();
+            $table->integer('customer_id')->index()->nullable();
             $table->timestamps();
         });
     }

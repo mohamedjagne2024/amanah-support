@@ -223,6 +223,7 @@ class CountrySeeder extends Seeder
             ['name' => 'Slovenia', 'code' => 'SI'],
             ['name' => 'Solomon Islands', 'code' => 'SB'],
             ['name' => 'Somalia', 'code' => 'SO'],
+            ['name' => 'Somaliland', 'code' => 'SL'],
             ['name' => 'South Africa', 'code' => 'ZA'],
             ['name' => 'South Georgia and the South Sandwich Islands', 'code' => 'GS'],
             ['name' => 'South Sudan', 'code' => 'SS'],

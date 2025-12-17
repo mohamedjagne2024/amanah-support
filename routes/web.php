@@ -10,7 +10,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileInformationController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\ImagesController;
 use App\Http\Controllers\ImapController;
 use App\Http\Controllers\OrganizationsController;
@@ -104,34 +103,6 @@ $router->prefix('/')->group(static function (Router $router): void {
 
         $router->delete('notes/{note?}', [NotesController::class, 'delete'])
             ->name('notes.delete')
-            ->middleware('auth');
-
-        $router->get('contacts', [ContactsController::class, 'index'])
-            ->name('contacts')
-            ->middleware('auth');
-
-        $router->get('contacts/create', [ContactsController::class, 'create'])
-            ->name('contacts.create')
-            ->middleware('auth');
-
-        $router->post('contacts', [ContactsController::class, 'store'])
-            ->name('contacts.store')
-            ->middleware('auth');
-
-        $router->get('contacts/{contact}/edit', [ContactsController::class, 'edit'])
-            ->name('contacts.edit')
-            ->middleware('auth');
-
-        $router->put('contacts/{contact}', [ContactsController::class, 'update'])
-            ->name('contacts.update')
-            ->middleware('auth');
-
-        $router->delete('contacts/{contact}', [ContactsController::class, 'destroy'])
-            ->name('contacts.destroy')
-            ->middleware('auth');
-
-        $router->put('contacts/{contact}/restore', [ContactsController::class, 'restore'])
-            ->name('contacts.restore')
             ->middleware('auth');
 
         /** Contact Functions */

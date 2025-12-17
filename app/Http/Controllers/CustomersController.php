@@ -1,163 +1,227 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\RedirectIfCustomer;
-use App\Http\Middleware\RedirectIfNotParmitted;
-use App\Models\City;
 use App\Models\Country;
-use App\Models\Role;
 use App\Models\User;
-use Illuminate\Support\Facades\App;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
-class CustomersController extends Controller {
-    public function __construct(){
-        $this->middleware(RedirectIfNotParmitted::class.':customer');
-    }
-    public function index(){
-        $customerRole = Role::where('slug', 'customer')->first();
-        return Inertia::render('Customers/Index', [
-            'title' => 'Customers',
-            'filters' => Request::all(['search']),
-            'users' => User::orderByName()
-                ->whereRoleId($customerRole ? $customerRole->id : 0)
-                ->filter(Request::all(['search']))
-                ->paginate(10)
-                ->withQueryString()
-                ->through(fn ($user) => [
+final class CustomersController extends Controller
+{
+    /**
+     * Display the customer management page.
+     */
+    public function index(): Response
+    {
+        Gate::authorize('customers.view');
+
+        $search = request()->query('search');
+        $sortBy = request()->string('sort_by')->value();
+        $sortDirection = request()->string('sort_direction')->value();
+        $perPage = request()->integer('per_page', 10);
+
+        $allowedSortColumns = ['name', 'email', 'created_at'];
+        $allowedSortDirections = ['asc', 'desc'];
+
+        $validSortBy = in_array($sortBy, $allowedSortColumns, true) ? $sortBy : 'name';
+        $validSortDirection = in_array($sortDirection, $allowedSortDirections, true) ? $sortDirection : 'asc';
+
+        $customers = User::with('roles')
+            ->role('customer')
+            ->when($search, static function ($query, string $term): void {
+                $query->where(static function ($subQuery) use ($term): void {
+                    $subQuery
+                        ->where('name', 'like', '%'.$term.'%')
+                        ->orWhere('email', 'like', '%'.$term.'%')
+                        ->orWhere('phone', 'like', '%'.$term.'%')
+                        ->orWhere('city', 'like', '%'.$term.'%');
+                });
+            })
+            ->orderBy($validSortBy, $validSortDirection)
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(static function (User $user): array {
+                return [
                     'id' => $user->id,
                     'name' => $user->name,
-                    'city' => $user->city,
-                    'country' => $user->country_id ? $user->country->name: null,
                     'email' => $user->email,
                     'phone' => $user->phone,
-                    'role' => $user->role,
-                    'role_id' => $user->role_id,
+                    'city' => $user->city,
+                    'country' => $user->country?->name,
                     'photo' => $user->photo_path,
-                    'created_at' => $user->created_at,
-                ]),
-        ]);
-    }
+                    'roles' => $user->roles->pluck('name')->toArray(),
+                    'created_at' => $user->created_at?->toDateString(),
+                ];
+            });
 
-    public function create(){
-        return Inertia::render('Customers/Create',[
-            'title' => 'Create a new customer',
-            'countries' => Country::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name')
-        ]);
-    }
+        $roles = Role::all()
+            ->map(static function (Role $role): array {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                ];
+            });
 
-    public function store(){
-        $userRequest = Request::validate([
-            'first_name' => ['required', 'max:50'],
-            'last_name' => ['required', 'max:50'],
-            'phone' => ['nullable', 'max:25'],
-            'email' => ['required', 'max:50', 'email', Rule::unique('users')],
-            'password' => ['nullable'],
-            'city' => ['nullable'],
-            'address' => ['nullable'],
-            'country_id' => ['nullable'],
-            'role_id' => ['nullable'],
-        ]);
-        if(Request::file('photo')){
-            $userRequest['photo_path'] = Request::file('photo')->store('users');
-        }
+        $countries = Country::all()
+            ->map(static function (Country $country): array {
+                return [
+                    'id' => $country->id,
+                    'name' => $country->name,
+                ];
+            });
 
-        $customerRole = Role::where('slug', 'customer')->first();
-        if(empty($userRequest['role_id']) && !empty($customerRole)){
-            $userRequest['role_id'] = $customerRole->id;
-        }
-        User::create($userRequest);
-
-        return Redirect::route('customers')->with('success', 'User created.');
-    }
-
-    public function edit(User $user)
-    {
-        $can_delete = 0;
-        $logged_user = Auth()->user();
-        if($logged_user['role']['slug'] === 'admin'){
-            $can_delete = 1;
-        }
-        return Inertia::render('Customers/Edit', [
-            'title' => $user->name,
-            'user' => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'city' => $user->city,
-                'can_delete' => $can_delete,
-                'address' => $user->address,
-                'country_id' => $user->country_id,
-                'photo_path' => $user->photo_path,
+        return Inertia::render('customer/index', [
+            'title' => 'Customers',
+            'customers' => $customers,
+            'roles' => $roles,
+            'countries' => $countries,
+            'filters' => [
+                'search' => $search,
+                'sort_by' => $sortBy ?: null,
+                'sort_direction' => $sortDirection ?: null,
             ],
-            'countries' => Country::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
-            'cities' => City::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name')
         ]);
     }
 
-    public function update(User $user)
+    /**
+     * Store a newly created customer.
+     */
+    public function store(): RedirectResponse
     {
-        if (config('app.demo')) {
-            return Redirect::back()->with('error', 'Updating customer is not allowed for the live demo.');
-        }
+        Gate::authorize('customers.create');
 
-        Request::validate([
-            'first_name' => ['required', 'max:50'],
-            'last_name' => ['required', 'max:50'],
-            'phone' => ['nullable', 'max:25'],
-            'email' => ['required', 'max:50', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => ['nullable'],
-            'city' => ['nullable'],
-            'address' => ['nullable'],
-            'country_id' => ['nullable'],
-            'role_id' => ['nullable'],
-            'photo' => ['nullable', 'image'],
+        $validated = Request::validate([
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
+            'phone' => ['nullable', 'string', 'max:25'],
+            'email' => ['required', 'string', 'max:50', 'email', Rule::unique('users')],
+            'password' => ['nullable', 'string'],
+            'city' => ['nullable', 'string'],
+            'address' => ['nullable', 'string'],
+            'country_id' => ['nullable', 'exists:countries,id'],
         ]);
 
-        $user->update(Request::only('first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id', 'role_id'));
+        $photoPath = null;
+        if (Request::file('photo')) {
+            $photoPath = '/files/'.Request::file('photo')->store('users', ['disk' => 'file_uploads']);
+        }
 
-        if(Request::file('photo')){
-            if(isset($user->photo_path) && !empty($user->photo_path) && File::exists(public_path($user->photo_path))){
+        /** @var User */
+        $user = User::create([
+            'name' => $validated['first_name'].' '.$validated['last_name'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'country_id' => $validated['country_id'] ?? null,
+            'photo_path' => $photoPath,
+            'password' => !empty($validated['password']) 
+                ? Hash::make($validated['password']) 
+                : Hash::make(Str::random(16)),
+        ]);
+
+        // Assign the customer role
+        $user->assignRole('customer');
+
+        return redirect()
+            ->route('customers')
+            ->with('success', 'Customer created successfully.');
+    }
+
+    /**
+     * Update the specified customer.
+     */
+    public function update(User $user): RedirectResponse
+    {
+        Gate::authorize('customers.edit');
+
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:100'],
+            'phone' => ['nullable', 'string', 'max:25'],
+            'email' => ['required', 'string', 'max:50', 'email', Rule::unique('users')->ignore($user->id)],
+            'password' => ['nullable', 'string'],
+            'city' => ['nullable', 'string'],
+            'address' => ['nullable', 'string'],
+            'country_id' => ['nullable', 'exists:countries,id'],
+            'photo' => ['nullable', 'image'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['string', 'exists:roles,name'],
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'phone' => $validated['phone'] ?? null,
+            'email' => $validated['email'],
+            'city' => $validated['city'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'country_id' => $validated['country_id'] ?? null,
+        ]);
+
+        if (Request::file('photo')) {
+            if (!empty($user->photo_path) && File::exists(public_path($user->photo_path))) {
                 File::delete(public_path($user->photo_path));
             }
-            $user->update(['photo_path' => '/files/'.Request::file('photo')->store('users', ['disk' => 'file_uploads'])]);
+            $user->update([
+                'photo_path' => '/files/'.Request::file('photo')->store('users', ['disk' => 'file_uploads']),
+            ]);
         }
 
-        if (Request::get('password')) {
-            $user->update(['password' => Request::get('password')]);
+        if (!empty($validated['password'])) {
+            $user->update(['password' => Hash::make($validated['password'])]);
         }
 
-        return Redirect::back()->with('success', 'Customer updated.');
+        // Update roles if provided
+        if (isset($validated['roles'])) {
+            $user->syncRoles($validated['roles']);
+            
+            // Clear permission cache
+            $user->forgetCachedPermissions();
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'Customer updated successfully.');
     }
 
-    public function destroy(User $user)
+    /**
+     * Delete the specified customer.
+     */
+    public function destroy(User $user): RedirectResponse
     {
-        if (config('app.demo')) {
-            return Redirect::back()->with('error', 'Deleting customer is not allowed for the live demo.');
-        }
+        Gate::authorize('customers.delete');
 
         $user->delete();
-        return Redirect::route('customers')->with('success', 'Customer deleted.');
+
+        return redirect()
+            ->route('customers')
+            ->with('success', 'Customer deleted successfully.');
     }
-    public function restore(User $user){
+
+    /**
+     * Restore the specified customer.
+     */
+    public function restore(User $user): RedirectResponse
+    {
+        Gate::authorize('customers.edit');
+
         $user->restore();
-        return Redirect::back()->with('success', 'Customer restored!');
+
+        return redirect()
+            ->back()
+            ->with('success', 'Customer restored successfully.');
     }
 }
