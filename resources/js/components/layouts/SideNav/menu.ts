@@ -66,12 +66,12 @@ export const menuItemsData: MenuItemType[] = [
     label: 'Front Pages',
     icon: LucideFileText,
     children: [
-      { key: 'Home', label: 'Home', href: '/front-pages/home'},
-      { key: 'Contact', label: 'Contact', href: '/front-pages/contact'},
-      { key: 'Services', label: 'Services', href: '/front-pages/services'},
-      { key: 'Privacy Policy', label: 'Privacy Policy', href: '/front-pages/privacy-policy'},
-      { key: 'Terms of Services', label: 'Terms of Services', href: '/front-pages/terms-of-services'},
-      { key: 'Footer', label: 'Footer', href: '/front-pages/footer'},
+      { key: 'Home', label: 'Home', href: '/front_pages/home'},
+      { key: 'Contact', label: 'Contact', href: '/front_pages/contact'},
+      { key: 'Services', label: 'Services', href: '/front_pages/services'},
+      { key: 'Privacy Policy', label: 'Privacy Policy', href: '/front_pages/privacy'},
+      { key: 'Terms of Services', label: 'Terms of Services', href: '/front_pages/terms'},
+      { key: 'Footer', label: 'Footer', href: '/front_pages/footer'},
     ],
   },
   {

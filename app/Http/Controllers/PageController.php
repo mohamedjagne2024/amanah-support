@@ -3,45 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Events\ContactMessage;
-use App\Models\Blog;
 use App\Models\Faq;
 use App\Models\FrontPage;
 use App\Models\KnowledgeBase;
 use App\Models\Setting;
+use App\Models\Settings;
 use App\Models\Type;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Jackiedo\DotenvEditor\Facades\DotenvEditor;
 
 class PageController extends Controller {
-
-    public function blog(){
-        if(!$this->isEnabled('blog')){
-            return abort(404);
-        }
-        return Inertia::render('Landing/Blog/Index', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
-            'title' => 'Blogs & News',
-            'posts' => Blog::where('is_active', '1')->orderBy('created_at', 'desc')
-                ->filter(Request::only('search'))
-                ->paginate(6)
-                ->withQueryString()
-                ->through(function ($post) {
-                    return [
-                        'id' => $post->id,
-                        'title' => $post->title,
-                        'type' => $post->type?$post->type->name:'',
-                        'typeId' => $post->type_id,
-                        'image' => $post->image,
-                        'details' => strip_tags($post->details),
-                        'created_at' => $post->created_at,
-                        'updated_at' => $post->updated_at,
-                    ];
-                } ),
-        ]);
-    }
 
     public function kbByType($typeId){
         $type = Type::where('id', $typeId)->first();
@@ -67,69 +39,7 @@ class PageController extends Controller {
         ]);
     }
 
-    public function blogByType($typeId){
-        $type = Type::where('id', $typeId)->first();
-        return Inertia::render('Landing/Blog/ByType', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
-            'title' => 'Blog posts',
-            'type' => $type,
-            'posts' => Blog::where('type_id', $type->id)->orderBy('created_at', 'desc')
-                ->filter(Request::only('search'))
-                ->paginate(9)
-                ->withQueryString()
-                ->through(function ($post) {
-                    return [
-                        'id' => $post->id,
-                        'title' => $post->title,
-                        'isActive' => $post->is_active?'Yes':'No',
-                        'type' => $post->type?$post->type->name:'',
-                        'typeId' => $post->type_id,
-                        'image' => $post->image,
-                        'details' => strip_tags($post->details),
-                        'created_at' => $post->created_at,
-                        'updated_at' => $post->updated_at,
-                    ];
-                } ),
-        ]);
-    }
-
-    public function blogDetails(Blog $post){
-        return Inertia::render('Landing/Blog/Details', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
-            'title' => $post->title,
-            'post' => [
-                'id' => $post->id,
-                'title' => $post->title,
-                'is_active' => $post->is_active,
-                'author_id' => $post->author_id,
-                'author' => $post->author?? null,
-                'type_id' => $post->type_id,
-                'image' => $post->image,
-                'details' => $post->details,
-                'created_at' => $post->created_at,
-                'updated_at' => $post->updated_at,
-            ],
-            'types' => Type::whereHas('posts')->get(),
-            'recent_posts' => Blog::where( 'id', '!=', $post->id )
-                ->orderBy('created_at','desc')
-                ->limit(5)
-                ->get()
-                ->map
-                ->only('id', 'title', 'created_at', 'details', 'image', 'updated_at'),
-            'related_posts' => Blog::where('type_id', $post->type_id)
-                ->where( 'id', '!=', $post->id )
-                ->orderBy('created_at','desc')
-                ->limit(3)
-                ->get()
-                ->map
-                ->only('id', 'title', 'created_at', 'details', 'image', 'updated_at')
-        ]);
-    }
-
     public function kb(){
-        if(!$this->isEnabled('kb')){
-            return abort(404);
-        }
         // Test Code
         $setting = Setting::where('slug', 'enable_options')->select('value')->first();
         $options = $setting->value? json_decode($setting->value, true): null;
@@ -159,9 +69,6 @@ class PageController extends Controller {
     }
 
     public function faq(){
-        if(!$this->isEnabled('faq')){
-            return abort(404);
-        }
         return Inertia::render('Landing/FAQ', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
             'title' => 'FAQs',
@@ -206,45 +113,36 @@ class PageController extends Controller {
 
     public function privacy(){
         $page = FrontPage::where('slug', 'privacy')->first();
-        return Inertia::render('Landing/PrivacyPolicy', [
+        return Inertia::render('landing/privacy', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
-            'title' => $page->title,
+            'title' => $page ? $page->title : 'Privacy Policy',
             'data' => $page
         ]);
     }
 
     public function contact(){
-        if(!$this->isEnabled('contact')){
-            return abort(404);
-        }
         $page = FrontPage::where('slug', 'contact')->first();
-        $env = DotenvEditor::load();
-        $siteKey = $env->keyExists('RE_CAPTCHA_KEY')?$env->getValue('RE_CAPTCHA_KEY'):'';
-        return Inertia::render('Landing/Contact', [
+        return Inertia::render('landing/contact', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
-            'site_key' => $siteKey,
             'title' => $page->title,
             'data' => $page
         ]);
     }
 
     public function services(){
-        if(!$this->isEnabled('service')){
-            return abort(404);
-        }
         $page = FrontPage::where('slug', 'services')->first();
-        return Inertia::render('Landing/Services', [
+        return Inertia::render('landing/services', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
-            'title' => 'Services',
+            'title' => $page ? $page->title : 'Services',
             'data' => $page
         ]);
     }
 
     public function terms(){
         $page = FrontPage::where('slug', 'terms')->first();
-        return Inertia::render('Landing/TermsOfServices', [
+        return Inertia::render('landing/terms', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
-            'title' => $page->title,
+            'title' => $page ? $page->title : 'Terms of Service',
             'data' => $page
         ]);
     }
@@ -259,15 +157,6 @@ class PageController extends Controller {
 
         event(new ContactMessage(['email' => $contact_data['email'], 'name' => $contact_data['name'], 'phone' => $contact_data['phone'], 'message' => $contact_data['message']]));
         return Redirect::back()->with('success', 'Your message has been sent!');
-    }
-    private function isEnabled($slug){
-        $setting = Setting::where('slug', 'enable_options')->select('value')->first();
-        $options = $setting->value? json_decode($setting->value, true): null;
-        $key = array_search($slug, array_column($options, 'slug'));
-        if(empty($options)){
-            return true;
-        }
-        return $options[$key]?$options[$key]['value']:true;
     }
 
     public function getFlag($code){

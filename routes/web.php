@@ -489,7 +489,7 @@ $router->prefix('/')->group(static function (Router $router): void {
         /** Site Front-Landing */
         // Note: The '/' route is defined at the top of the file, outside this auth middleware group
 
-        $router->get('terms-of-services', [PageController::class, 'terms'])
+        $router->get('terms', [PageController::class, 'terms'])
             ->name('terms_service');
 
         $router->get('privacy', [PageController::class, 'privacy'])

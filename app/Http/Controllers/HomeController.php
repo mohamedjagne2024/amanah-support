@@ -7,16 +7,12 @@ use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Department;
 use App\Models\FrontPage;
-use App\Models\Role;
-use App\Models\Setting;
+use App\Models\Settings;
 use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\TicketEntry;
-use App\Models\TicketField;
 use App\Models\Type;
 use App\Models\User;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
@@ -27,14 +23,13 @@ class HomeController extends Controller
 {
 
     public function index(){
-        return Inertia::render('Landing/Home', [
-            'title' => 'Home - Helpdesk',
+        return Inertia::render('landing/home', [
+            'title' => 'Home - Amanah Support',
             'page' => FrontPage::where('slug', 'home')->first(),
-//            'footer' => FrontPage::where('slug', 'footer')->first(),
-            'custom_fields' => TicketField::get(),
+            'footer' => FrontPage::where('slug', 'footer')->first(),
 
-            'hide_ticket_fields' => json_decode(Setting::where('slug', 'hide_ticket_fields')->value('value') ?? '[]', true),
-            'require_login' => collect(json_decode(Setting::where('slug', 'enable_options')->value('value') ?? '[]', true))
+            'hide_ticket_fields' => json_decode(Settings::where('name', 'hide_ticket_fields')->value('value') ?? '[]', true),
+            'require_login' => collect(json_decode(Settings::where('name', 'enable_options')->value('value') ?? '[]', true))
                 ->first(fn($option) => $option['slug'] === 'require_login_submit_ticket' && ($option['value'] ?? false)),
             'departments' => Department::orderBy('name')
                 ->get()
@@ -50,7 +45,7 @@ class HomeController extends Controller
     }
 
     public function ticketOpen(){
-        $enable_options = Setting::where('slug', 'enable_options')->value('value');
+        $enable_options = Settings::where('name', 'enable_options')->value('value');
         $require_login = collect(json_decode($enable_options, true))
             ->first(fn($option) => $option['slug'] === 'require_login_submit_ticket' && $option['value'] ?? false);
 
@@ -60,14 +55,13 @@ class HomeController extends Controller
 
         $hide_ticket_fields = [];
 
-        $get_hide_ticket_fields = Setting::where('slug', 'hide_ticket_fields')->first();
+        $get_hide_ticket_fields = Settings::where('name', 'hide_ticket_fields')->first();
         if(!empty($get_hide_ticket_fields)){
             $hide_ticket_fields = json_decode($get_hide_ticket_fields->value, true);
         }
         return Inertia::render('Landing/OpenTicket', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
             'title' => 'Open Ticket - Helpdesk',
-            'custom_fields' => TicketField::get(),
             'hide_ticket_fields' => $hide_ticket_fields,
             'departments' => Department::orderBy('name')
                 ->get()
@@ -86,8 +80,8 @@ class HomeController extends Controller
         $required_fields = [];
         $hide_ticket_fields = [];
 
-        $get_required_fields = Setting::where('slug', 'required_ticket_fields')->first();
-        $get_hide_ticket_fields = Setting::where('slug', 'hide_ticket_fields')->first();
+        $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
+        $get_hide_ticket_fields = Settings::where('name', 'hide_ticket_fields')->first();
         if(!empty($get_required_fields)){
             $required_fields = json_decode($get_required_fields->value, true);
         }
@@ -100,8 +94,7 @@ class HomeController extends Controller
         });
 
         $ticket_data = Request::validate([
-            'first_name' => ['required', 'max:40'],
-            'last_name' => ['required', 'max:40'],
+            'name' => ['required', 'max:40'],
             'subject' => ['required'],
             'department_id' => [in_array('department', $is_required)?'required':'nullable', Rule::exists('departments', 'id')],
             'category_id' => [in_array('category', $is_required)?'required':'nullable', Rule::exists('categories', 'id')],
@@ -116,14 +109,13 @@ class HomeController extends Controller
 
         if(empty($user)){
             $plain_password = $this->genRendomPassword();
-            $customerRole = Role::where('slug', 'customer')->first();
             $user = User::create([
-                'first_name' => $ticket_data['first_name'],
-                'last_name' => $ticket_data['last_name'],
+                'name' => $ticket_data['name'],
                 'email' => $ticket_data['email'],
-                'role_id' => $customerRole ? $customerRole->id : null,
                 'password' => $plain_password,
             ]);
+
+            $user->assignRole('customer');
         }
 
         $status = Status::where('slug', 'LIKE', '%pending%')->first();
@@ -145,7 +137,6 @@ class HomeController extends Controller
 
         if(!empty($ticket_data['custom_field'])){
             foreach ($ticket_data['custom_field'] as $cfk => $cfv){
-                $ticket_field = TicketField::where('name', $cfk)->first();
                 if(!empty($ticket_field)){
                     TicketEntry::create(['ticket_id' => $ticket->id, 'field_id' => $ticket_field->id, 'name' => $cfk, 'label' => $ticket_field->label, 'value' => $cfv]);
                 }
@@ -161,11 +152,11 @@ class HomeController extends Controller
         }
 
         $variables = [
-            'name' => $user->first_name,
+            'name' => $user->name,
             'email' => $user->email,
             'password' => $plain_password ?? null,
             'login_url' => URL::to('login'),
-            'sender_name' => config('mail.from.name', 'support@web.com'),
+            'sender_name' => config('mail.from.name', 'support@amanahsupport.com'),
             'ticket_id' => $ticket->id,
             'uid' => $ticket->uid,
             'subject' => $ticket->subject,
