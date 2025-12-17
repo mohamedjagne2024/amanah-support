@@ -233,7 +233,7 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->middleware('auth');
 
         /** Knowledge base */
-        $router->get('knowledge_base', [KnowledgeBaseController::class, 'index'])
+        $router->get('knowledge-base', [KnowledgeBaseController::class, 'index'])
             ->name('knowledge_base')
             ->middleware('auth');
 

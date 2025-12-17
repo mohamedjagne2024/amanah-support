@@ -61,7 +61,7 @@ class HomeController extends Controller
         }
         return Inertia::render('Landing/OpenTicket', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
-            'title' => 'Open Ticket - Helpdesk',
+            'title' => 'Open Ticket - Amanah Support',
             'hide_ticket_fields' => $hide_ticket_fields,
             'departments' => Department::orderBy('name')
                 ->get()

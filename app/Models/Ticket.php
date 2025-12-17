@@ -5,8 +5,6 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\HelpDesk;
-use Illuminate\Support\Str;
 use App\Traits\MultiTenant;
 
 class Ticket extends Model

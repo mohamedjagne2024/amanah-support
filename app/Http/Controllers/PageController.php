@@ -40,13 +40,7 @@ class PageController extends Controller {
     }
 
     public function kb(){
-        // Test Code
-        $setting = Setting::where('slug', 'enable_options')->select('value')->first();
-        $options = $setting->value? json_decode($setting->value, true): null;
-        $key = array_search('service', array_column($options, 'slug'));
-        $option = $options[$key];
-        // Test Code
-        return Inertia::render('Landing/KnowledgeBase/Index', [
+        return Inertia::render('landing/kb', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
             'types' => Type::orderBy('name')->get()->map->only('id', 'name'),
             'filters' => Request::only('search'),
@@ -69,11 +63,12 @@ class PageController extends Controller {
     }
 
     public function faq(){
-        return Inertia::render('Landing/FAQ', [
+        return Inertia::render('landing/faq', [
             'footer' => FrontPage::where('slug', 'footer')->first(),
             'title' => 'FAQs',
             'filters' => Request::only('search'),
-            'faqs' => Faq::orderBy('name')
+            'faqs' => Faq::where('status', true)
+                ->orderBy('name')
                 ->filter(Request::only('search'))
                 ->paginate(100)
                 ->withQueryString()

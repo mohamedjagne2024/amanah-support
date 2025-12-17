@@ -1,4 +1,5 @@
 import { Editor } from '@tinymce/tinymce-react';
+import { useRef } from 'react';
 
 interface TextEditorProps {
   placeholder?: string;
@@ -15,6 +16,9 @@ export default function TextEditor({
   className = '',
   initialValue = '',
 }: TextEditorProps) {
+  // Store the initial value in a ref so it doesn't change on re-renders
+  const initialValueRef = useRef(initialValue);
+
   const handleEditorChange = (content: string, editor: any) => {
     if (onChange) {
       onChange(content);
@@ -39,7 +43,7 @@ export default function TextEditor({
           branding: false,
           promotion: false,
         }}
-        initialValue={initialValue}
+        initialValue={initialValueRef.current}
         onEditorChange={handleEditorChange}
       />
     </div>

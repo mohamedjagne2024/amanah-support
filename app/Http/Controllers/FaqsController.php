@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\RedirectIfCustomer;
-use App\Http\Middleware\RedirectIfNotParmitted;
 use App\Models\Faq;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
@@ -11,12 +9,8 @@ use Inertia\Inertia;
 
 class FaqsController extends Controller {
 
-    public function __construct(){
-        $this->middleware(RedirectIfNotParmitted::class.':faq');
-    }
-
     public function index() {
-        return Inertia::render('Faqs/Index', [
+        return Inertia::render('faqs/index', [
             'title' => 'FAQs',
             'filters' => Request::all('search'),
             'faqs' => Faq::orderBy('name')
@@ -34,13 +28,6 @@ class FaqsController extends Controller {
         ]);
     }
 
-    public function create()
-    {
-        return Inertia::render('Faqs/Create',[
-            'title' => 'Create a new FAQ',
-        ]);
-    }
-
     public function store()
     {
         Faq::create(
@@ -52,18 +39,6 @@ class FaqsController extends Controller {
         );
 
         return Redirect::route('faqs')->with('success', 'Faq created.');
-    }
-
-    public function edit(Faq $faq) {
-        return Inertia::render('Faqs/Edit', [
-            'title' => $faq->name,
-            'faq' => [
-                'id' => $faq->id,
-                'name' => $faq->name,
-                'status' => $faq->status,
-                'details' => $faq->details,
-            ],
-        ]);
     }
 
     public function update(Faq $faq)
