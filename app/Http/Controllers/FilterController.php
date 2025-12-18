@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\Request;
+use Spatie\Permission\Models\Role;
 
 class FilterController extends Controller {
     //
-    public function customers(){
-        $customerRole = Role::where('slug', 'customer')->first();
-        $customers = User::where('role_id', $customerRole ? $customerRole->id: 0)
+    public function contacts(){
+        $contactRole = Role::where('name', 'contact')->first();
+        $contacts = User::where('role_id', $contactRole ? $contactRole->id: 0)
             ->filter(Request::only('search'))
             ->limit(6)
             ->get()
             ->map
             ->only('id', 'name');
 
-        return response()->json($customers);
+        return response()->json($contacts);
     }
 
     public function assignees(){
@@ -41,14 +41,14 @@ class FilterController extends Controller {
         return response()->json($assignees);
     }
 
-    public function usersExceptCustomer(){
-        $customerRole = Role::where('slug', 'customer')->first();
-        $customers = User::where('role_id', '!=', $customerRole ? $customerRole->id : 0)
+    public function usersExceptContact(){
+        $contactRole = Role::where('name', 'contact')->first();
+        $contacts = User::where('role_id', '!=', $contactRole ? $contactRole->id : 0)
             ->filter(Request::only('search'))
             ->limit(6)
             ->get()
             ->map
             ->only('id', 'name');
-        return response()->json($customers);
+        return response()->json($contacts);
     }
 }

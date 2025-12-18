@@ -39,7 +39,7 @@ type TicketRecord = {
   id: number;
   uid: string;
   subject: string;
-  user: string | null;
+  contact: string | null;
   priority: string | null;
   category: string | null;
   sub_category: string | null;
@@ -375,16 +375,16 @@ export default function Index({
         enableSorting: true
       },
       {
-        accessorKey: "user",
-        header: "Requester",
+        accessorKey: "contact",
+        header: "Contact",
         cell: ({ getValue }) => {
-          const user = getValue<string | null>();
-          return user ? (
+          const contact = getValue<string | null>();
+          return contact ? (
             <div className="flex items-center gap-2 min-w-[140px]">
               <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs uppercase shrink-0">
-                {user.charAt(0)}
+                {contact.charAt(0)}
               </div>
-              <span className="text-sm text-default-700 truncate">{user}</span>
+              <span className="text-sm text-default-700 truncate">{contact}</span>
             </div>
           ) : (
             <span className="text-sm text-default-400 italic">-</span>

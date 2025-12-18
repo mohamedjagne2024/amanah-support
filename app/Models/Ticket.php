@@ -107,7 +107,7 @@ class Ticket extends Model
     }
 
     public function contact(){
-        return $this->belongsTo(Contact::class, 'contact_id');
+        return $this->belongsTo(User::class, 'contact_id');
     }
 
     public function user(){
@@ -140,9 +140,9 @@ class Ticket extends Model
         return Carbon::parse($date)->format('Y-m-d');
     }
 
-    public function scopeByCustomer($query, $id){
+    public function scopeByContact($query, $id){
         if(!empty($id)){
-            $query->where('user_id', $id);
+            $query->where('contact_id', $id);
         }
     }
 

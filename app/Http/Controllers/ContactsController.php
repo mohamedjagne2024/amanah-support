@@ -17,14 +17,14 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
-final class CustomersController extends Controller
+final class ContactsController extends Controller
 {
     /**
-     * Display the customer management page.
+     * Display the contact management page.
      */
     public function index(): Response
     {
-        Gate::authorize('customers.view');
+        Gate::authorize('contacts.view');
 
         $search = request()->query('search');
         $sortBy = request()->string('sort_by')->value();
@@ -37,8 +37,8 @@ final class CustomersController extends Controller
         $validSortBy = in_array($sortBy, $allowedSortColumns, true) ? $sortBy : 'name';
         $validSortDirection = in_array($sortDirection, $allowedSortDirections, true) ? $sortDirection : 'asc';
 
-        $customers = User::with('roles')
-            ->role('customer')
+        $contacts = User::with('roles')
+            ->role('contact')
             ->when($search, static function ($query, string $term): void {
                 $query->where(static function ($subQuery) use ($term): void {
                     $subQuery
@@ -81,9 +81,9 @@ final class CustomersController extends Controller
                 ];
             });
 
-        return Inertia::render('customer/index', [
-            'title' => 'Customers',
-            'customers' => $customers,
+        return Inertia::render('contact/index', [
+            'title' => 'Contacts',
+            'contacts' => $contacts,
             'roles' => $roles,
             'countries' => $countries,
             'filters' => [
@@ -95,15 +95,14 @@ final class CustomersController extends Controller
     }
 
     /**
-     * Store a newly created customer.
+     * Store a newly created contact.
      */
     public function store(): RedirectResponse
     {
-        Gate::authorize('customers.create');
+        Gate::authorize('contacts.create');
 
         $validated = Request::validate([
-            'first_name' => ['required', 'string', 'max:50'],
-            'last_name' => ['required', 'string', 'max:50'],
+            'name' => ['required', 'string', 'max:50'],
             'phone' => ['nullable', 'string', 'max:25'],
             'email' => ['required', 'string', 'max:50', 'email', Rule::unique('users')],
             'password' => ['nullable', 'string'],
@@ -119,9 +118,7 @@ final class CustomersController extends Controller
 
         /** @var User */
         $user = User::create([
-            'name' => $validated['first_name'].' '.$validated['last_name'],
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
+            'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
             'city' => $validated['city'] ?? null,
@@ -133,23 +130,23 @@ final class CustomersController extends Controller
                 : Hash::make(Str::random(16)),
         ]);
 
-        // Assign the customer role
-        $user->assignRole('customer');
+        // Assign the contact role
+        $user->assignRole('contact');
 
         return redirect()
-            ->route('customers')
-            ->with('success', 'Customer created successfully.');
+            ->route('contacts')
+            ->with('success', 'Contact created successfully.');
     }
 
     /**
-     * Update the specified customer.
+     * Update the specified contact.
      */
     public function update(User $user): RedirectResponse
     {
-        Gate::authorize('customers.edit');
+        Gate::authorize('contacts.edit');
 
         $validated = Request::validate([
-            'name' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:50'],
             'phone' => ['nullable', 'string', 'max:25'],
             'email' => ['required', 'string', 'max:50', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable', 'string'],
@@ -194,34 +191,34 @@ final class CustomersController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Customer updated successfully.');
+            ->with('success', 'Contact updated successfully.');
     }
 
     /**
-     * Delete the specified customer.
+     * Delete the specified contact.
      */
     public function destroy(User $user): RedirectResponse
     {
-        Gate::authorize('customers.delete');
+        Gate::authorize('contacts.delete');
 
         $user->delete();
 
         return redirect()
-            ->route('customers')
-            ->with('success', 'Customer deleted successfully.');
+            ->route('contacts')
+            ->with('success', 'Contact deleted successfully.');
     }
 
     /**
-     * Restore the specified customer.
+     * Restore the specified contact.
      */
     public function restore(User $user): RedirectResponse
     {
-        Gate::authorize('customers.edit');
+        Gate::authorize('contacts.edit');
 
         $user->restore();
 
         return redirect()
             ->back()
-            ->with('success', 'Customer restored successfully.');
+            ->with('success', 'Contact restored successfully.');
     }
 }

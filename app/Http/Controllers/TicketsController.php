@@ -34,11 +34,11 @@ class TicketsController extends Controller
     use HasGoogleCloudStorage;
 
     public function index(){
-        $byCustomer = null;
+        $byContact = null;
         $byAssign = null;
         $user = Auth()->user();
-        if($user->hasRole('customer')){
-            $byCustomer = $user['id'];
+        if($user->hasRole('contact')){
+            $byContact = $user['id'];
         }elseif($user->hasRole('manager')){
             $byAssign = $user['id'];
         }else{
@@ -47,10 +47,10 @@ class TicketsController extends Controller
         $whereAll = [];
         $type = Request::input('type');
         $limit = Request::input('limit', 10);
-        $customer = Request::input('customer_id');
+        $contact = Request::input('contact_id');
 
-        if(!empty($customer)){
-            $whereAll[] = ['user_id', '=', $customer];
+        if(!empty($contact)){
+            $whereAll[] = ['contact_id', '=', $contact];
         }
 
         if($type == 'un_assigned'){
@@ -108,7 +108,7 @@ class TicketsController extends Controller
                 ->only('id', 'name'),
             'tickets' => $ticketQuery
                 ->filter(Request::only(['search', 'priority_id', 'status_id', 'type_id', 'category_id', 'department_id']))
-                ->byCustomer($byCustomer)
+                ->byContact($byContact)
                 ->byAssign($byAssign)
                 ->paginate($limit)
                 ->withQueryString()
@@ -117,7 +117,7 @@ class TicketsController extends Controller
                         'id' => $ticket->id,
                         'uid' => $ticket->uid,
                         'subject' => $ticket->subject,
-                        'user' => $ticket->user ? $ticket->user->name : null,
+                        'contact' => $ticket->contact ? $ticket->contact->name : null,
                         'priority' => $ticket->priority ? $ticket->priority->name : null,
                         'category' => $ticket->category ? $ticket->category->name: null,
                         'sub_category' => $ticket->subCategory ? $ticket->subCategory->name: null,
@@ -231,17 +231,17 @@ class TicketsController extends Controller
         
         return Inertia::render('ticket/create', [
             'title' => 'Create a new ticket',
-            'customers' => User::role('customer')
-                ->when(Request::input('customer_id'), function($query) {
-                    $query->orWhere('id', Request::input('customer_id'));
+            'contacts' => User::role('contact')
+                ->when(Request::input('contact_id'), function($query) {
+                    $query->orWhere('id', Request::input('contact_id'));
                 })
                 ->orderBy('name')
                 ->limit(6)
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'usersExceptCustomers' => User::whereDoesntHave('roles', function($query) {
-                    $query->where('name', 'customer');
+            'usersExceptContacts' => User::whereDoesntHave('roles', function($query) {
+                    $query->where('name', 'contact');
                 })
                 ->when(Request::input('user_id'), function($query) {
                     $query->orWhere('id', Request::input('user_id'));
@@ -282,7 +282,7 @@ class TicketsController extends Controller
         }
         $user = Auth()->user();
         $request_data = Request::validate([
-            'user_id' => ['nullable', Rule::exists('users', 'id')],
+            'contact_id' => ['nullable', Rule::exists('users', 'id')],
             'priority_id' => ['nullable', Rule::exists('priorities', 'id')],
             'status_id' => ['nullable', Rule::exists('status', 'id')],
             'department_id' => [in_array('department', $required_fields)?'required':'nullable', Rule::exists('departments', 'id')],
@@ -294,8 +294,8 @@ class TicketsController extends Controller
             'details' => ['required'],
         ]);
 
-        if($user->hasRole('customer')){
-            $request_data['user_id'] = $user['id'];
+        if($user->hasRole('contact')){
+            $request_data['contact_id'] = $user['id'];
         }
 
         if(empty($request_data['priority_id'])){
@@ -343,18 +343,18 @@ class TicketsController extends Controller
     public function show($uid)
     {
         $user = Auth()->user();
-        $byCustomer = null;
+        $byContact = null;
         $byAssign = null;
         
-        if ($user->hasRole('customer')) {
-            $byCustomer = $user['id'];
+        if ($user->hasRole('contact')) {
+            $byContact = $user['id'];
         } elseif ($user->hasRole('manager')) {
             $byAssign = $user['id'];
         } else {
             $byAssign = Request::input('assigned_to');
         }
         
-        $ticket = Ticket::byCustomer($byCustomer)
+        $ticket = Ticket::byContact($byContact)
             ->byAssign($byAssign)
             ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);
@@ -394,9 +394,7 @@ class TicketsController extends Controller
             'ticket' => [
                 'id' => $ticket->id,
                 'uid' => $ticket->uid,
-                'user_id' => $ticket->user_id,
                 'contact_id' => $ticket->contact_id,
-                'user' => $ticket->user ? $ticket->user->name : 'N/A',
                 'contact' => $ticket->contact ?: null,
                 'priority_id' => $ticket->priority_id,
                 'created_at' => $ticket->created_at,
@@ -437,16 +435,16 @@ class TicketsController extends Controller
 
     public function edit($uid){
         $user = Auth()->user();
-        $byCustomer = null;
+        $byContact = null;
         $byAssign = null;
-        if($user->hasRole('customer')){
-            $byCustomer = $user['id'];
+        if($user->hasRole('contact')){
+            $byContact = $user['id'];
         }elseif($user->hasRole('manager')){
             $byAssign = $user['id'];
         }else{
             $byAssign = Request::input('assigned_to');
         }
-        $ticket = Ticket::byCustomer($byCustomer)
+        $ticket = Ticket::byContact($byContact)
             ->byAssign($byAssign)
             ->where(function($query) use ($uid){
                 $query->where('uid', $uid);
@@ -470,17 +468,17 @@ class TicketsController extends Controller
 
         return Inertia::render('ticket/edit', [
             'title' => $ticket->subject ? '#'.$ticket->uid.' '.$ticket->subject : '',
-            'customers' => User::role('customer')
-                ->when(Request::input('customer_id'), function($query) {
-                    $query->orWhere('id', Request::input('customer_id'));
+            'contacts' => User::role('contact')
+                ->when(Request::input('contact_id'), function($query) {
+                    $query->orWhere('id', Request::input('contact_id'));
                 })
                 ->orderBy('name')
                 ->limit(6)
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'usersExceptCustomers' => User::whereDoesntHave('roles', function($query) {
-                    $query->where('name', 'customer');
+            'usersExceptContacts' => User::whereDoesntHave('roles', function($query) {
+                    $query->where('name', 'contact');
                 })
                 ->when(Request::input('user_id'), function($query) {
                     $query->orWhere('id', Request::input('user_id'));
@@ -530,10 +528,8 @@ class TicketsController extends Controller
             'ticket' => [
                 'id' => $ticket->id,
                 'uid' => $ticket->uid,
-                'user_id' => $ticket->user_id,
                 'contact_id' => $ticket->contact_id,
-                'user' => $ticket->user?$ticket->user->name: 'N/A',
-                'contact' => $ticket->contact?: null,
+                'contact' => $ticket->contact ?: null,
                 'priority_id' => $ticket->priority_id,
                 'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
                 'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format')),
@@ -577,8 +573,7 @@ class TicketsController extends Controller
         
         $user = Auth()->user();
         $request_data = Request::validate([
-            'user_id' => ['nullable', Rule::exists('users', 'id')],
-            'contact_id' => ['nullable', Rule::exists('contacts', 'id')],
+            'contact_id' => ['nullable', Rule::exists('users', 'id')],
             'priority_id' => ['nullable', Rule::exists('priorities', 'id')],
             'status_id' => ['nullable', Rule::exists('status', 'id')],
             'department_id' => [in_array('department', $required_fields)?'required':'nullable', Rule::exists('departments', 'id')],
@@ -690,18 +685,18 @@ class TicketsController extends Controller
     public function destroy($uid)
     {
         $user = Auth()->user();
-        $byCustomer = null;
+        $byContact = null;
         $byAssign = null;
         
-        if ($user->hasRole('customer')) {
-            $byCustomer = $user['id'];
+        if ($user->hasRole('contact')) {
+            $byContact = $user['id'];
         } elseif ($user->hasRole('manager')) {
             $byAssign = $user['id'];
         } else {
             $byAssign = Request::input('assigned_to');
         }
         
-        $ticket = Ticket::byCustomer($byCustomer)
+        $ticket = Ticket::byContact($byContact)
             ->byAssign($byAssign)
             ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);

@@ -26,7 +26,7 @@ use App\Http\Controllers\TypesController;
 use App\Http\Controllers\EmailTemplatesController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\TicketsController;
-use App\Http\Controllers\CustomersController;
+use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CronJobsController;
 use App\Http\Controllers\FrontPagesController;
@@ -356,16 +356,16 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('departments.restore')
             ->middleware('auth');
 
-        $router->get('settings/filter/customers', [FilterController::class, 'customers'])
-            ->name('filter.customers')
+        $router->get('settings/filter/contacts', [FilterController::class, 'contacts'])
+            ->name('filter.contacts')
             ->middleware('auth');
 
         $router->get('settings/filter/assignees', [FilterController::class, 'assignees'])
             ->name('filter.assignees')
             ->middleware('auth');
 
-        $router->get('settings/filter/users_except_customer', [FilterController::class, 'usersExceptCustomer'])
-            ->name('filter.users_except_customer')
+        $router->get('settings/filter/users_except_contact', [FilterController::class, 'usersExceptContact'])
+            ->name('filter.users_except_contact')
             ->middleware('auth');
 
         $router->put('settings/departments/{department}', [DepartmentsController::class, 'update'])
@@ -435,33 +435,33 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('pending.decline')
             ->middleware('auth');
 
-        // Customers
-        $router->get('customers/{user}/edit', [CustomersController::class, 'edit'])
-            ->name('customers.edit')
+        // Contacts
+        $router->get('contacts/{user}/edit', [ContactsController::class, 'edit'])
+            ->name('contacts.edit')
             ->middleware('auth');
 
-        $router->get('customers', [CustomersController::class, 'index'])
-            ->name('customers')
+        $router->get('contacts', [ContactsController::class, 'index'])
+            ->name('contacts')
             ->middleware('auth');
 
-        $router->put('customers/{user}', [CustomersController::class, 'update'])
-            ->name('customers.update')
+        $router->put('contacts/{user}', [ContactsController::class, 'update'])
+            ->name('contacts.update')
             ->middleware('auth');
 
-        $router->get('customers/create', [CustomersController::class, 'create'])
-            ->name('customers.create')
+        $router->get('contacts/create', [ContactsController::class, 'create'])
+            ->name('contacts.create')
             ->middleware('auth');
 
-        $router->post('customers', [CustomersController::class, 'store'])
-            ->name('customers.store')
+        $router->post('contacts', [ContactsController::class, 'store'])
+            ->name('contacts.store')
             ->middleware('auth');
 
-        $router->delete('customers/{user}', [CustomersController::class, 'destroy'])
-            ->name('customers.destroy')
+        $router->delete('contacts/{user}', [ContactsController::class, 'destroy'])
+            ->name('contacts.destroy')
             ->middleware('auth');
 
-        $router->put('customers/{user}/restore', [CustomersController::class, 'restore'])
-            ->name('customers.restore')
+        $router->put('contacts/{user}/restore', [ContactsController::class, 'restore'])
+            ->name('contacts.restore')
             ->middleware('auth');
 
 

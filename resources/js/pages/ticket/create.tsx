@@ -10,7 +10,7 @@ import PageHeader from '@/components/Pageheader';
 import Breadcrumb from '@/components/BreadCrumb';
 
 
-type CustomerOption = {
+type ContactOption = {
   id: number;
   name: string;
 };
@@ -37,8 +37,8 @@ type CategoryOption = {
 };
 
 type CreateTicketPageProps = {
-  customers: CustomerOption[];
-  usersExceptCustomers: CustomerOption[];
+  contacts: ContactOption[];
+  usersExceptContacts: ContactOption[];
   departments: DepartmentOption[];
   priorities: PriorityOption[];
   types: TypeOption[];
@@ -47,8 +47,8 @@ type CreateTicketPageProps = {
 };
 
 export default function Create({
-  customers,
-  usersExceptCustomers,
+  contacts,
+  usersExceptContacts,
   departments,
   priorities,
   types,
@@ -59,7 +59,7 @@ export default function Create({
   const [attachments, setAttachments] = useState<File[]>([]);
 
   const { data, setData, post, processing, errors } = useForm({
-    user_id: '',
+    contact_id: '',
     priority_id: '',
     type_id: '',
     department_id: '',
@@ -71,22 +71,22 @@ export default function Create({
     files: [] as File[],
   });
 
-  const customerOptions = useMemo<SelectOption[]>(
+  const contactOptions = useMemo<SelectOption[]>(
     () =>
-      customers.map((customer) => ({
-        label: customer.name,
-        value: customer.id,
+      contacts.map((contact) => ({
+        label: contact.name,
+        value: contact.id,
       })),
-    [customers]
+    [contacts]
   );
 
   const assigneeOptions = useMemo<SelectOption[]>(
     () =>
-      usersExceptCustomers.map((user) => ({
+      usersExceptContacts.map((user) => ({
         label: user.name,
         value: user.id,
       })),
-    [usersExceptCustomers]
+    [usersExceptContacts]
   );
 
   const departmentOptions = useMemo<SelectOption[]>(
@@ -197,30 +197,30 @@ export default function Create({
             </div>
             <div className="card-body">
               <div className="space-y-6">
-                {/* First 3-Column Grid: Customer, Priority, Type */}
+                {/* First 3-Column Grid: Contact, Priority, Type */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <input type="hidden" name="user_id" value={data.user_id} />
+                    <input type="hidden" name="contact_id" value={data.contact_id} />
                     <Combobox
                       label={
                         <>
-                          Customer <span className="text-danger">*</span>
+                          Contact <span className="text-danger">*</span>
                         </>
                       }
-                      options={customerOptions}
+                      options={contactOptions}
                       value={
-                        customerOptions.find(
-                          (opt) => String(opt.value) === data.user_id
+                        contactOptions.find(
+                          (opt) => String(opt.value) === data.contact_id
                         ) || null
                       }
                       onChange={(option) =>
-                        setData('user_id', option?.value?.toString() || '')
+                        setData('contact_id', option?.value?.toString() || '')
                       }
                       placeholder="Start typing"
                       disabled={processing}
                       isClearable
                       isSearchable
-                      error={errors.user_id}
+                      error={errors.contact_id}
                     />
                   </div>
 

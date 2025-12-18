@@ -23,7 +23,7 @@ import DatePicker from '@/components/DatePicker';
 import { ConfirmDialog } from '@/components/Dialog';
 import Breadcrumb from '@/components/BreadCrumb';
 
-type CustomerOption = {
+type ContactOption = {
   id: number;
   name: string;
 };
@@ -79,9 +79,7 @@ type CommentType = {
 type TicketData = {
   id: number;
   uid: string;
-  user_id: number | null;
   contact_id: number | null;
-  user: string;
   contact: any;
   priority_id: number | null;
   created_at: string;
@@ -122,8 +120,8 @@ type TicketData = {
 type EditTicketPageProps = {
   title: string;
   ticket: TicketData;
-  customers: CustomerOption[];
-  usersExceptCustomers: CustomerOption[];
+  contacts: ContactOption[];
+  usersExceptContacts: ContactOption[];
   departments: DepartmentOption[];
   priorities: PriorityOption[];
   statuses: StatusOption[];
@@ -137,8 +135,8 @@ type EditTicketPageProps = {
 export default function Edit({
   title,
   ticket,
-  customers,
-  usersExceptCustomers,
+  contacts,
+  usersExceptContacts,
   departments,
   priorities,
   statuses,
@@ -159,7 +157,7 @@ export default function Edit({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, setData, post, processing, errors, reset } = useForm({
-    user_id: ticket.user_id?.toString() || '',
+    contact_id: ticket.contact_id?.toString() || '',
     priority_id: ticket.priority_id?.toString() || '',
     status_id: ticket.status_id?.toString() || '',
     type_id: ticket.type_id?.toString() || '',
@@ -186,22 +184,22 @@ export default function Edit({
     return data.tags ? data.tags.split(',').map(t => t.trim()).filter(t => t) : [];
   }, [data.tags]);
 
-  const customerOptions = useMemo<SelectOption[]>(
+  const contactOptions = useMemo<SelectOption[]>(
     () =>
-      customers.map((customer) => ({
-        label: customer.name,
-        value: customer.id,
+      contacts.map((contact) => ({
+        label: contact.name,
+        value: contact.id,
       })),
-    [customers]
+    [contacts]
   );
 
   const assigneeOptions = useMemo<SelectOption[]>(
     () =>
-      usersExceptCustomers.map((user) => ({
+      usersExceptContacts.map((user) => ({
         label: user.name,
         value: user.id,
       })),
-    [usersExceptCustomers]
+    [usersExceptContacts]
   );
 
   const departmentOptions = useMemo<SelectOption[]>(
@@ -733,25 +731,25 @@ export default function Edit({
                   <h6 className="card-title">Properties</h6>
                 </div>
                 <div className="card-body space-y-4">
-                  {/* Customer */}
+                  {/* Contact */}
                   <div>
-                    <input type="hidden" name="user_id" value={data.user_id} />
+                    <input type="hidden" name="contact_id" value={data.contact_id} />
                     <Combobox
-                      label="Customer"
-                      options={customerOptions}
+                      label="Contact"
+                      options={contactOptions}
                       value={
-                        customerOptions.find(
-                          (opt) => String(opt.value) === data.user_id
+                        contactOptions.find(
+                          (opt) => String(opt.value) === data.contact_id
                         ) || null
                       }
                       onChange={(option) =>
-                        setData('user_id', option?.value?.toString() || '')
+                        setData('contact_id', option?.value?.toString() || '')
                       }
-                      placeholder="Search customer"
+                      placeholder="Search contact"
                       disabled={processing}
                       isClearable
                       isSearchable
-                      error={errors.user_id}
+                      error={errors.contact_id}
                     />
                   </div>
 

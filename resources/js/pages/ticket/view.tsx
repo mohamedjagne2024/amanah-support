@@ -47,9 +47,7 @@ type CommentType = {
 type TicketData = {
   id: number;
   uid: string;
-  user_id: number | null;
   contact_id: number | null;
-  user: string;
   contact: any;
   priority_id: number | null;
   created_at: string;
@@ -561,8 +559,8 @@ export default function View({
               <div className="card-body">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between py-2 border-b border-default-100">
-                    <span className="text-sm text-default-500">Customer</span>
-                    <span className="text-sm font-medium text-default-900">{ticket.user || 'N/A'}</span>
+                    <span className="text-sm text-default-500">Contact</span>
+                    <span className="text-sm font-medium text-default-900">{ticket.contact?.name || 'N/A'}</span>
                   </div>
                   <div className="flex items-center justify-between py-2 border-b border-default-100">
                     <span className="text-sm text-default-500">Assigned to</span>

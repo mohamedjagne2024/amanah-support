@@ -80,22 +80,16 @@ export const menuItemsData: MenuItemType[] = [
     isTitle: true,
   },
   {
-    key: 'Customers',
-    label: 'Customers',
+    key: 'Contacts',
+    label: 'Contacts',
     icon: LucideUser,
-    href: '/customers',
+    href: '/contacts',
   },
   {
     key: 'Notes',
     label: 'Notes',
     icon: LucideNotebook,
     href: '/notes',
-  },
-  {
-    key: 'Contacts',
-    label: 'Contacts',
-    icon: LucideUser,
-    href: '/contacts',
   },
   {
     key: 'Organizations',

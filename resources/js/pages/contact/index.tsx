@@ -7,7 +7,7 @@ import AppLayout from "@/layouts/app-layout";
 import PageMeta from "@/components/PageMeta";
 import PageHeader from "@/components/Pageheader";
 
-type Customer = {
+type Contact = {
   id: number;
   name: string;
   email: string;
@@ -43,9 +43,9 @@ type PaginatedData<T> = {
   links: PaginationLinks[];
 };
 
-type CustomerManagementPageProps = {
+type ContactManagementPageProps = {
   title: string;
-  customers: PaginatedData<Customer>;
+  contacts: PaginatedData<Contact>;
   roles: Role[];
   countries: Country[];
   filters?: {
@@ -55,7 +55,7 @@ type CustomerManagementPageProps = {
   };
 };
 
-export default function CustomerManagement({ title, customers, roles, countries, filters }: CustomerManagementPageProps) {
+export default function ContactManagement({ title, contacts, roles, countries, filters }: ContactManagementPageProps) {
   const safeFilters = {
     search: filters?.search ?? "",
     sort_by: filters?.sort_by ?? null,
@@ -64,9 +64,9 @@ export default function CustomerManagement({ title, customers, roles, countries,
 
   const [isLoading, setIsLoading] = useState(false);
   
-  // Edit drawer state (Manage Customer)
+  // Edit drawer state (Manage Contact)
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
     email: "",
@@ -83,8 +83,7 @@ export default function CustomerManagement({ title, customers, roles, countries,
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createFormData, setCreateFormData] = useState({
-    first_name: "",
-    last_name: "",
+    name: "",
     email: "",
     phone: "",
     city: "",
@@ -94,17 +93,17 @@ export default function CustomerManagement({ title, customers, roles, countries,
   const [createFormErrors, setCreateFormErrors] = useState<Record<string, string>>({});
 
   // Edit drawer handlers
-  const handleOpenEditDrawer = useCallback((customer: Customer) => {
-    setEditingCustomer(customer);
+  const handleOpenEditDrawer = useCallback((contact: Contact) => {
+    setEditingContact(contact);
     setEditFormData({
-      name: customer.name || "",
-      email: customer.email || "",
-      phone: customer.phone || "",
-      city: customer.city || "",
-      country_id: countries.find(c => c.name === customer.country)?.id.toString() || "",
+      name: contact.name || "",
+      email: contact.email || "",
+      phone: contact.phone || "",
+      city: contact.city || "",
+      country_id: countries.find(c => c.name === contact.country)?.id.toString() || "",
       password: "",
     });
-    setSelectedRoles(customer.roles);
+    setSelectedRoles(contact.roles);
     setEditFormErrors({});
     setIsEditDrawerOpen(true);
   }, [countries]);
@@ -112,7 +111,7 @@ export default function CustomerManagement({ title, customers, roles, countries,
   const handleCloseEditDrawer = useCallback(() => {
     setIsEditDrawerOpen(false);
     setTimeout(() => {
-      setEditingCustomer(null);
+      setEditingContact(null);
       setEditFormData({
         name: "",
         email: "",
@@ -126,14 +125,14 @@ export default function CustomerManagement({ title, customers, roles, countries,
     }, 300);
   }, []);
 
-  const handleSaveCustomer = useCallback((e: React.FormEvent) => {
+  const handleSaveContact = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingCustomer || isSaving) return;
+    if (!editingContact || isSaving) return;
 
     setIsSaving(true);
 
     router.put(
-      `/customers/${editingCustomer.id}`,
+      `/contacts/${editingContact.id}`,
       { 
         ...editFormData,
         roles: selectedRoles,
@@ -151,13 +150,12 @@ export default function CustomerManagement({ title, customers, roles, countries,
         },
       }
     );
-  }, [editingCustomer, editFormData, selectedRoles, handleCloseEditDrawer, isSaving]);
+    }, [editingContact, editFormData, selectedRoles, handleCloseEditDrawer, isSaving]);
 
   // Create drawer handlers
   const handleOpenCreateDrawer = useCallback(() => {
     setCreateFormData({
-      first_name: "",
-      last_name: "",
+      name: "",
       email: "",
       phone: "",
       city: "",
@@ -172,8 +170,7 @@ export default function CustomerManagement({ title, customers, roles, countries,
     setIsCreateDrawerOpen(false);
     setTimeout(() => {
       setCreateFormData({
-        first_name: "",
-        last_name: "",
+        name: "",
         email: "",
         phone: "",
         city: "",
@@ -184,10 +181,10 @@ export default function CustomerManagement({ title, customers, roles, countries,
     }, 300);
   }, []);
 
-  const handleCreateCustomer = useCallback((e: React.FormEvent) => {
+  const handleCreateContact = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
-    router.post("/customers", createFormData, {
+    router.post("/contacts", createFormData, {
       preserveScroll: true,
       onStart: () => setIsCreating(true),
       onSuccess: () => {
@@ -212,10 +209,10 @@ export default function CustomerManagement({ title, customers, roles, countries,
     });
   }, []);
 
-  const handleDeleteCustomer = useCallback((customer: Customer) => {
-    if (!confirm(`Are you sure you want to delete ${customer.name}?`)) return;
+  const handleDeleteContact = useCallback((contact: Contact) => {
+    if (!confirm(`Are you sure you want to delete ${contact.name}?`)) return;
 
-    router.delete(`/customers/${customer.id}`, {
+    router.delete(`/contacts/${contact.id}`, {
       preserveScroll: true,
     });
   }, []);
@@ -226,14 +223,14 @@ export default function CustomerManagement({ title, customers, roles, countries,
         search: partial.search ?? safeFilters.search ?? "",
         sort_by: partial.sort_by !== undefined ? partial.sort_by : safeFilters.sort_by,
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction,
-        page: partial.page ?? customers.current_page,
-        per_page: partial.per_page ?? customers.per_page,
+        page: partial.page ?? contacts.current_page,
+        per_page: partial.per_page ?? contacts.per_page,
       };
 
       const hasChanged = 
         query.search !== (safeFilters.search ?? "") ||
-        query.page !== customers.current_page ||
-        query.per_page !== customers.per_page ||
+        query.page !== contacts.current_page ||
+        query.per_page !== contacts.per_page ||
         query.sort_by !== safeFilters.sort_by ||
         query.sort_direction !== safeFilters.sort_direction;
 
@@ -251,7 +248,7 @@ export default function CustomerManagement({ title, customers, roles, countries,
         })
       );
 
-      router.get("/customers", sanitized, {
+      router.get("/contacts", sanitized, {
         preserveScroll: true,
         preserveState: true,
         replace: true,
@@ -259,14 +256,14 @@ export default function CustomerManagement({ title, customers, roles, countries,
         onFinish: () => setIsLoading(false),
       });
     },
-    [safeFilters.search, safeFilters.sort_by, safeFilters.sort_direction, customers.current_page, customers.per_page]
+    [safeFilters.search, safeFilters.sort_by, safeFilters.sort_direction, contacts.current_page, contacts.per_page]
   );
 
-  const columns = useMemo<ColumnDef<Customer, unknown>[]>(
+  const columns = useMemo<ColumnDef<Contact, unknown>[]>(
     () => [
       {
         accessorKey: "name",
-        header: "Customer",
+        header: "Contact",
         cell: ({ getValue, row }) => (
           <div className="flex items-center gap-3">
             {row.original.photo ? (
@@ -315,13 +312,13 @@ export default function CustomerManagement({ title, customers, roles, countries,
         accessorKey: "roles",
         header: "Roles",
         cell: ({ getValue }) => {
-          const customerRoles = getValue<string[]>();
-          if (customerRoles.length === 0) {
+          const contactRoles = getValue<string[]>();
+          if (contactRoles.length === 0) {
             return <span className="text-default-400">No roles</span>;
           }
           return (
             <div className="flex flex-wrap gap-1">
-              {customerRoles.map((role) => (
+              {contactRoles.map((role) => (
                 <Badge key={role} variant="info">
                   {role}
                 </Badge>
@@ -343,40 +340,40 @@ export default function CustomerManagement({ title, customers, roles, countries,
     []
   );
 
-  const rowActions = useMemo<DataTableRowAction<Customer>[]>(
+  const rowActions = useMemo<DataTableRowAction<Contact>[]>(
     () => [
       {
-        label: "Edit Customer",
+        label: "Edit Contact",
         value: "edit",
-        onSelect: (customer) => {
-          handleOpenEditDrawer(customer);
+        onSelect: (contact) => {
+          handleOpenEditDrawer(contact);
         }
       },
       {
-        label: "Delete Customer",
+        label: "Delete Contact",
         value: "delete",
-        onSelect: (customer) => {
-          handleDeleteCustomer(customer);
+        onSelect: (contact) => {
+          handleDeleteContact(contact);
         }
       },
     ],
-    [handleOpenEditDrawer, handleDeleteCustomer]
+    [handleOpenEditDrawer, handleDeleteContact]
   );
 
   return (
     <AppLayout>
-      <PageMeta title={title || "Customers"} />
+      <PageMeta title={title || "Contacts"} />
       <main>
-        <PageHeader title={title || "Customers"} />
+        <PageHeader title={title || "Contacts"} />
         <div className="space-y-6">
-          <DataTable<Customer>
-            data={customers.data}
+          <DataTable<Contact>
+            data={contacts.data}
             columns={columns}
             rowActions={rowActions}
             pagination={{
-              page: customers.current_page,
-              perPage: customers.per_page,
-              total: customers.total
+              page: contacts.current_page,
+              perPage: contacts.per_page,
+              total: contacts.total
             }}
             searchValue={safeFilters.search}
             onSearchChange={(search) => submitQuery({ search, page: 1 })}
@@ -410,7 +407,7 @@ export default function CustomerManagement({ title, customers, roles, countries,
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Add Customer
+                Add Contact
               </button>
             )}
             isLoading={isLoading}
@@ -419,11 +416,11 @@ export default function CustomerManagement({ title, customers, roles, countries,
         </div>
       </main>
 
-      {/* Edit Customer Drawer */}
+      {/* Edit Contact Drawer */}
       <Drawer
         isOpen={isEditDrawerOpen}
         onClose={handleCloseEditDrawer}
-        title="Edit Customer"
+        title="Edit Contact"
         size="lg"
         placement="right"
         footer={
@@ -438,7 +435,7 @@ export default function CustomerManagement({ title, customers, roles, countries,
             </button>
             <button
               type="submit"
-              form="edit-customer-form"
+              form="edit-contact-form"
               className="btn bg-primary text-white hover:bg-primary/90 disabled:opacity-75 disabled:cursor-not-allowed"
               disabled={isSaving}
             >
@@ -454,25 +451,25 @@ export default function CustomerManagement({ title, customers, roles, countries,
           </>
         }
       >
-        <form id="edit-customer-form" onSubmit={handleSaveCustomer} className="space-y-4">
-          {/* Customer Info Header */}
+        <form id="edit-contact-form" onSubmit={handleSaveContact} className="space-y-4">
+          {/* Contact Info Header */}
           <div className="bg-default-50 p-4 rounded-lg flex items-center gap-3">
-            {editingCustomer?.photo ? (
+            {editingContact?.photo ? (
               <img 
-                src={editingCustomer.photo} 
-                alt={editingCustomer.name} 
+                src={editingContact.photo} 
+                alt={editingContact.name} 
                 className="size-12 rounded-full object-cover"
               />
             ) : (
               <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-primary font-semibold">
-                  {editingCustomer?.name?.charAt(0)?.toUpperCase() || '?'}
+                  {editingContact?.name?.charAt(0)?.toUpperCase() || '?'}
                 </span>
               </div>
             )}
             <div>
-              <div className="font-semibold text-default-900">{editingCustomer?.name}</div>
-              <div className="text-sm text-default-600">{editingCustomer?.email}</div>
+              <div className="font-semibold text-default-900">{editingContact?.name}</div>
+              <div className="text-sm text-default-600">{editingContact?.email}</div>
             </div>
           </div>
 
@@ -483,7 +480,7 @@ export default function CustomerManagement({ title, customers, roles, countries,
             <input
               type="text"
               name="name"
-              placeholder="Enter customer name"
+              placeholder="Enter contact name"
               value={editFormData.name}
               onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
               disabled={isSaving}
@@ -617,11 +614,11 @@ export default function CustomerManagement({ title, customers, roles, countries,
         </form>
       </Drawer>
 
-      {/* Create Customer Drawer */}
+      {/* Create Contact Drawer */}
       <Drawer
         isOpen={isCreateDrawerOpen}
         onClose={handleCloseCreateDrawer}
-        title="Add New Customer"
+        title="Add New Contact"
         size="lg"
         placement="right"
         footer={
@@ -636,7 +633,7 @@ export default function CustomerManagement({ title, customers, roles, countries,
             </button>
             <button
               type="submit"
-              form="create-customer-form"
+              form="create-contact-form"
               className="btn bg-primary text-white hover:bg-primary/90 disabled:opacity-75 disabled:cursor-not-allowed"
               disabled={isCreating}
             >
@@ -646,47 +643,29 @@ export default function CustomerManagement({ title, customers, roles, countries,
                   Creating...
                 </span>
               ) : (
-                "Add Customer"
+                  "Add Contact"
               )}
             </button>
           </>
         }
       >
-        <form id="create-customer-form" onSubmit={handleCreateCustomer} className="space-y-4">
+        <form id="create-contact-form" onSubmit={handleCreateContact} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                First Name <span className="text-danger">*</span>
+                Name <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
-                name="first_name"
+                name="name"
                 placeholder="Enter first name"
-                value={createFormData.first_name}
-                onChange={(e) => setCreateFormData({ ...createFormData, first_name: e.target.value })}
+                value={createFormData.name}
+                onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
                 disabled={isCreating}
-                className={`form-input w-full ${createFormErrors.first_name ? 'border-danger focus:ring-danger' : ''}`}
+                className={`form-input w-full ${createFormErrors.name ? 'border-danger focus:ring-danger' : ''}`}
               />
-              {createFormErrors.first_name && (
-                <p className="text-danger text-sm mt-1">{createFormErrors.first_name}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">
-                Last Name <span className="text-danger">*</span>
-              </label>
-              <input
-                type="text"
-                name="last_name"
-                placeholder="Enter last name"
-                value={createFormData.last_name}
-                onChange={(e) => setCreateFormData({ ...createFormData, last_name: e.target.value })}
-                disabled={isCreating}
-                className={`form-input w-full ${createFormErrors.last_name ? 'border-danger focus:ring-danger' : ''}`}
-              />
-              {createFormErrors.last_name && (
-                <p className="text-danger text-sm mt-1">{createFormErrors.last_name}</p>
+              {createFormErrors.name && (
+                <p className="text-danger text-sm mt-1">{createFormErrors.name}</p>
               )}
             </div>
           </div>

@@ -405,7 +405,7 @@ export default function UserManagement({ users, roles, permissions, filters }: U
               Roles
             </label>
             <div className="space-y-2">
-              {roles.filter(role => role.name.toLowerCase() !== 'customer').map((role) => (
+              {roles.filter(role => role.name.toLowerCase() !== 'contact').map((role) => (
                 <label
                   key={role.id}
                   className="flex items-center gap-2 cursor-pointer hover:bg-default-50 p-2 rounded"
@@ -574,7 +574,7 @@ export default function UserManagement({ users, roles, permissions, filters }: U
               Roles
             </label>
             <div className="space-y-2 max-h-48 overflow-y-auto border border-default-200 rounded-lg p-3">
-              {roles.filter(role => role.name.toLowerCase() !== 'customer').map((role) => (
+              {roles.filter(role => role.name.toLowerCase() !== 'contact').map((role) => (
                 <label
                   key={role.id}
                   className="flex items-center gap-2 cursor-pointer hover:bg-default-50 p-2 rounded"

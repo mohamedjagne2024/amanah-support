@@ -45,23 +45,23 @@ class ChatController extends Controller {
 
     public function init(){
         $request = Request::all();
-        $existingCustomer = User::where('email', $request['email'])->first();
+        $existingContact = User::where('email', $request['email'])->first();
         $newConversation = null;
-        if(empty($existingCustomer)){
-            $existingCustomer = new User;
-            $existingCustomer->name = $request['name'];
-            $existingCustomer->email = $request['email'];
-            $existingCustomer->password = bcrypt('password');
-            $existingCustomer->assignRole('customer');
-            $existingCustomer->save();
+        if(empty($existingContact)){
+            $existingContact = new User;
+            $existingContact->name = $request['name'];
+            $existingContact->email = $request['email'];
+            $existingContact->password = bcrypt('password');
+            $existingContact->assignRole('contact');
+            $existingContact->save();
         }else{
-            $newConversation = Conversation::where('customer_id', $existingCustomer->id)->first();
+            $newConversation = Conversation::where('contact_id', $existingContact->id)->first();
         }
 
         if(empty($newConversation)){
             $newConversation = new Conversation;
-            $newConversation->customer_id = $existingCustomer->id;
-            $initialMessage = "Hey ". $existingCustomer->name. ', welcome to Amanah Support - how can I help?';
+            $newConversation->contact_id = $existingContact->id;
+            $initialMessage = "Hey ". $existingContact->name. ', welcome to Amanah Support - how can I help?';
             $newConversation->title = $initialMessage;
             $newConversation->save();
 
@@ -81,11 +81,11 @@ class ChatController extends Controller {
             if(!empty($user)){
                 $participant->user_id = $user->id;
             }
-            $participant->customer_id = $existingCustomer->id;
+            $participant->contact_id = $existingContact->id;
             $participant->conversation_id = $newConversation->id;
             $participant->save();
 
-            $message->creator = $existingCustomer;
+            $message->creator = $existingContact;
             broadcast(new NewChatMessage($message))->toOthers();
         }
 
@@ -102,7 +102,7 @@ class ChatController extends Controller {
         return response()->json($conversation);
     }
 
-    public function getConversation($id, $customer_id){
+    public function getConversation($id, $contact_id){
         $conversation = Conversation::with([
             'creator',
             'messages' => function($q){
@@ -113,7 +113,7 @@ class ChatController extends Controller {
             'participant.user'
         ])->where(function ($query) use ($id) {
             $query->where('id', $id)->orWhere('slug', $id);
-        })->where('customer_id', $customer_id)->first();
+        })->where('contact_id', $contact_id)->first();
         return response()->json($conversation);
     }
 
@@ -212,15 +212,15 @@ class ChatController extends Controller {
     public function sendPublicMessage(){
         $request = Request::all();
         $newMessage = new Message;
-        if(isset($request['customer_id'])){
-            $newMessage->customer_id = $request['customer_id'];
+        if(isset($request['contact_id'])){
+            $newMessage->contact_id = $request['contact_id'];
         }
         $newMessage->message = $request['message'];
         $newMessage->conversation_id = $request['conversation_id'];
         $newMessage->save();
 
         Conversation::where('id', $newMessage->conversation_id)->update(['title' => $newMessage->message]);
-        $message = Message::with(['customer', 'user'])->where('id', $newMessage->id)->first();
+        $message = Message::with(['contact', 'user'])->where('id', $newMessage->id)->first();
 
         broadcast(new NewChatMessage($message))->toOthers();
 

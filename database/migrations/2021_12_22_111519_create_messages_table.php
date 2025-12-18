@@ -19,7 +19,7 @@ class CreateMessagesTable extends Migration
             $table->integer('guid')->nullable()->index();
             $table->integer('conversation_id')->index();
             $table->integer('user_id')->index()->nullable();
-            $table->integer('customer_id')->index()->nullable();
+            $table->integer('contact_id')->index()->nullable();
             $table->integer('is_read')->default(0);
             $table->text('message');
             $table->timestamps();

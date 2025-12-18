@@ -24,9 +24,9 @@ class Message extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function customer()
+    public function contact()
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(User::class, 'contact_id');
     }
 
     public function attachments()

@@ -122,13 +122,13 @@ final class RolesAndPermissionsSeeder extends Seeder
             'pending_users.active',
             'pending_users.decline',
 
-            // Customers
-            'customers.view',
-            'customers.create',
-            'customers.edit',
-            'customers.update',
-            'customers.delete',
-            'customers.restore',
+            // Contacts
+            'contacts.view',
+            'contacts.create',
+            'contacts.edit',
+            'contacts.update',
+            'contacts.delete',
+            'contacts.restore',
 
             // Organizations
             'organizations.view',
@@ -171,11 +171,6 @@ final class RolesAndPermissionsSeeder extends Seeder
 
             // Permissions
             'permissions.view',
-
-            // Filters
-            'filter.customers',
-            'filter.assignees',
-            'filter.users_except_customer',
 
             // Images
             'images.cke_upload',
@@ -280,12 +275,12 @@ final class RolesAndPermissionsSeeder extends Seeder
             'pending_users.view',
             'pending_users.active',
             'pending_users.decline',
-            'customers.view',
-            'customers.create',
-            'customers.edit',
-            'customers.update',
-            'customers.delete',
-            'customers.restore',
+            'contacts.view',
+            'contacts.create',
+            'contacts.edit',
+            'contacts.update',
+            'contacts.delete',
+            'contacts.restore',
             'organizations.view',
             'organizations.create',
             'organizations.edit',
@@ -314,9 +309,6 @@ final class RolesAndPermissionsSeeder extends Seeder
             'roles.edit',
             'roles.delete',
             'permissions.view',
-            'filter.customers',
-            'filter.assignees',
-            'filter.users_except_customer',
             'images.cke_upload',
             'images.view',
             'cron.imap.run',
@@ -355,15 +347,12 @@ final class RolesAndPermissionsSeeder extends Seeder
             'departments.view',
             'types.view',
             'templates.view',
-            'customers.view',
-            'customers.create',
-            'customers.edit',
-            'customers.update',
+            'contacts.view',
+            'contacts.create',
+            'contacts.edit',
+            'contacts.update',
             'organizations.view',
             'reports.view',
-            'filter.customers',
-            'filter.assignees',
-            'filter.users_except_customer',
             'images.view',
         ]);
 
@@ -386,8 +375,8 @@ final class RolesAndPermissionsSeeder extends Seeder
             'images.view',
         ]);
 
-        $customer = Role::firstOrCreate(['name' => 'Customer', 'guard_name' => 'web']);
-        $customer->givePermissionTo([
+        $contact = Role::firstOrCreate(['name' => 'Contact', 'guard_name' => 'web']);
+        $contact->givePermissionTo([
             'dashboard.view',
             'tickets.view',
             'tickets.create',
