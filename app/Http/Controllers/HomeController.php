@@ -5,22 +5,28 @@ namespace App\Http\Controllers;
 use App\Events\TicketCreated;
 use App\Models\Attachment;
 use App\Models\Category;
+use App\Models\Conversation;
 use App\Models\Department;
 use App\Models\FrontPage;
+use App\Models\Message;
+use App\Models\Participant;
 use App\Models\Settings;
 use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\TicketEntry;
 use App\Models\Type;
 use App\Models\User;
+use App\Traits\HasGoogleCloudStorage;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class HomeController extends Controller
 {
+    use HasGoogleCloudStorage;
 
     public function index(){
         return Inertia::render('landing/home', [
@@ -96,26 +102,27 @@ class HomeController extends Controller
         $ticket_data = Request::validate([
             'name' => ['required', 'max:40'],
             'subject' => ['required'],
-            'department_id' => [in_array('department', $is_required)?'required':'nullable', Rule::exists('departments', 'id')],
-            'category_id' => [in_array('category', $is_required)?'required':'nullable', Rule::exists('categories', 'id')],
-            'sub_category_id' => [in_array('sub_category', $is_required)?'required':'nullable', Rule::exists('categories', 'id')],
-            'type_id' => [in_array('ticket_type', $is_required)?'required':'nullable', Rule::exists('types', 'id')],
+            'department_id' => ['nullable', Rule::exists('departments', 'id')],
+            'category_id' => ['nullable', Rule::exists('categories', 'id')],
+            'sub_category_id' => ['nullable', Rule::exists('categories', 'id')],
+            'type_id' => ['nullable', Rule::exists('types', 'id')],
             'email' => ['required', 'max:60', 'email'],
             'details' => ['required'],
             'custom_field' => ['nullable'],
         ]);
 
-        $user = User::where('email', $ticket_data['email'])->first();
+        $contact = User::where('email', $ticket_data['email'])->first();
+        $plain_password = null;
 
-        if(empty($user)){
+        if(empty($contact)){
             $plain_password = $this->genRendomPassword();
-            $user = User::create([
+            $contact = User::create([
                 'name' => $ticket_data['name'],
                 'email' => $ticket_data['email'],
                 'password' => $plain_password,
             ]);
 
-            $user->assignRole('customer');
+            $contact->assignRole('contact');
         }
 
         $status = Status::where('slug', 'LIKE', '%pending%')->first();
@@ -126,7 +133,7 @@ class HomeController extends Controller
             'category_id' => $ticket_data['category_id'],
             'sub_category_id' => $ticket_data['sub_category_id'],
             'type_id' => $ticket_data['type_id'],
-            'user_id' => $user->id
+            'contact_id' => $contact->id
         ];
 
         if($status){
@@ -145,16 +152,16 @@ class HomeController extends Controller
 
         if(Request::hasFile('files')){
             $files = Request::file('files');
-            foreach($files as $file){
-                $file_path = $file->store('tickets', ['disk' => 'file_uploads']);
-                Attachment::create(['ticket_id' => $ticket->id, 'name' => $file->getClientOriginalName(), 'size' => $file->getSize(), 'path' => $file_path]);
-            }
+            $this->handleAttachmentUploads($ticket, $files);
         }
 
+        // Create a conversation linked to the ticket and contact
+        $this->createTicketConversation($ticket, $contact);
+
         $variables = [
-            'name' => $user->name,
-            'email' => $user->email,
-            'password' => $plain_password ?? null,
+            'name' => $contact->name,
+            'email' => $contact->email,
+            'password' => $plain_password,
             'login_url' => URL::to('login'),
             'sender_name' => config('mail.from.name', 'support@amanahsupport.com'),
             'ticket_id' => $ticket->id,
@@ -164,7 +171,7 @@ class HomeController extends Controller
         ];
         event(new TicketCreated($variables));
 
-        return Redirect::route('ticket_open')->with('success', 'The ticket has been submitted, we will get a message from us to follow up the ticket update. Please check the spam folder and make sure you got the mail from us.');
+        return Redirect::route('home')->with('success', 'The ticket has been submitted. We will send you a message to follow up on the ticket update. Please check your spam folder.');
     }
 
     private function genRendomPassword() {
@@ -176,5 +183,70 @@ class HomeController extends Controller
             $pass[] = $alphabet[$n];
         }
         return implode($pass); //turn the array into a string
+    }
+
+    /**
+     * Create a conversation linked to the ticket and contact.
+     */
+    private function createTicketConversation(Ticket $ticket, User $contact): Conversation
+    {
+        // Create the conversation
+        $conversation = new Conversation();
+        $conversation->contact_id = $contact->id;
+        $conversation->ticket_id = $ticket->id;
+        $conversation->title = "Ticket #{$ticket->uid}: {$ticket->subject}";
+        $conversation->save();
+
+        // Find an admin user to be the initial responder
+        $adminRole = Role::where('name', 'admin')->first();
+        $adminUser = User::whereHas('roles', function ($query) use ($adminRole) {
+            $query->where('roles.id', $adminRole ? $adminRole->id : 0);
+        })->first();
+
+        // Create an initial welcome message
+        $initialMessage = "Thank you for submitting your ticket. Your ticket ID is #{$ticket->uid}. Our support team will review your request and respond shortly.";
+        
+        $message = new Message();
+        $message->conversation_id = $conversation->id;
+        if ($adminUser) {
+            $message->user_id = $adminUser->id;
+        }
+        $message->message = $initialMessage;
+        $message->save();
+
+        // Create a participant record
+        $participant = new Participant();
+        if ($adminUser) {
+            $participant->user_id = $adminUser->id;
+        }
+        $participant->contact_id = $contact->id;
+        $participant->conversation_id = $conversation->id;
+        $participant->save();
+
+        return $conversation;
+    }
+
+    /**
+     * Handle attachment uploads to Google Cloud Storage.
+     */
+    private function handleAttachmentUploads(Ticket $ticket, array $files): void
+    {
+        // Configure GCS from database settings
+        $this->configureGCS();
+
+        foreach ($files as $file) {            
+            // Upload to Google Cloud Storage
+            $path = $this->uploadToStorage($file, 'tickets');
+
+            if($path){
+                Attachment::create([
+                    'ticket_id' => $ticket->id,
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'path' => $path,
+                    'user_id' => null, // No authenticated user for public submissions
+                ]);
+            }
+        }
     }
 }

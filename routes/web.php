@@ -77,6 +77,10 @@ $router->prefix('/')->group(static function (Router $router): void {
         $router->get('blog/{post}', [PageController::class, 'blogDetails'])
             ->name('blog.details');
 
+        // Public ticket submission (no auth required)
+        $router->post('ticket/store', [HomeController::class, 'ticketPublicStore'])
+            ->name('ticket.public.store');
+
             
     $router->middleware('auth')->group(static function (Router $router): void {
         $router->get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

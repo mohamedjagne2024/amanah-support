@@ -136,6 +136,10 @@ class Ticket extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    public function conversations(){
+        return $this->hasMany(Conversation::class, 'ticket_id');
+    }
+
     public function getDueAttribute($date){
         return Carbon::parse($date)->format('Y-m-d');
     }

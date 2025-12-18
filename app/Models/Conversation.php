@@ -22,6 +22,11 @@ class Conversation extends Model {
         return $this->belongsTo(User::class, 'contact_id');
     }
 
+    public function ticket()
+    {
+        return $this->belongsTo(Ticket::class, 'ticket_id');
+    }
+
     public function participant()
     {
         return $this->hasOne(Participant::class);
