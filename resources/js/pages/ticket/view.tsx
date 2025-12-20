@@ -1,5 +1,6 @@
-import { useForm, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import axios from 'axios';
 import { 
   FileText, 
   Calendar, 
@@ -19,8 +20,9 @@ import {
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
-import Breadcrumb from '@/components/BreadCrumb';
 import TextEditor from '@/components/TextEditor';
+import Breadcrumb from '@/components/Breadcrumb';
+import { useTicketCommentListener } from '@/hooks/usePusher';
 
 type AttachmentType = {
   id: number;
@@ -77,8 +79,6 @@ type TicketData = {
   due: string | null;
   source: string;
   tags: string;
-  impact_level: string;
-  urgency_level: string;
   estimated_hours: string;
   actual_hours: string;
   files: File[];
@@ -100,13 +100,22 @@ export default function View({
   title,
   ticket,
   attachments,
-  comments,
+  comments: initialComments,
 }: ViewTicketPageProps) {
   const [copiedUid, setCopiedUid] = useState(false);
   const [showNewComment, setShowNewComment] = useState(false);
+  const [localComments, setLocalComments] = useState<CommentType[]>(initialComments);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data, setData, post, processing } = useForm({
-    comment: '',
+  // Listen for real-time comment updates via Pusher
+  useTicketCommentListener(ticket.id, (newComment) => {
+    // Add the new comment to local state if it doesn't already exist
+    setLocalComments((prev) => {
+      const exists = prev.some((c) => c.id === newComment.id);
+      if (exists) return prev;
+      return [...prev, newComment];
+    });
   });
 
   // Parse tags from comma-separated string
@@ -114,11 +123,11 @@ export default function View({
     return ticket.tags ? ticket.tags.split(',').map(t => t.trim()).filter(t => t) : [];
   }, [ticket.tags]);
 
-  // Generate activity log from comments and system events
+  // Generate activity log from system events (excludes comments - they appear in Conversations)
   const activityLog = useMemo(() => {
     const activities: Array<{
       id: number;
-      type: 'system' | 'comment' | 'assignment' | 'created';
+      type: 'system' | 'assignment' | 'created';
       message: string;
       created_at: string;
       user?: { id: number; name: string };
@@ -144,21 +153,10 @@ export default function View({
       });
     }
 
-    // Add comments as activities
-    comments.forEach((comment) => {
-      activities.push({
-        id: comment.id,
-        type: 'comment',
-        message: comment.details,
-        created_at: comment.created_at,
-        user: comment.user,
-      });
-    });
-
     return activities.sort((a, b) => 
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
-  }, [ticket, comments]);
+  }, [ticket]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -196,19 +194,35 @@ export default function View({
   };
 
   const handleCommentChange = (content: string) => {
-    setData('comment', content);
+    setCommentText(content);
   };
 
-  const handleSubmitComment = (e: React.FormEvent) => {
+  const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!data.comment.trim()) return;
+    if (!commentText.trim() || isSubmitting) return;
     
-    post(`/tickets/${ticket.id}/comment`, {
-      onSuccess: () => {
-        setData('comment', '');
-        setShowNewComment(false);
-      },
-    });
+    setIsSubmitting(true);
+    try {
+      const response = await axios.post(`/tickets/${ticket.id}/comment`, {
+        comment: commentText,
+      });
+      
+      // Add the comment to local state immediately
+      if (response.data.comment) {
+        setLocalComments((prev) => {
+          const exists = prev.some((c) => c.id === response.data.comment.id);
+          if (exists) return prev;
+          return [...prev, response.data.comment];
+        });
+      }
+      
+      setCommentText('');
+      setShowNewComment(false);
+    } catch {
+      // Error handling - comment failed to submit
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getPriorityBadgeClass = (priority: string) => {
@@ -228,14 +242,6 @@ export default function View({
     if (s.includes('pending')) return 'bg-warning text-white';
     if (s.includes('progress')) return 'bg-primary text-white';
     return 'bg-default-200 text-default-700';
-  };
-
-  const getImpactBadgeClass = (level: string) => {
-    const l = level.toLowerCase();
-    if (l.includes('critical') || l.includes('high')) return 'bg-warning/10 text-warning border border-warning/20';
-    if (l.includes('medium')) return 'bg-info/10 text-info border border-info/20';
-    if (l.includes('low')) return 'bg-success/10 text-success border border-success/20';
-    return 'bg-default-100 text-default-600 border border-default-200';
   };
 
   return (
@@ -317,16 +323,6 @@ export default function View({
                   <Star className="size-3" />
                   {ticket.priority}
                 </span>
-                {ticket.impact_level && (
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getImpactBadgeClass(ticket.impact_level)}`}>
-                    <span className="opacity-70">Impact:</span> {ticket.impact_level}
-                  </span>
-                )}
-                {ticket.urgency_level && (
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getImpactBadgeClass(ticket.urgency_level)}`}>
-                    <span className="opacity-70">Urgency:</span> {ticket.urgency_level}
-                  </span>
-                )}
                 {parsedTags.length > 0 && (
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-default-200 text-default-700 flex items-center gap-1">
                     <Tag className="size-3" />
@@ -339,14 +335,6 @@ export default function View({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowNewComment(true)}
-              className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
-            >
-              <MessageSquare className="size-4 me-1" />
-              Start Conversation
-            </button>
             <Link href={`/tickets/${ticket.uid}/edit`}>
               <button type="button" className="btn bg-primary text-white btn-sm">
                 <Edit3 className="size-4 me-1" />
@@ -390,11 +378,7 @@ export default function View({
                 <div className="space-y-4">
                   {activityLog.map((activity, index) => (
                     <div key={`${activity.type}-${activity.id}-${index}`} className="flex gap-3">
-                      {activity.type === 'comment' && activity.user ? (
-                        <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
-                          {activity.user.name.charAt(0)}
-                        </div>
-                      ) : activity.type === 'created' && activity.user ? (
+                      {activity.type === 'created' && activity.user ? (
                         <div className="size-8 rounded-full bg-success/10 flex items-center justify-center text-success font-semibold text-sm uppercase shrink-0">
                           {activity.user.name.charAt(0)}
                         </div>
@@ -409,22 +393,7 @@ export default function View({
                       )}
                       
                       <div className="flex-1 min-w-0">
-                        {activity.type === 'comment' ? (
-                          <>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-default-900 text-sm">
-                                {activity.user?.name || 'Unknown User'}
-                              </span>
-                              <span className="text-xs text-default-400">
-                                {formatDateTime(activity.created_at)}
-                              </span>
-                            </div>
-                            <div 
-                              className="text-sm text-default-600 bg-default-50 rounded-lg p-3 prose prose-sm max-w-none"
-                              dangerouslySetInnerHTML={{ __html: activity.message }}
-                            />
-                          </>
-                        ) : activity.type === 'created' ? (
+                        {activity.type === 'created' ? (
                           <div className="flex items-center justify-between py-1">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-default-900 text-sm">
@@ -445,11 +414,11 @@ export default function View({
                                 {activity.message}
                               </span>
                               <span className="px-2 py-0.5 rounded text-xs bg-info/10 text-info font-medium">
-                                System Event
+                                Assigned
                               </span>
                             </div>
                             <span className="text-xs text-default-400">
-                              by System • {formatDateTime(activity.created_at)}
+                              {formatDateTime(activity.created_at)}
                             </span>
                           </div>
                         )}
@@ -460,16 +429,16 @@ export default function View({
               </div>
             </div>
 
-            {/* Conversations Card */}
+            {/* Reply Card */}
             <div className="card">
               <div className="card-header flex items-center justify-between">
-                <h6 className="card-title">Conversations</h6>
+                <h6 className="card-title">Reply</h6>
                 <button
                   onClick={() => setShowNewComment(true)}
                   className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
                 >
                   <Plus className="size-4 me-1" />
-                  New Conversation
+                  New Reply
                 </button>
               </div>
               <div className="card-body">
@@ -491,31 +460,31 @@ export default function View({
                       </button>
                       <button
                         type="submit"
-                        disabled={processing || !data.comment.trim()}
+                        disabled={isSubmitting || !commentText.trim()}
                         className="btn bg-primary text-white btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Send Message
                       </button>
                     </div>
                   </form>
-                ) : comments.length === 0 ? (
+                ) : localComments.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="size-16 mx-auto mb-4 rounded-full bg-default-100 flex items-center justify-center">
                       <MessageSquare className="size-8 text-default-400" />
                     </div>
-                    <h6 className="text-default-900 font-medium mb-1">No conversations yet</h6>
-                    <p className="text-default-500 text-sm mb-4">Start a conversation to discuss this ticket</p>
+                    <h6 className="text-default-900 font-medium mb-1">No replies yet</h6>
+                    <p className="text-default-500 text-sm mb-4">Reply to discuss this ticket</p>
                     <button
                       onClick={() => setShowNewComment(true)}
                       className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
                     >
                       <Plus className="size-4 me-1" />
-                      Start First Conversation
+                      Reply
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {comments.map((comment) => (
+                    {localComments.map((comment: CommentType) => (
                       <div key={comment.id} className="flex gap-3 p-4 bg-default-50 rounded-lg">
                         <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
                           {comment.user?.name?.charAt(0) || 'U'}

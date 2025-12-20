@@ -21,7 +21,7 @@ import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
 import DatePicker from '@/components/DatePicker';
 import { ConfirmDialog } from '@/components/Dialog';
-import Breadcrumb from '@/components/BreadCrumb';
+import Breadcrumb from '@/components/Breadcrumb';
 
 type ContactOption = {
   id: number;
@@ -109,10 +109,6 @@ type TicketData = {
   due: string | null;
   source: string;
   tags: string;
-  impact_level: string;
-  urgency_level: string;
-  estimated_hours: string;
-  actual_hours: string;
   files: File[];
   comment_access: string;
 };
@@ -170,10 +166,6 @@ export default function Edit({
     due: ticket.due || '',
     source: ticket.source || 'Email',
     tags: ticket.tags || '',
-    impact_level: ticket.impact_level || 'Medium',
-    urgency_level: ticket.urgency_level || 'Medium',
-    estimated_hours: ticket.estimated_hours || '',
-    actual_hours: ticket.actual_hours || '',
     files: [] as File[],
     removedFiles: [] as number[],
     comment: '',
@@ -259,20 +251,6 @@ export default function Edit({
         })),
     [all_categories, data.category_id]
   );
-
-  const impactLevelOptions: SelectOption[] = [
-    { label: 'Low', value: 'Low' },
-    { label: 'Medium', value: 'Medium' },
-    { label: 'High', value: 'High' },
-    { label: 'Critical', value: 'Critical' },
-  ];
-
-  const urgencyLevelOptions: SelectOption[] = [
-    { label: 'Low', value: 'Low' },
-    { label: 'Medium', value: 'Medium' },
-    { label: 'High', value: 'High' },
-    { label: 'Critical', value: 'Critical' },
-  ];
 
   const sourceOptions: SelectOption[] = [
     { label: 'Email', value: 'Email' },
@@ -457,12 +435,6 @@ export default function Edit({
                 </span>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityBadgeClass(ticket.priority)}`}>
                   {ticket.priority}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityBadgeClass(ticket.impact_level)}`}>
-                  <span className="opacity-70">Impact:</span> {ticket.impact_level}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityBadgeClass(ticket.urgency_level)}`}>
-                  <span className="opacity-70">Urgency:</span> {ticket.urgency_level}
                 </span>
                 {parsedTags.length > 0 && (
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-default-200 text-default-700 flex items-center gap-1">
@@ -969,44 +941,6 @@ export default function Edit({
                     />
                   </div>
 
-                  {/* Impact Level */}
-                  <div>
-                    <Combobox
-                      label="Impact Level"
-                      options={impactLevelOptions}
-                      value={
-                        impactLevelOptions.find(
-                          (opt) => String(opt.value) === data.impact_level
-                        ) || null
-                      }
-                      onChange={(option) =>
-                        setData('impact_level', option?.value?.toString() || 'Medium')
-                      }
-                      placeholder="Select impact level"
-                      disabled={processing}
-                      isSearchable={false}
-                    />
-                  </div>
-
-                  {/* Urgency Level */}
-                  <div>
-                    <Combobox
-                      label="Urgency Level"
-                      options={urgencyLevelOptions}
-                      value={
-                        urgencyLevelOptions.find(
-                          (opt) => String(opt.value) === data.urgency_level
-                        ) || null
-                      }
-                      onChange={(option) =>
-                        setData('urgency_level', option?.value?.toString() || 'Medium')
-                      }
-                      placeholder="Select urgency level"
-                      disabled={processing}
-                      isSearchable={false}
-                    />
-                  </div>
-
                   {/* Source */}
                   <div>
                     <Combobox
@@ -1067,50 +1001,6 @@ export default function Edit({
                       </div>
                     )}
                     <input type="hidden" name="tags" value={data.tags} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Time Tracking Card */}
-              <div className="card">
-                <div className="card-header">
-                  <h6 className="card-title">Time Tracking</h6>
-                </div>
-                <div className="card-body space-y-4">
-                  {/* Estimated Hours */}
-                  <div>
-                    <label className="block font-medium text-default-900 text-sm mb-2">
-                      Estimated Hours
-                    </label>
-                    <input
-                      type="number"
-                      name="estimated_hours"
-                      value={data.estimated_hours}
-                      onChange={(e) => setData('estimated_hours', e.target.value)}
-                      placeholder="Enter estimated hours"
-                      disabled={processing}
-                      className="form-input"
-                      min="0"
-                      step="0.5"
-                    />
-                  </div>
-
-                  {/* Actual Hours */}
-                  <div>
-                    <label className="block font-medium text-default-900 text-sm mb-2">
-                      Actual Hours
-                    </label>
-                    <input
-                      type="number"
-                      name="actual_hours"
-                      value={data.actual_hours}
-                      onChange={(e) => setData('actual_hours', e.target.value)}
-                      placeholder="Enter actual hours"
-                      disabled={processing}
-                      className="form-input"
-                      min="0"
-                      step="0.5"
-                    />
                   </div>
                 </div>
               </div>

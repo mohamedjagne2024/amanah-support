@@ -1,4 +1,4 @@
-import { useForm, Link } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
 import { 
   Ticket, 

@@ -42,6 +42,11 @@ final class HandleInertiaRequests extends Middleware
                     Settings::where('name', 'date_format')->first()?->value ?? 'Y-m-d'
                 ),
             ],
+
+            'pusher' => fn () => [
+                'key' => Settings::where('name', 'pusher_app_key')->first()?->value,
+                'cluster' => Settings::where('name', 'pusher_app_cluster')->first()?->value,
+            ],
         ]);
     }
 }

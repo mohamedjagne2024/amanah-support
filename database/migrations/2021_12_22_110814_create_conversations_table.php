@@ -18,7 +18,6 @@ class CreateConversationsTable extends Migration
             $table->id();
             $table->string('title', 100)->nullable();
             $table->integer('contact_id')->index();
-            $table->integer('ticket_id')->index()->nullable();
             $table->timestamps();
         });
     }

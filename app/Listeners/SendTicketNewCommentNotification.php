@@ -24,7 +24,12 @@ class SendTicketNewCommentNotification
      */
     public function handle(TicketNewComment $event): void
     {
-        $data = $event->data;
+        // Map new event format to data array for backward compatibility
+        $data = [
+            'ticket_id' => $event->ticketId,
+            'ticket_uid' => $event->ticketUid,
+            'comment' => $event->comment['details'] ?? '',
+        ];
         
         // Get email notification settings
         $notifications = app('App\AmanahSupport')->getSettingsEmailNotifications();

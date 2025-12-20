@@ -31,6 +31,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CronJobsController;
 use App\Http\Controllers\FrontPagesController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\ContactsTicketController;
 
 $router->prefix('/')->group(static function (Router $router): void {
     $router->get('/', [HomeController::class, 'index'])->name('home');
@@ -468,6 +469,35 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('contacts.restore')
             ->middleware('auth');
 
+
+        $router->get('contact/tickets', [ContactsTicketController::class, 'index'])
+            ->name('contact.tickets')
+            ->middleware('auth');
+
+        $router->get('contact/tickets/create', [ContactsTicketController::class, 'create'])
+            ->name('contact.tickets.create')
+            ->middleware('auth');
+
+        $router->post('contact/tickets', [ContactsTicketController::class, 'store'])
+            ->name('contact.tickets.store')
+            ->middleware('auth');
+
+        $router->get('contact/tickets/{ticket}', [ContactsTicketController::class, 'show'])
+            ->name('contact.tickets.show')
+            ->middleware('auth');
+
+        $router->get('contact/tickets/{ticket}/edit', [ContactsTicketController::class, 'edit'])
+            ->name('contact.tickets.edit')
+            ->middleware('auth');
+
+        $router->put('contact/tickets/{ticket}', [ContactsTicketController::class, 'update'])
+            ->name('contact.tickets.update')
+            ->middleware('auth');
+
+        $router->post('contact/tickets/{ticket}/comment', [ContactsTicketController::class, 'addComment'])
+            ->name('contact.tickets.comment')
+            ->middleware('auth');
+            
 
         // Organizations
 

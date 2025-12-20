@@ -419,10 +419,6 @@ class TicketsController extends Controller
                 'due' => $ticket->due,
                 'source' => $ticket->source ?? 'Email',
                 'tags' => $ticket->tags ?? '',
-                'impact_level' => $ticket->impact_level ?? 'Medium',
-                'urgency_level' => $ticket->urgency_level ?? 'Medium',
-                'estimated_hours' => $ticket->estimated_hours ?? '',
-                'actual_hours' => $ticket->actual_hours ?? '',
                 'files' => [],
                 'comment_access' => 'read',
                 'created_by' => $ticket->createdBy ? [
@@ -553,10 +549,6 @@ class TicketsController extends Controller
                 'due' => Carbon::parse($ticket->due)->format(Settings::get('date_format')),
                 'source' => $ticket->source ?? 'Email',
                 'tags' => $ticket->tags ?? '',
-                'impact_level' => $ticket->impact_level ?? 'Medium',
-                'urgency_level' => $ticket->urgency_level ?? 'Medium',
-                'estimated_hours' => $ticket->estimated_hours ?? '',
-                'actual_hours' => $ticket->actual_hours ?? '',
                 'files' => [],
                 'comment_access' => $comment_access,
             ],
@@ -586,8 +578,6 @@ class TicketsController extends Controller
             'details' => ['required'],
             'source' => ['nullable', 'string', 'max:50'],
             'tags' => ['nullable', 'string', 'max:500'],
-            'estimated_hours' => ['nullable', 'numeric', 'min:0'],
-            'actual_hours' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         if(!empty(Request::input('review')) || !empty(Request::input('rating'))){
@@ -767,12 +757,7 @@ class TicketsController extends Controller
     public function addComment(Ticket $ticket)
     {
         $request = Request::all();
-        
-        // Check if this is the first comment for the ticket
-        $existingComments = Comment::where('ticket_id', $ticket->id)->count();
-        if (empty($existingComments)) {
-            event(new TicketNewComment(['ticket_id' => $ticket->id, 'comment' => $request['comment'] ?? '']));
-        }
+        $user = Auth()->user();
 
         $newComment = new Comment;
         $newComment->user_id = Auth()->id();
@@ -780,6 +765,29 @@ class TicketsController extends Controller
         $newComment->details = $request['comment'] ?? '';
         $newComment->save();
 
-        return Redirect::back()->with('success', 'Comment added successfully.');
+        // Build the comment response data
+        $commentData = [
+            'id' => $newComment->id,
+            'details' => $newComment->details,
+            'created_at' => $newComment->created_at,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ],
+        ];
+
+        // Dispatch Pusher event for real-time updates
+        event(new TicketNewComment(
+            $ticket->id,
+            $ticket->uid,
+            $commentData
+        ));
+
+        // Return JSON response for axios calls
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment added successfully.',
+            'comment' => $commentData,
+        ]);
     }
 }

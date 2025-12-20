@@ -3,17 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Events\NewPublicChatMessage;
+use App\Models\Attachment;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Participant;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 use App\Events\NewChatMessage;
 use Spatie\Permission\Models\Role;
+use App\Traits\HasGoogleCloudStorage;
 
 class ChatController extends Controller {
+    use HasGoogleCloudStorage;
 
     public function index(){
         return Inertia::render('chat/index', [
@@ -199,14 +203,48 @@ class ChatController extends Controller {
         if(isset($request['user_id'])){
             $newMessage->user_id = $request['user_id'];
         }
-        $newMessage->message = $request['message'];
+        $newMessage->message = $request['message'] ?? '';
         $newMessage->conversation_id = $request['conversation_id'];
         $newMessage->save();
 
-        Conversation::where('id', $newMessage->conversation_id)->update(['title' => $newMessage->message]);
-        broadcast(new NewPublicChatMessage($newMessage))->toOthers();
+        // Handle file attachments
+        if(Request::hasFile('files')){
+            $files = Request::file('files');
+            $this->handleMessageAttachments($newMessage, $files);
+        }
 
-        return response()->json($newMessage);
+        // Update conversation title with last message
+        if(!empty($newMessage->message)){
+            Conversation::where('id', $newMessage->conversation_id)->update(['title' => $newMessage->message]);
+        }
+        
+        // Load relationships for the response and broadcast
+        $message = Message::with(['contact', 'user', 'attachments'])->where('id', $newMessage->id)->first();
+        
+        broadcast(new NewPublicChatMessage($message))->toOthers();
+
+        return response()->json($message);
+    }
+
+    private function handleMessageAttachments(Message $message, array $files): void
+    {
+        // Configure GCS from database settings
+        $this->configureGCS();
+
+        foreach ($files as $file) {            
+            // Upload to Google Cloud Storage
+            $path = $this->uploadToStorage($file, 'chat');
+
+            if($path){
+                Attachment::create([
+                    'message_id' => $message->id,
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'path' => $path,
+                    'user_id' => Auth::id(),
+                ]);
+            }
+        }
     }
 
     public function sendPublicMessage(){
@@ -215,12 +253,22 @@ class ChatController extends Controller {
         if(isset($request['contact_id'])){
             $newMessage->contact_id = $request['contact_id'];
         }
-        $newMessage->message = $request['message'];
+        $newMessage->message = $request['message'] ?? '';
         $newMessage->conversation_id = $request['conversation_id'];
         $newMessage->save();
 
-        Conversation::where('id', $newMessage->conversation_id)->update(['title' => $newMessage->message]);
-        $message = Message::with(['contact', 'user'])->where('id', $newMessage->id)->first();
+        // Handle file attachments
+        if(Request::hasFile('files')){
+            $files = Request::file('files');
+            $this->handleMessageAttachments($newMessage, $files);
+        }
+
+        // Update conversation title with last message
+        if(!empty($newMessage->message)){
+            Conversation::where('id', $newMessage->conversation_id)->update(['title' => $newMessage->message]);
+        }
+        
+        $message = Message::with(['contact', 'user', 'attachments'])->where('id', $newMessage->id)->first();
 
         broadcast(new NewChatMessage($message))->toOthers();
 
