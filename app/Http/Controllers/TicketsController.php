@@ -24,7 +24,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Traits\HasGoogleCloudStorage;
@@ -33,15 +32,16 @@ class TicketsController extends Controller
 {
     use HasGoogleCloudStorage;
 
-    public function index(){
+    public function index()
+    {
         $byContact = null;
         $byAssign = null;
         $user = Auth()->user();
-        if($user->hasRole('contact')){
+        if ($user->hasRole('Contact')) {
             $byContact = $user['id'];
-        }elseif($user->hasRole('manager')){
+        } elseif ($user->hasRole('Manager')) {
             $byAssign = $user['id'];
-        }else{
+        } else {
             $byAssign = Request::input('assigned_to');
         }
         $whereAll = [];
@@ -49,36 +49,36 @@ class TicketsController extends Controller
         $limit = Request::input('limit', 10);
         $contact = Request::input('contact_id');
 
-        if(!empty($contact)){
+        if (!empty($contact)) {
             $whereAll[] = ['contact_id', '=', $contact];
         }
 
-        if($type == 'un_assigned'){
+        if ($type == 'un_assigned') {
             $whereAll[] = ['assigned_to', '=', null];
-        }elseif ($type == 'open'){
+        } elseif ($type == 'open') {
             $whereAll[] = ['close', '=', null];
-        }elseif ($type == 'new'){
-            $whereAll[] = ['created_at', '>=', date('Y-m-d').' 00:00:00'];
+        } elseif ($type == 'new') {
+            $whereAll[] = ['created_at', '>=', date('Y-m-d') . ' 00:00:00'];
         }
 
         $ticketQuery = Ticket::where($whereAll);
 
         // Handle high priority filter
-        if($type == 'high_priority'){
-            $ticketQuery->whereHas('priority', function($query) {
+        if ($type == 'high_priority') {
+            $ticketQuery->whereHas('priority', function ($query) {
                 $query->where('name', 'like', '%high%');
             });
         }
 
         if (Request::has(['field', 'direction'])) {
-            if(Request::input('field') == 'tech'){
+            if (Request::input('field') == 'tech') {
                 $ticketQuery
                     ->join('users', 'tickets.assigned_to', '=', 'users.id')
                     ->orderBy('users.first_name', Request::input('direction'))->select('tickets.*');
-            }else{
+            } else {
                 $ticketQuery->orderBy(Request::input('field'), Request::input('direction'));
             }
-        }else{
+        } else {
             $ticketQuery->orderBy('updated_at', 'DESC');
         }
 
@@ -112,19 +112,19 @@ class TicketsController extends Controller
                 ->byAssign($byAssign)
                 ->paginate($limit)
                 ->withQueryString()
-                ->through(function ($ticket){
+                ->through(function ($ticket) {
                     return [
                         'id' => $ticket->id,
                         'uid' => $ticket->uid,
                         'subject' => $ticket->subject,
                         'contact' => $ticket->contact ? $ticket->contact->name : null,
                         'priority' => $ticket->priority ? $ticket->priority->name : null,
-                        'category' => $ticket->category ? $ticket->category->name: null,
-                        'sub_category' => $ticket->subCategory ? $ticket->subCategory->name: null,
+                        'category' => $ticket->category ? $ticket->category->name : null,
+                        'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : null,
                         'rating' => $ticket->review ? $ticket->review->rating : 0,
                         'status' => $ticket->status ? $ticket->status->name : null,
                         'due' => Carbon::parse($ticket->due)->format(Settings::get('date_format')),
-                        'assigned_to' => $ticket->assignedTo? $ticket->assignedTo->name : null,
+                        'assigned_to' => $ticket->assignedTo ? $ticket->assignedTo->name : null,
                         'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
                         'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format')),
                     ];
@@ -137,11 +137,11 @@ class TicketsController extends Controller
         // Configure GCS from database settings
         $this->configureGCS();
 
-        foreach ($files as $file) {            
+        foreach ($files as $file) {
             // Upload to Google Cloud Storage
             $path = $this->uploadToStorage($file, 'tickets');
 
-            if($path){
+            if ($path) {
                 Attachment::create([
                     'ticket_id' => $ticket->id,
                     'name' => $file->getClientOriginalName(),
@@ -156,19 +156,19 @@ class TicketsController extends Controller
     public function csvImport()
     {
         $file = Request::file('file');
-        if(!empty($file)){
+        if (!empty($file)) {
 
             $fileContents = $this->csvToArray($file->getPathname());
             foreach ($fileContents as $data) {
                 $findExistingTicket = Ticket::where('uid', $data['UID'])->first();
-                if(empty($findExistingTicket)){
+                if (empty($findExistingTicket)) {
                     $priority = Priority::firstOrCreate(['name' => $data['Priority']]);
                     $category = Category::firstOrCreate(['name' => $data['Category']]);
                     $sub_category = Category::firstOrCreate(['name' => $data['Sub Category']]);
                     $department = Department::firstOrCreate(['name' => $data['Department']]);
                     $status = Status::firstOrCreate(['name' => $data['Status']]);
                     $assignTo = User::where(['email' => $data['Assigned To Email']])->first();
-                    if(empty($assignTo) && !empty($data['Assigned To Email']) && !empty($data['Assigned To Name'])){
+                    if (empty($assignTo) && !empty($data['Assigned To Email']) && !empty($data['Assigned To Name'])) {
                         $aName = $this->splitName($data['Assigned To Name']);
                         $assignTo = User::create(['email' => $data['Assigned To Email'], 'first_name' => $aName[0], 'last_name' => $aName[1]]);
                     }
@@ -181,12 +181,12 @@ class TicketsController extends Controller
                         'sub_category_id' => $sub_category->id,
                         'department_id' => $department->id,
                         'status_id' => $status->id,
-                        'assigned_to' => $assignTo?$assignTo->id:null
+                        'assigned_to' => $assignTo ? $assignTo->id : null
                     ]);
                 }
             }
             return redirect()->back()->with('success', 'CSV file imported successfully.');
-        }else{
+        } else {
             return redirect()->back()->with('error', 'CSV file import issue!');
         }
     }
@@ -205,14 +205,18 @@ class TicketsController extends Controller
         fputcsv($handle, ['UID', 'Subject', 'Priority', 'Category', 'Sub Category', 'Department', 'Status', 'Assigned To Email', 'Assigned To Name', 'Created']);
 
         foreach ($tickets as $ticket) {
-            fputcsv($handle, [$ticket->uid, $ticket->subject, $ticket->priority ? $ticket->priority->name : null,
-                $ticket->category ? $ticket->category->name: null, $ticket->subCategory ? $ticket->subCategory->name: null,
-                $ticket->department ? $ticket->department->name: null,
+            fputcsv($handle, [
+                $ticket->uid,
+                $ticket->subject,
+                $ticket->priority ? $ticket->priority->name : null,
+                $ticket->category ? $ticket->category->name : null,
+                $ticket->subCategory ? $ticket->subCategory->name : null,
+                $ticket->department ? $ticket->department->name : null,
                 $ticket->status ? $ticket->status->name : null,
-                $ticket->assignedTo? $ticket->assignedTo->email : null,
-                $ticket->assignedTo? $ticket->assignedTo->first_name.' '.$ticket->assignedTo->last_name : null,
+                $ticket->assignedTo ? $ticket->assignedTo->email : null,
+                $ticket->assignedTo ? $ticket->assignedTo->first_name . ' ' . $ticket->assignedTo->last_name : null,
                 $ticket->created_at
-                ]);
+            ]);
         }
 
         fclose($handle);
@@ -220,19 +224,20 @@ class TicketsController extends Controller
         return Response::make('', 200, $headers);
     }
 
-    public function create(){
+    public function create()
+    {
         $user = Auth()->user();
-        
+
         $required_fields = [];
         $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
-        if(!empty($get_required_fields)){
+        if (!empty($get_required_fields)) {
             $required_fields = json_decode($get_required_fields->value, true);
         }
-        
+
         return Inertia::render('ticket/create', [
             'title' => 'Create a new ticket',
             'contacts' => User::role('contact')
-                ->when(Request::input('contact_id'), function($query) {
+                ->when(Request::input('contact_id'), function ($query) {
                     $query->orWhere('id', Request::input('contact_id'));
                 })
                 ->orderBy('name')
@@ -240,10 +245,10 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'usersExceptContacts' => User::whereDoesntHave('roles', function($query) {
-                    $query->where('name', 'contact');
-                })
-                ->when(Request::input('user_id'), function($query) {
+            'usersExceptContacts' => User::whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'contact');
+            })
+                ->when(Request::input('user_id'), function ($query) {
                     $query->orWhere('id', Request::input('user_id'));
                 })
                 ->orderBy('name')
@@ -273,11 +278,12 @@ class TicketsController extends Controller
         ]);
     }
 
-    public function store() {
+    public function store()
+    {
         $required_fields = [];
 
         $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
-        if(!empty($get_required_fields)){
+        if (!empty($get_required_fields)) {
             $required_fields = json_decode($get_required_fields->value, true);
         }
         $user = Auth()->user();
@@ -285,46 +291,46 @@ class TicketsController extends Controller
             'contact_id' => ['nullable', Rule::exists('users', 'id')],
             'priority_id' => ['nullable', Rule::exists('priorities', 'id')],
             'status_id' => ['nullable', Rule::exists('status', 'id')],
-            'department_id' => [in_array('department', $required_fields)?'required':'nullable', Rule::exists('departments', 'id')],
-            'assigned_to' => [in_array('assigned_to', $required_fields)?'required':'nullable', Rule::exists('users', 'id')],
-            'category_id' => [in_array('category', $required_fields)?'required':'nullable', Rule::exists('categories', 'id')],
-            'sub_category_id' => [in_array('sub_category', $required_fields)?'required':'nullable', Rule::exists('categories', 'id')],
-            'type_id' => [in_array('ticket_type', $required_fields)?'required':'nullable', Rule::exists('types', 'id')],
+            'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
+            'assigned_to' => [in_array('assigned_to', $required_fields) ? 'required' : 'nullable', Rule::exists('users', 'id')],
+            'category_id' => [in_array('category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
+            'sub_category_id' => [in_array('sub_category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
+            'type_id' => [in_array('ticket_type', $required_fields) ? 'required' : 'nullable', Rule::exists('types', 'id')],
             'subject' => ['required'],
             'details' => ['required'],
         ]);
 
-        if($user->hasRole('contact')){
+        if ($user->hasRole('Contact')) {
             $request_data['contact_id'] = $user['id'];
         }
 
-        if(empty($request_data['priority_id'])){
+        if (empty($request_data['priority_id'])) {
             $priority = Priority::orderBy('name')->first();
-            if(!empty($priority)){
+            if (!empty($priority)) {
                 $request_data['priority_id'] = $priority->id;
             }
         }
 
-        if(empty($request_data['status_id'])){
+        if (empty($request_data['status_id'])) {
             $status = Status::where('slug', 'like', '%active%')->first();
-            if(!empty($status)){
+            if (!empty($status)) {
                 $request_data['status_id'] = $status->id;
             }
         }
 
         $ticket = Ticket::create($request_data);
 
-        if(Request::hasFile('files')){
+        if (Request::hasFile('files')) {
             $files = Request::file('files');
             $this->handleAttachmentUploads($ticket, $files);
         }
 
         $custom_inputs = Request::input('custom_field');
 
-        if(!empty($custom_inputs)){
-            foreach ($custom_inputs as $cfk => $cfv){
+        if (!empty($custom_inputs)) {
+            foreach ($custom_inputs as $cfk => $cfv) {
                 $ticket_field = TicketField::where('name', $cfk)->first();
-                if(!empty($ticket_field)){
+                if (!empty($ticket_field)) {
                     TicketEntry::create(['ticket_id' => $ticket->id, 'field_id' => $ticket_field->id, 'name' => $cfk, 'label' => $ticket_field->label, 'value' => $cfv]);
                 }
             }
@@ -332,7 +338,7 @@ class TicketsController extends Controller
 
         event(new TicketCreated(['ticket_id' => $ticket->id, 'source' => 'dashboard']));
 
-        if(!empty($ticket->assigned_to)){
+        if (!empty($ticket->assigned_to)) {
             event(new AssignedUser($ticket->id));
         }
 
@@ -345,22 +351,22 @@ class TicketsController extends Controller
         $user = Auth()->user();
         $byContact = null;
         $byAssign = null;
-        
-        if ($user->hasRole('contact')) {
+
+        if ($user->hasRole('Contact')) {
             $byContact = $user['id'];
-        } elseif ($user->hasRole('manager')) {
+        } elseif ($user->hasRole('Manager')) {
             $byAssign = $user['id'];
         } else {
             $byAssign = Request::input('assigned_to');
         }
-        
+
         $ticket = Ticket::byContact($byContact)
             ->byAssign($byAssign)
             ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);
                 $query->orWhere('id', $uid);
             })->first();
-        
+
         if (empty($ticket)) {
             abort(404);
         }
@@ -385,7 +391,7 @@ class TicketsController extends Controller
             });
 
         return Inertia::render('ticket/view', [
-            'title' => $ticket->subject ? '#TKT-'.$ticket->uid.' '.$ticket->subject : '',
+            'title' => $ticket->subject ? '#TKT-' . $ticket->uid . ' ' . $ticket->subject : '',
             'attachments' => $attachments,
             'comments' => Comment::orderBy('created_at', 'asc')
                 ->with('user')
@@ -429,43 +435,44 @@ class TicketsController extends Controller
         ]);
     }
 
-    public function edit($uid){
+    public function edit($uid)
+    {
         $user = Auth()->user();
         $byContact = null;
         $byAssign = null;
-        if($user->hasRole('contact')){
+        if ($user->hasRole('Contact')) {
             $byContact = $user['id'];
-        }elseif($user->hasRole('manager')){
+        } elseif ($user->hasRole('Manager')) {
             $byAssign = $user['id'];
-        }else{
+        } else {
             $byAssign = Request::input('assigned_to');
         }
         $ticket = Ticket::byContact($byContact)
             ->byAssign($byAssign)
-            ->where(function($query) use ($uid){
+            ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);
                 $query->orWhere('id', $uid);
             })->first();
-        if(empty($ticket)){
+        if (empty($ticket)) {
             abort(404);
         }
         $comment_access = 'read';
-        if($user->hasRole('admin')){
+        if ($user->hasRole('Admin')) {
             $comment_access = 'delete';
-        }elseif($user->hasRole('manager')){
+        } elseif ($user->hasRole('Manager')) {
             $comment_access = 'view';
         }
 
         $required_fields = [];
         $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
-        if(!empty($get_required_fields)){
+        if (!empty($get_required_fields)) {
             $required_fields = json_decode($get_required_fields->value, true);
         }
 
         return Inertia::render('ticket/edit', [
-            'title' => $ticket->subject ? '#'.$ticket->uid.' '.$ticket->subject : '',
+            'title' => $ticket->subject ? '#' . $ticket->uid . ' ' . $ticket->subject : '',
             'contacts' => User::role('contact')
-                ->when(Request::input('contact_id'), function($query) {
+                ->when(Request::input('contact_id'), function ($query) {
                     $query->orWhere('id', Request::input('contact_id'));
                 })
                 ->orderBy('name')
@@ -473,10 +480,10 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'usersExceptContacts' => User::whereDoesntHave('roles', function($query) {
-                    $query->where('name', 'contact');
-                })
-                ->when(Request::input('user_id'), function($query) {
+            'usersExceptContacts' => User::whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'contact');
+            })
+                ->when(Request::input('user_id'), function ($query) {
                     $query->orWhere('id', Request::input('user_id'));
                 })
                 ->orderBy('name')
@@ -515,7 +522,7 @@ class TicketsController extends Controller
                         ] : null,
                     ];
                 }),
-            'comments' => Comment::orderBy('created_at', 'asc')->with('user')->where('ticket_id', $ticket->id??null)->get(),
+            'comments' => Comment::orderBy('created_at', 'asc')->with('user')->where('ticket_id', $ticket->id ?? null)->get(),
             'types' => Type::orderBy('name')
                 ->get()
                 ->map
@@ -529,13 +536,13 @@ class TicketsController extends Controller
                 'priority_id' => $ticket->priority_id,
                 'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
                 'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format')),
-                'priority' => $ticket->priority? $ticket->priority->name : 'N/A',
+                'priority' => $ticket->priority ? $ticket->priority->name : 'N/A',
                 'status_id' => $ticket->status_id,
-                'status' => $ticket->status?: null,
+                'status' => $ticket->status ?: null,
                 'closed' => $ticket->status && $ticket->status->slug == 'closed',
                 'review' => $ticket->review,
                 'department_id' => $ticket->department_id,
-                'department' => $ticket->department? $ticket->department->name : 'N/A',
+                'department' => $ticket->department ? $ticket->department->name : 'N/A',
                 'category_id' => $ticket->category_id,
                 'sub_category_id' => $ticket->sub_category_id,
                 'category' => $ticket->category ? $ticket->category->name : 'N/A',
@@ -555,24 +562,25 @@ class TicketsController extends Controller
         ]);
     }
 
-    public function update(Ticket $ticket){
+    public function update(Ticket $ticket)
+    {
         $required_fields = [];
 
         $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
-        if(!empty($get_required_fields)){
+        if (!empty($get_required_fields)) {
             $required_fields = json_decode($get_required_fields->value, true);
         }
-        
+
         $user = Auth()->user();
         $request_data = Request::validate([
             'contact_id' => ['nullable', Rule::exists('users', 'id')],
             'priority_id' => ['nullable', Rule::exists('priorities', 'id')],
             'status_id' => ['nullable', Rule::exists('status', 'id')],
-            'department_id' => [in_array('department', $required_fields)?'required':'nullable', Rule::exists('departments', 'id')],
-            'assigned_to' => [in_array('assigned_to', $required_fields)?'required':'nullable', Rule::exists('users', 'id')],
-            'category_id' => [in_array('category', $required_fields)?'required':'nullable', Rule::exists('categories', 'id')],
-            'sub_category_id' => [in_array('sub_category', $required_fields)?'required':'nullable', Rule::exists('categories', 'id')],
-            'type_id' => [in_array('ticket_type', $required_fields)?'required':'nullable', Rule::exists('types', 'id')],
+            'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
+            'assigned_to' => [in_array('assigned_to', $required_fields) ? 'required' : 'nullable', Rule::exists('users', 'id')],
+            'category_id' => [in_array('category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
+            'sub_category_id' => [in_array('sub_category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
+            'type_id' => [in_array('ticket_type', $required_fields) ? 'required' : 'nullable', Rule::exists('types', 'id')],
             'subject' => ['required'],
             'due' => ['nullable'],
             'details' => ['required'],
@@ -580,7 +588,7 @@ class TicketsController extends Controller
             'tags' => ['nullable', 'string', 'max:500'],
         ]);
 
-        if(!empty(Request::input('review')) || !empty(Request::input('rating'))){
+        if (!empty(Request::input('review')) || !empty(Request::input('rating'))) {
             $review = Review::create([
                 'review' => Request::input('review'),
                 'rating' => Request::input('rating'),
@@ -594,56 +602,56 @@ class TicketsController extends Controller
         $closed_status = Status::where('slug', 'like', '%close%')->first();
 
         $update_message = null;
-        if($closed_status && ($ticket->status_id != $closed_status->id) && ($request_data['status_id'] ?? null) == $closed_status->id){
+        if ($closed_status && ($ticket->status_id != $closed_status->id) && ($request_data['status_id'] ?? null) == $closed_status->id) {
             $update_message = 'The ticket has been closed.';
-        }elseif($ticket->status_id != ($request_data['status_id'] ?? null)){
+        } elseif ($ticket->status_id != ($request_data['status_id'] ?? null)) {
             $update_message = 'The status has been changed for this ticket.';
         }
 
-        if($ticket->priority_id != ($request_data['priority_id'] ?? null)){
+        if ($ticket->priority_id != ($request_data['priority_id'] ?? null)) {
             $update_message = 'The priority has been changed for this ticket.';
         }
 
-        if(empty($ticket->response) && $user->hasRole('admin')){
+        if (empty($ticket->response) && $user->hasRole('Admin')) {
             $request_data['response'] = date('Y-m-d H:i:s');
         }
 
-        if(isset($request_data['due']) && !empty($request_data['due'])){
+        if (isset($request_data['due']) && !empty($request_data['due'])) {
             $request_data['due'] = date('Y-m-d', strtotime($request_data['due']));
         }
 
-        $assigned = (!empty($request_data['assigned_to']) && ($ticket->assigned_to != $request_data['assigned_to']))??false;
+        $assigned = (!empty($request_data['assigned_to']) && ($ticket->assigned_to != $request_data['assigned_to'])) ?? false;
 
         $ticket->update($request_data);
 
-        if($assigned){
+        if ($assigned) {
             event(new AssignedUser(['ticket_id' => $ticket->id]));
         }
 
-        if(!empty($update_message)){
+        if (!empty($update_message)) {
             event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => $update_message]));
         }
 
-        if(!empty(Request::input('comment'))){
+        if (!empty(Request::input('comment'))) {
             Comment::create([
                 'details' => Request::input('comment'),
                 'ticket_id' => $ticket->id,
                 'user_id' => $user['id']
             ]);
-            $this->sendMailCron( $ticket->id, 'response' , Request::input('comment') );
+            $this->sendMailCron($ticket->id, 'response', Request::input('comment'));
         }
 
         $removedFiles = Request::input('removedFiles');
-        if(!empty($removedFiles)){
+        if (!empty($removedFiles)) {
             $attachments = Attachment::where('ticket_id', $ticket->id)->whereIn('id', $removedFiles)->get();
-            foreach ($attachments as $attachment){
+            foreach ($attachments as $attachment) {
                 // Delete from Google Cloud Storage
                 $this->deleteFromStorage($attachment->path);
                 $attachment->delete();
             }
         }
 
-        if(Request::hasFile('files')){
+        if (Request::hasFile('files')) {
             $files = Request::file('files');
             $this->handleAttachmentUploads($ticket, $files);
         }
@@ -651,18 +659,19 @@ class TicketsController extends Controller
         return Redirect::route('tickets.edit', $ticket->uid)->with('success', 'Ticket updated.');
     }
 
-    public function newComment(){
+    public function newComment()
+    {
         $request = Request::all();
         $ticket = Comment::where('ticket_id', $request['ticket_id'])->count();
-        if(empty($ticket)){
+        if (empty($ticket)) {
             event(new TicketNewComment(['ticket_id' => $request['ticket_id'], 'comment' => $request['comment']]));
         }
 
         $newComment = new Comment;
-        if(isset($request['user_id'])){
+        if (isset($request['user_id'])) {
             $newComment->user_id = $request['user_id'];
         }
-        if(isset($request['ticket_id'])){
+        if (isset($request['ticket_id'])) {
             $newComment->ticket_id = $request['ticket_id'];
         }
         $newComment->details = $request['comment'];
@@ -677,26 +686,26 @@ class TicketsController extends Controller
         $user = Auth()->user();
         $byContact = null;
         $byAssign = null;
-        
-        if ($user->hasRole('contact')) {
+
+        if ($user->hasRole('Contact')) {
             $byContact = $user['id'];
-        } elseif ($user->hasRole('manager')) {
+        } elseif ($user->hasRole('Manager')) {
             $byAssign = $user['id'];
         } else {
             $byAssign = Request::input('assigned_to');
         }
-        
+
         $ticket = Ticket::byContact($byContact)
             ->byAssign($byAssign)
             ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);
                 $query->orWhere('id', $uid);
             })->first();
-        
+
         if (empty($ticket)) {
             abort(404);
         }
-        
+
         $ticket->delete();
         return Redirect::route('tickets')->with('success', 'Ticket deleted.');
     }
@@ -713,12 +722,14 @@ class TicketsController extends Controller
         return Redirect::back()->with('success', count($validated['ids']) . ' ticket(s) deleted successfully.');
     }
 
-    public function restore(Ticket $ticket){
+    public function restore(Ticket $ticket)
+    {
         $ticket->restore();
         return Redirect::back()->with('success', 'Ticket restored.');
     }
 
-    private function sendMailCron($id, $type = null, $value = null){
+    private function sendMailCron($id, $type = null, $value = null)
+    {
         PendingEmail::create(['ticket_id' => $id, 'type' => $type, 'value' => $value]);
     }
 
@@ -729,10 +740,8 @@ class TicketsController extends Controller
 
         $header = null;
         $data = array();
-        if (($handle = fopen($filename, 'r')) !== false)
-        {
-            while (($row = fgetcsv($handle, 1000, $delimiter)) !== false)
-            {
+        if (($handle = fopen($filename, 'r')) !== false) {
+            while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
                 if (!$header)
                     $header = $row;
                 else
@@ -744,10 +753,11 @@ class TicketsController extends Controller
         return $data;
     }
 
-    private function splitName($name) {
+    private function splitName($name)
+    {
         $name = trim($name);
         $last_name = (!str_contains($name, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $name);
-        $first_name = trim( preg_replace('#'.preg_quote($last_name,'#').'#', '', $name ) );
+        $first_name = trim(preg_replace('#' . preg_quote($last_name, '#') . '#', '', $name));
         return array($first_name, $last_name);
     }
 

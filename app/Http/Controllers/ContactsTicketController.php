@@ -27,21 +27,21 @@ class ContactsTicketController extends Controller
     public function index()
     {
         $user = Auth()->user();
-        
+
         // Only show tickets belonging to the logged-in contact
         $contactId = $user['id'];
         $limit = Request::input('limit', 10);
-        
+
         $ticketQuery = Ticket::where('contact_id', $contactId);
 
         // Handle filtering by status type
         $type = Request::input('type');
         if ($type == 'open') {
-            $ticketQuery->whereHas('status', function($query) {
+            $ticketQuery->whereHas('status', function ($query) {
                 $query->where('slug', 'not like', '%close%');
             });
         } elseif ($type == 'closed') {
-            $ticketQuery->whereHas('status', function($query) {
+            $ticketQuery->whereHas('status', function ($query) {
                 $query->where('slug', 'like', '%close%');
             });
         }
@@ -89,14 +89,14 @@ class ContactsTicketController extends Controller
     public function show($uid)
     {
         $user = Auth()->user();
-        
+
         // Only allow viewing own tickets
         $ticket = Ticket::where('contact_id', $user['id'])
             ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);
                 $query->orWhere('id', $uid);
             })->first();
-        
+
         if (empty($ticket)) {
             abort(404);
         }
@@ -109,7 +109,7 @@ class ContactsTicketController extends Controller
             ->map(function ($attachment) {
                 $path = $attachment->path;
                 $url = '';
-                
+
                 // Check if it's a GCS path or local path
                 if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
                     $url = $path;
@@ -118,7 +118,7 @@ class ContactsTicketController extends Controller
                 } else {
                     $url = '/storage/' . $path;
                 }
-                
+
                 return [
                     'id' => $attachment->id,
                     'name' => $attachment->name,
@@ -139,7 +139,7 @@ class ContactsTicketController extends Controller
             ->get();
 
         return Inertia::render('contact-ticket/view', [
-            'title' => $ticket->subject ? '#TKT-'.$ticket->uid.' '.$ticket->subject : '',
+            'title' => $ticket->subject ? '#TKT-' . $ticket->uid . ' ' . $ticket->subject : '',
             'footer' => $this->getFooter(),
             'attachments' => $attachments,
             'comments' => $comments,
@@ -180,7 +180,7 @@ class ContactsTicketController extends Controller
     public function create()
     {
         $hide_ticket_fields = json_decode(Settings::where('name', 'hide_ticket_fields')->value('value') ?? '[]', true);
-        
+
         return Inertia::render('contact-ticket/create', [
             'title' => 'Create New Ticket',
             'footer' => $this->getFooter(),
@@ -200,7 +200,7 @@ class ContactsTicketController extends Controller
     public function store()
     {
         $user = Auth()->user();
-        
+
         $request_data = Request::validate([
             'subject' => ['required', 'string', 'max:255'],
             'details' => ['required', 'string'],
@@ -247,19 +247,19 @@ class ContactsTicketController extends Controller
             }
         }
 
-        return redirect()->route('contacts.tickets')->with('success', 'Ticket created successfully.');
+        return redirect()->route('contact.tickets')->with('success', 'Ticket created successfully.');
     }
 
     public function edit($uid)
     {
         $user = Auth()->user();
-        
+
         $ticket = Ticket::where('contact_id', $user['id'])
             ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);
                 $query->orWhere('id', $uid);
             })->first();
-        
+
         if (empty($ticket)) {
             abort(404);
         }
@@ -284,13 +284,13 @@ class ContactsTicketController extends Controller
     public function update($uid)
     {
         $user = Auth()->user();
-        
+
         $ticket = Ticket::where('contact_id', $user['id'])
             ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);
                 $query->orWhere('id', $uid);
             })->first();
-        
+
         if (empty($ticket)) {
             abort(404);
         }
@@ -303,20 +303,20 @@ class ContactsTicketController extends Controller
 
         $ticket->update($request_data);
 
-        return redirect()->route('contacts.tickets')->with('success', 'Ticket updated successfully.');
+        return redirect()->route('contact.tickets')->with('success', 'Ticket updated successfully.');
     }
 
     public function addComment($ticketId)
     {
         $user = Auth()->user();
-        
+
         // Only allow commenting on own tickets
         $ticket = Ticket::where('contact_id', $user['id'])
             ->where(function ($query) use ($ticketId) {
                 $query->where('uid', $ticketId);
                 $query->orWhere('id', $ticketId);
             })->first();
-        
+
         if (empty($ticket)) {
             abort(404);
         }

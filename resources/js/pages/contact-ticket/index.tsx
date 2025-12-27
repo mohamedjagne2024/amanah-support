@@ -300,7 +300,7 @@ export default function ContactTicketIndex({
                   }`}
                 >
                   OPENED TICKETS
-                  {activeTab === 'open' && safeTickets.total > 0 && (
+                  {activeTab === 'open' && safeFilters.type === 'open' && safeTickets.total > 0 && !isLoading && (
                     <span className="ml-2 bg-primary text-white text-xs px-2 py-0.5 rounded-full">
                       {safeTickets.total}
                     </span>
@@ -315,7 +315,7 @@ export default function ContactTicketIndex({
                   }`}
                 >
                   CLOSED TICKETS
-                  {activeTab === 'closed' && safeTickets.total > 0 && (
+                  {activeTab === 'closed' && safeFilters.type === 'closed' && safeTickets.total > 0 && !isLoading && (
                     <span className="ml-2 bg-success text-white text-xs px-2 py-0.5 rounded-full">
                       {safeTickets.total}
                     </span>
@@ -365,9 +365,12 @@ export default function ContactTicketIndex({
                 status_id: safeFilters.status_id ?? ""
               }}
               onFilterChange={(filterId, value) => {
+                // Only submit if value actually changed
                 if (filterId === "department_id") {
+                  if (value === (safeFilters.department_id ?? "")) return;
                   submitQuery({ department_id: value, page: 1 });
                 } else if (filterId === "status_id") {
+                  if (value === (safeFilters.status_id ?? "")) return;
                   submitQuery({ status_id: value, page: 1 });
                 }
               }}

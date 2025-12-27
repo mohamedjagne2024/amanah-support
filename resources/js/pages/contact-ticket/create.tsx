@@ -7,6 +7,7 @@ import { Ticket, ArrowLeft, Send, Upload, X, FileText } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import Combobox, { SelectOption } from "@/components/Combobox";
 import TextEditor from "@/components/TextEditor";
+import Breadcrumb from "@/components/Breadcrumb";
 
 type Department = {
   id: number;
@@ -119,17 +120,13 @@ export default function CreateContactTicket({
           <div className="max-w-3xl mx-auto">
             {/* Header Section */}
             <div className="mb-8">
-              <div className="flex items-center gap-2 text-primary mb-2">
-                <Ticket className="size-5" />
-                <span className="text-sm font-medium uppercase tracking-wider">Support</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/contact/tickets"
-                  className="size-10 rounded-full bg-default-100 flex items-center justify-center hover:bg-default-200 transition-colors"
-                >
-                  <ArrowLeft className="size-5 text-default-600" />
-                </Link>
+              <Breadcrumb
+                items={[
+                  { label: 'Tickets', href: '/contact/tickets' },
+                  { label: 'Create New Ticket', href: '/contact/tickets/create' },
+                ]}
+              />
+              <div className="mt-3">
                 <h1 className="text-3xl sm:text-4xl font-bold text-default-900">Create New Ticket</h1>
               </div>
             </div>

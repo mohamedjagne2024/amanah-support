@@ -4,10 +4,19 @@ namespace App\Http\Controllers;
 
 
 use Inertia\Inertia;
+use App\Models\Ticket;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
-class DashboardController extends Controller {
+class DashboardController extends Controller
+{
     public function index()
     {
+        // Redirect contact users to their ticket dashboard
+        if (auth()->check() && auth()->user()->hasRole('Contact')) {
+            return redirect()->route('contact.tickets');
+        }
+
         $userName = 'User';
         if (auth()->check()) {
             $user = auth()->user();
@@ -16,20 +25,20 @@ class DashboardController extends Controller {
         }
 
         $metrics = [
-            'totalTickets' => \App\Models\Ticket::count(),
-            'openTickets' => \App\Models\Ticket::whereHas('status', function ($q) {
+            'totalTickets' => Ticket::count(),
+            'openTickets' => Ticket::whereHas('status', function ($q) {
                 $q->where('slug', 'not like', '%closed%')
-                  ->where('slug', 'not like', '%resolved%');
+                    ->where('slug', 'not like', '%resolved%');
             })->count(),
-            'closedTickets' => \App\Models\Ticket::whereHas('status', function ($q) {
+            'closedTickets' => Ticket::whereHas('status', function ($q) {
                 $q->where('slug', 'like', '%closed%')
-                  ->orWhere('slug', 'like', '%resolved%');
+                    ->orWhere('slug', 'like', '%resolved%');
             })->count(),
-            'unassignedTickets' => \App\Models\Ticket::whereNull('assigned_to')->count(),
+            'unassignedTickets' => Ticket::whereNull('assigned_to')->count(),
         ];
 
         // Charts
-        $ticketsByStatus = \App\Models\Ticket::select('status_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+        $ticketsByStatus = Ticket::select('status_id', DB::raw('count(*) as count'))
             ->with('status')
             ->groupBy('status_id')
             ->get()
@@ -40,7 +49,7 @@ class DashboardController extends Controller {
                 ];
             })->values();
 
-        $ticketsByPriority = \App\Models\Ticket::select('priority_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+        $ticketsByPriority = Ticket::select('priority_id', DB::raw('count(*) as count'))
             ->with('priority')
             ->groupBy('priority_id')
             ->get()
@@ -51,7 +60,7 @@ class DashboardController extends Controller {
                 ];
             })->values();
 
-        $ticketsByCategory = \App\Models\Ticket::select('category_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+        $ticketsByCategory = Ticket::select('category_id', DB::raw('count(*) as count'))
             ->with('category')
             ->groupBy('category_id')
             ->get()
@@ -63,11 +72,11 @@ class DashboardController extends Controller {
             })->values();
 
         // Trend (Last 12 months)
-        $ticketsTrend = \App\Models\Ticket::select(
-            \Illuminate\Support\Facades\DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
-            \Illuminate\Support\Facades\DB::raw('count(*) as count')
+        $ticketsTrend = Ticket::select(
+            DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
+            DB::raw('count(*) as count')
         )
-            ->where('created_at', '>=', \Carbon\Carbon::now()->subMonths(12))
+            ->where('created_at', '>=', Carbon::now()->subMonths(12))
             ->groupBy('month')
             ->orderBy('month')
             ->get()
@@ -79,7 +88,7 @@ class DashboardController extends Controller {
             });
 
         // Recent Activities
-        $recentTickets = \App\Models\Ticket::with(['status', 'priority', 'category', 'user'])
+        $recentTickets = Ticket::with(['status', 'priority', 'category', 'user'])
             ->latest()
             ->take(6)
             ->get()
@@ -89,7 +98,7 @@ class DashboardController extends Controller {
                     $uName = trim(($ticket->user->first_name ?? '') . ' ' . ($ticket->user->last_name ?? ''));
                     if (!$uName) $uName = $ticket->user->name ?? 'Unknown';
                 }
-                
+
                 return [
                     'id' => $ticket->id,
                     'title' => $ticket->subject,
