@@ -12,7 +12,7 @@ type CurrencyOption = {
 };
 
 type EmailNotificationsType = {
-  ticket_by_customer: boolean;
+  ticket_by_contact: boolean;
   ticket_from_dashboard: boolean;
   first_comment: boolean;
   user_assigned: boolean;
@@ -74,7 +74,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
     decimal_places: settings.decimal_places !== null ? String(settings.decimal_places) : '',
     required_ticket_fields: settings.required_ticket_fields ?? [],
     email_notifications: settings.email_notifications ?? {
-      ticket_by_customer: false,
+      ticket_by_contact: false,
       ticket_from_dashboard: false,
       first_comment: false,
       user_assigned: false,
@@ -97,8 +97,8 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
   const emailNotificationItems = [
     {
-      key: 'ticket_by_customer' as keyof EmailNotificationsType,
-      title: 'Create ticket by new customer',
+      key: 'ticket_by_contact' as keyof EmailNotificationsType,
+      title: 'Create ticket by new contact',
       description: 'Configure email notification settings',
     },
     {

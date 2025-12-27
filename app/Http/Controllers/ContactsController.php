@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Country;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\File;
@@ -15,7 +16,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 final class ContactsController extends Controller
 {
@@ -37,15 +37,15 @@ final class ContactsController extends Controller
         $validSortBy = in_array($sortBy, $allowedSortColumns, true) ? $sortBy : 'name';
         $validSortDirection = in_array($sortDirection, $allowedSortDirections, true) ? $sortDirection : 'asc';
 
-        $contacts = User::with('roles')
+        $contacts = User::with(['roles', 'organization'])
             ->role('contact')
             ->when($search, static function ($query, string $term): void {
                 $query->where(static function ($subQuery) use ($term): void {
                     $subQuery
-                        ->where('name', 'like', '%'.$term.'%')
-                        ->orWhere('email', 'like', '%'.$term.'%')
-                        ->orWhere('phone', 'like', '%'.$term.'%')
-                        ->orWhere('city', 'like', '%'.$term.'%');
+                        ->where('name', 'like', '%' . $term . '%')
+                        ->orWhere('email', 'like', '%' . $term . '%')
+                        ->orWhere('phone', 'like', '%' . $term . '%')
+                        ->orWhere('city', 'like', '%' . $term . '%');
                 });
             })
             ->orderBy($validSortBy, $validSortDirection)
@@ -59,19 +59,15 @@ final class ContactsController extends Controller
                     'phone' => $user->phone,
                     'city' => $user->city,
                     'country' => $user->country?->name,
+                    'country_id' => $user->country_id,
+                    'organization_id' => $user->organization_id,
+                    'organization' => $user->organization?->name,
                     'photo' => $user->photo_path,
-                    'roles' => $user->roles->pluck('name')->toArray(),
                     'created_at' => $user->created_at?->toDateString(),
                 ];
             });
 
-        $roles = Role::all()
-            ->map(static function (Role $role): array {
-                return [
-                    'id' => $role->id,
-                    'name' => $role->name,
-                ];
-            });
+
 
         $countries = Country::all()
             ->map(static function (Country $country): array {
@@ -81,11 +77,20 @@ final class ContactsController extends Controller
                 ];
             });
 
+        $organizations = Organization::orderBy('name')
+            ->get()
+            ->map(static function (Organization $organization): array {
+                return [
+                    'id' => $organization->id,
+                    'name' => $organization->name,
+                ];
+            });
+
         return Inertia::render('contact/index', [
             'title' => 'Contacts',
             'contacts' => $contacts,
-            'roles' => $roles,
             'countries' => $countries,
+            'organizations' => $organizations,
             'filters' => [
                 'search' => $search,
                 'sort_by' => $sortBy ?: null,
@@ -109,11 +114,12 @@ final class ContactsController extends Controller
             'city' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
             'country_id' => ['nullable', 'exists:countries,id'],
+            'organization_id' => ['nullable', 'exists:organizations,id'],
         ]);
 
         $photoPath = null;
         if (Request::file('photo')) {
-            $photoPath = '/files/'.Request::file('photo')->store('users', ['disk' => 'file_uploads']);
+            $photoPath = '/files/' . Request::file('photo')->store('users', ['disk' => 'file_uploads']);
         }
 
         /** @var User */
@@ -124,9 +130,10 @@ final class ContactsController extends Controller
             'city' => $validated['city'] ?? null,
             'address' => $validated['address'] ?? null,
             'country_id' => $validated['country_id'] ?? null,
+            'organization_id' => $validated['organization_id'] ?? null,
             'photo_path' => $photoPath,
-            'password' => !empty($validated['password']) 
-                ? Hash::make($validated['password']) 
+            'password' => !empty($validated['password'])
+                ? Hash::make($validated['password'])
                 : Hash::make(Str::random(16)),
         ]);
 
@@ -153,9 +160,8 @@ final class ContactsController extends Controller
             'city' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
             'country_id' => ['nullable', 'exists:countries,id'],
+            'organization_id' => ['nullable', 'exists:organizations,id'],
             'photo' => ['nullable', 'image'],
-            'roles' => ['nullable', 'array'],
-            'roles.*' => ['string', 'exists:roles,name'],
         ]);
 
         $user->update([
@@ -165,6 +171,7 @@ final class ContactsController extends Controller
             'city' => $validated['city'] ?? null,
             'address' => $validated['address'] ?? null,
             'country_id' => $validated['country_id'] ?? null,
+            'organization_id' => $validated['organization_id'] ?? null,
         ]);
 
         if (Request::file('photo')) {
@@ -172,7 +179,7 @@ final class ContactsController extends Controller
                 File::delete(public_path($user->photo_path));
             }
             $user->update([
-                'photo_path' => '/files/'.Request::file('photo')->store('users', ['disk' => 'file_uploads']),
+                'photo_path' => '/files/' . Request::file('photo')->store('users', ['disk' => 'file_uploads']),
             ]);
         }
 
@@ -180,14 +187,6 @@ final class ContactsController extends Controller
             $user->update(['password' => Hash::make($validated['password'])]);
         }
 
-        // Update roles if provided
-        if (isset($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
-            
-            // Clear permission cache
-            $user->forgetCachedPermissions();
-            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        }
 
         return redirect()
             ->back()

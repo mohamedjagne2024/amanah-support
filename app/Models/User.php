@@ -46,4 +46,9 @@ final class User extends Auth\User
     {
         return $this->belongsTo(Country::class);
     }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
 }

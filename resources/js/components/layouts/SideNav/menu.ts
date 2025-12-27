@@ -95,7 +95,7 @@ export const menuItemsData: MenuItemType[] = [
     key: 'Organizations',
     label: 'Organizations',
     icon: LucideBuilding,
-    href: '/categories',
+    href: '/organizations',
   },
   {
     key: 'Configuration',

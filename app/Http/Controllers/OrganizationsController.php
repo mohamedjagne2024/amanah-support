@@ -1,132 +1,162 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\RedirectIfCustomer;
-use App\Http\Middleware\RedirectIfNotParmitted;
-use App\Models\City;
 use App\Models\Country;
 use App\Models\Organization;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
-class OrganizationsController extends Controller
+final class OrganizationsController extends Controller
 {
-    public function __construct(){
-        $this->middleware(RedirectIfNotParmitted::class.':organization');
-    }
-
-    public function index()
+    /**
+     * Display the organization management page.
+     */
+    public function index(): Response
     {
-        return Inertia::render('Organizations/Index', [
+        Gate::authorize('organization.view');
+
+        $search = request()->query('search');
+        $sortBy = request()->string('sort_by')->value();
+        $sortDirection = request()->string('sort_direction')->value();
+        $perPage = request()->integer('per_page', 10);
+
+        $allowedSortColumns = ['name', 'email', 'created_at'];
+        $allowedSortDirections = ['asc', 'desc'];
+
+        $validSortBy = in_array($sortBy, $allowedSortColumns, true) ? $sortBy : 'name';
+        $validSortDirection = in_array($sortDirection, $allowedSortDirections, true) ? $sortDirection : 'asc';
+
+        $organizations = Organization::query()
+            ->when($search, static function ($query, string $term): void {
+                $query->where(static function ($subQuery) use ($term): void {
+                    $subQuery
+                        ->where('name', 'like', '%' . $term . '%')
+                        ->orWhere('email', 'like', '%' . $term . '%')
+                        ->orWhere('phone', 'like', '%' . $term . '%')
+                        ->orWhere('city', 'like', '%' . $term . '%');
+                });
+            })
+            ->orderBy($validSortBy, $validSortDirection)
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(static function (Organization $organization): array {
+                return [
+                    'id' => $organization->id,
+                    'name' => $organization->name,
+                    'email' => $organization->email,
+                    'phone' => $organization->phone,
+                    'address' => $organization->address,
+                    'city' => $organization->city,
+                    'region' => $organization->region,
+                    'country' => $organization->country,
+                    'postal_code' => $organization->postal_code,
+                    'contacts_count' => $organization->contacts()->count(),
+                    'created_at' => $organization->created_at?->toDateString(),
+                ];
+            });
+
+        $countries = Country::all()
+            ->map(static function (Country $country): array {
+                return [
+                    'id' => $country->id,
+                    'name' => $country->name,
+                    'code' => $country->short_code ?? null,
+                ];
+            });
+
+        return Inertia::render('organization/index', [
             'title' => 'Organizations',
-            'filters' => Request::all('search'),
-            'organizations' => Organization::orderBy('name')
-                ->filter(Request::only('search'))
-                ->paginate(8)
-                ->withQueryString()
-                ->through(function ($organization) {
-                    return [
-                        'id' => $organization->id,
-                        'name' => $organization->name,
-                        'phone' => $organization->phone,
-                        'city' => $organization->city,
-                    ];
-                } ),
-        ]);
-    }
-
-    public function create()
-    {
-        return Inertia::render('Organizations/Create',[
-            'title' => 'Create a new organization',
-            'countries' => Country::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
-            'cities' => City::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
-        ]);
-    }
-
-    public function store()
-    {
-        Organization::create(
-            Request::validate([
-                'name' => ['required', 'max:100'],
-                'email' => ['nullable', 'max:50', 'email'],
-                'phone' => ['nullable', 'max:50'],
-                'address' => ['nullable', 'max:150'],
-                'city' => ['nullable', 'max:50'],
-                'region' => ['nullable', 'max:50'],
-                'country' => ['nullable', 'max:2'],
-                'postal_code' => ['nullable', 'max:25'],
-            ])
-        );
-
-        return Redirect::route('organizations')->with('success', 'Organization created.');
-    }
-
-    public function edit(Organization $organization)
-    {
-        return Inertia::render('Organizations/Edit', [
-            'title' => $organization->name,
-            'countries' => Country::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
-            'cities' => City::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
-            'organization' => [
-                'id' => $organization->id,
-                'name' => $organization->name,
-                'email' => $organization->email,
-                'phone' => $organization->phone,
-                'address' => $organization->address,
-                'city' => $organization->city,
-                'region' => $organization->region,
-                'country' => $organization->country,
-                'postal_code' => $organization->postal_code,
-                'contacts' => $organization->contacts()->orderByName()->get()->map->only('id', 'name', 'city', 'phone'),
+            'organizations' => $organizations,
+            'countries' => $countries,
+            'filters' => [
+                'search' => $search,
+                'sort_by' => $sortBy ?: null,
+                'sort_direction' => $sortDirection ?: null,
             ],
         ]);
     }
 
-    public function update(Organization $organization)
+    /**
+     * Store a newly created organization.
+     */
+    public function store(): RedirectResponse
     {
-        $organization->update(
-            Request::validate([
-                'name' => ['required', 'max:100'],
-                'email' => ['nullable', 'max:50', 'email'],
-                'phone' => ['nullable', 'max:50'],
-                'address' => ['nullable', 'max:150'],
-                'city' => ['nullable', 'max:50'],
-                'region' => ['nullable', 'max:50'],
-                'country' => ['nullable', 'max:2'],
-                'postal_code' => ['nullable', 'max:25'],
-            ])
-        );
+        Gate::authorize('organization.create');
 
-        return Redirect::back()->with('success', 'Organization updated.');
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:100'],
+            'email' => ['nullable', 'string', 'max:50', 'email'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string', 'max:150'],
+            'city' => ['nullable', 'string', 'max:50'],
+            'region' => ['nullable', 'string', 'max:50'],
+            'country' => ['nullable', 'string', 'max:2'],
+            'postal_code' => ['nullable', 'string', 'max:25'],
+        ]);
+
+        Organization::create($validated);
+
+        return redirect()
+            ->route('organizations')
+            ->with('success', 'Organization created successfully.');
     }
 
-    public function destroy(Organization $organization)
+    /**
+     * Update the specified organization.
+     */
+    public function update(Organization $organization): RedirectResponse
     {
+        Gate::authorize('organization.edit');
+
+        $validated = Request::validate([
+            'name' => ['required', 'string', 'max:100'],
+            'email' => ['nullable', 'string', 'max:50', 'email'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string', 'max:150'],
+            'city' => ['nullable', 'string', 'max:50'],
+            'region' => ['nullable', 'string', 'max:50'],
+            'country' => ['nullable', 'string', 'max:2'],
+            'postal_code' => ['nullable', 'string', 'max:25'],
+        ]);
+
+        $organization->update($validated);
+
+        return redirect()
+            ->back()
+            ->with('success', 'Organization updated successfully.');
+    }
+
+    /**
+     * Delete the specified organization.
+     */
+    public function destroy(Organization $organization): RedirectResponse
+    {
+        Gate::authorize('organization.delete');
+
         $organization->delete();
 
-        return Redirect::route('organizations')->with('success', 'Organization deleted.');
+        return redirect()
+            ->route('organizations')
+            ->with('success', 'Organization deleted successfully.');
     }
 
-    public function restore(Organization $organization)
+    /**
+     * Restore the specified organization.
+     */
+    public function restore(Organization $organization): RedirectResponse
     {
+        Gate::authorize('organization.edit');
+
         $organization->restore();
 
-        return Redirect::back()->with('success', 'Organization restored.');
+        return redirect()
+            ->back()
+            ->with('success', 'Organization restored successfully.');
     }
 }

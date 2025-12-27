@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('password');
             $table->boolean('is_super_admin')->default(false);
             $table->string('photo_path', 100)->nullable();
+            $table->bigInteger('organization_id')->default(null)->nullable()->index();
             $table->rememberToken();
             $table->timestamps();
         });

@@ -15,15 +15,16 @@ class EmailTemplateSeeder extends Seeder
      *
      * @return void
      */
-    public function run(){
+    public function run()
+    {
 
         DB::table('email_templates')->truncate();
         $logo = URL::to('/assets/images/logo-dark.png');
-        $html = File::get(public_path('html/email_templates/create_ticket_new_customer.html'));
+        $html = File::get(public_path('html/email_templates/create_ticket_new_contact.html'));
         EmailTemplate::factory()->create([
-            'name' => 'Create ticket by new customer',
-            'slug' => 'create_ticket_new_customer',
-            'details' => 'When customer create a new ticket from the landing page',
+            'name' => 'Create ticket by new contact',
+            'slug' => 'create_ticket_new_contact',
+            'details' => 'When contact create a new ticket from the landing page',
             'language' => 'en',
             'html' => str_replace('https://res.cloudinary.com/robinbd/image/upload/v1663394454/mail-template/help-desk-logo.png', $logo, $html)
         ]);

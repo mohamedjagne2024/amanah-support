@@ -28,17 +28,17 @@ final class SettingsController extends Controller
     public function general(): Response
     {
         Gate::authorize('settings.general');
-        
+
         $settings = Settings::all()->pluck('value', 'name')->toArray();
 
         $jsonContent = File::get(base_path('app/Helpers/currency.json'));
         $jsonContent = preg_replace('/^\xEF\xBB\xBF/', '', $jsonContent);
         $jsonContent = trim($jsonContent);
-        
+
         $currencies = json_decode($jsonContent, true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('Failed to decode currency.json: '.json_last_error_msg());
+            throw new \RuntimeException('Failed to decode currency.json: ' . json_last_error_msg());
         }
 
         return Inertia::render('settings/general', [
@@ -51,12 +51,12 @@ final class SettingsController extends Controller
                 'decimal_sep' => $settings['decimal_sep'] ?? null,
                 'decimal_places' => $settings['decimal_places'] ?? null,
                 'currency' => $settings['currency'] ?? null,
-                'required_ticket_fields' => isset($settings['required_ticket_fields']) 
+                'required_ticket_fields' => isset($settings['required_ticket_fields'])
                     ? json_decode($settings['required_ticket_fields'], true) ?? []
                     : [],
-                'email_notifications' => isset($settings['email_notifications']) 
+                'email_notifications' => isset($settings['email_notifications'])
                     ? json_decode($settings['email_notifications'], true) ?? [
-                        'ticket_by_customer' => false,
+                        'ticket_by_contact' => false,
                         'ticket_from_dashboard' => false,
                         'first_comment' => false,
                         'user_assigned' => false,
@@ -64,7 +64,7 @@ final class SettingsController extends Controller
                         'new_user' => false,
                     ]
                     : [
-                        'ticket_by_customer' => false,
+                        'ticket_by_contact' => false,
                         'ticket_from_dashboard' => false,
                         'first_comment' => false,
                         'user_assigned' => false,
@@ -87,7 +87,7 @@ final class SettingsController extends Controller
     public function update(UpdateGeneralSettingsRequest $request): RedirectResponse
     {
         Gate::authorize('settings.general');
-        
+
         $validated = $request->validated();
 
         foreach ($validated as $name => $value) {
@@ -95,7 +95,7 @@ final class SettingsController extends Controller
             if (is_array($value)) {
                 $value = json_encode($value);
             }
-            
+
             Settings::updateOrCreate(
                 ['name' => $name],
                 ['value' => $value === '' ? null : $value]
@@ -123,12 +123,12 @@ final class SettingsController extends Controller
         $validSortDirection = in_array($sortDirection, $allowedSortDirections, true) ? $sortDirection : 'asc';
 
         $users = User::with('roles', 'permissions')
-            ->withoutRole('customer')
+            ->withoutRole('contact')
             ->when($search, static function ($query, string $term): void {
                 $query->where(static function ($subQuery) use ($term): void {
                     $subQuery
-                        ->where('name', 'like', '%'.$term.'%')
-                        ->orWhere('email', 'like', '%'.$term.'%');
+                        ->where('name', 'like', '%' . $term . '%')
+                        ->orWhere('email', 'like', '%' . $term . '%');
                 });
             })
             ->when($validSortBy, static function ($query) use ($validSortBy, $validSortDirection): void {
@@ -188,9 +188,9 @@ final class SettingsController extends Controller
     public function assignRoles(AssignRoleRequest $request, User $user): RedirectResponse
     {
         Gate::authorize('users.assign-roles');
-        
+
         $validated = $request->validated();
-        
+
         $user->syncRoles($validated['roles']);
 
         // Clear permission cache for this user and globally
@@ -208,9 +208,9 @@ final class SettingsController extends Controller
     public function assignPermissions(AssignPermissionRequest $request, User $user): RedirectResponse
     {
         Gate::authorize('users.assign-roles');
-        
+
         $validated = $request->validated();
-        
+
         $permissions = $validated['permissions'] ?? [];
         $user->syncPermissions($permissions);
 
@@ -229,11 +229,11 @@ final class SettingsController extends Controller
     public function assignRolesAndPermissions(AssignRolesAndPermissionsRequest $request, User $user): RedirectResponse
     {
         Gate::authorize('users.assign-roles');
-        
+
         $validated = $request->validated();
-        
+
         $user->syncRoles($validated['roles']);
-        
+
         $permissions = $validated['permissions'] ?? [];
         $user->syncPermissions($permissions);
 
@@ -265,7 +265,7 @@ final class SettingsController extends Controller
         // Assign roles if provided
         if (!empty($validated['roles'])) {
             $user->syncRoles($validated['roles']);
-            
+
             // Clear permission cache
             $user->forgetCachedPermissions();
             app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
@@ -282,7 +282,7 @@ final class SettingsController extends Controller
     public function rolesPermissions(): RedirectResponse
     {
         Gate::authorize('settings.roles-permissions');
-        
+
         return redirect()->route('roles.index');
     }
 
@@ -292,7 +292,7 @@ final class SettingsController extends Controller
     public function smtp(): Response
     {
         Gate::authorize('settings.smtp');
-        
+
         $settings = Settings::all()->pluck('value', 'name')->toArray();
 
         return Inertia::render('smtp/index', [
@@ -314,7 +314,7 @@ final class SettingsController extends Controller
     public function updateSmtp(): RedirectResponse
     {
         Gate::authorize('settings.smtp');
-        
+
         $validated = request()->validate([
             'smtp_host' => ['nullable', 'string', 'max:255'],
             'smtp_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
@@ -341,7 +341,7 @@ final class SettingsController extends Controller
     public function pusher(): Response
     {
         Gate::authorize('settings.pusher');
-        
+
         $settings = Settings::all()->pluck('value', 'name')->toArray();
 
         return Inertia::render('pusher/index', [
@@ -360,7 +360,7 @@ final class SettingsController extends Controller
     public function updatePusher(): RedirectResponse
     {
         Gate::authorize('settings.pusher');
-        
+
         $validated = request()->validate([
             'pusher_app_id' => ['nullable', 'string', 'max:255'],
             'pusher_app_key' => ['nullable', 'string', 'max:255'],
@@ -384,10 +384,10 @@ final class SettingsController extends Controller
     public function testPusherConnection(): \Illuminate\Http\JsonResponse
     {
         Gate::authorize('settings.pusher');
-        
+
         try {
             $settings = Settings::all()->pluck('value', 'name')->toArray();
-            
+
             $appId = $settings['pusher_app_id'] ?? null;
             $appKey = $settings['pusher_app_key'] ?? null;
             $appSecret = $settings['pusher_app_secret'] ?? null;
