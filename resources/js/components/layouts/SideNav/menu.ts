@@ -104,6 +104,7 @@ export const menuItemsData: MenuItemType[] = [
     icon: LuChartBar,
     children: [
       { key: 'Staff Performance', label: 'Staff Performance', href: '/reports/staff-performance'},
+      { key: 'Support By Organization', label: 'Support By Organization', href: '/reports/support-by-organization'},
     ],
   },
   {

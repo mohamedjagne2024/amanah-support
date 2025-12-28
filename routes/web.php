@@ -547,6 +547,10 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('reports.staff-performance')
             ->middleware('auth');
 
+        $router->get('reports/support-by-organization', [ReportsController::class, 'supportByOrganization'])
+            ->name('reports.support-by-organization')
+            ->middleware('auth');
+
         // Public Chat
         $router->post('chat/init', [ChatController::class, 'init'])
             ->name('chat.init');
