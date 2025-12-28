@@ -37,52 +37,52 @@ $router->prefix('/')->group(static function (Router $router): void {
     $router->get('/', [HomeController::class, 'index'])->name('home');
 
     /** Site Front-Landing */
-        // Note: The '/' route is defined at the top of the file, outside this auth middleware group
+    // Note: The '/' route is defined at the top of the file, outside this auth middleware group
 
-        $router->get('terms', [PageController::class, 'terms'])
-            ->name('terms_service');
+    $router->get('terms', [PageController::class, 'terms'])
+        ->name('terms_service');
 
-        $router->get('privacy', [PageController::class, 'privacy'])
-            ->name('privacy');
+    $router->get('privacy', [PageController::class, 'privacy'])
+        ->name('privacy');
 
-        $router->get('contact', [PageController::class, 'contact'])
-            ->name('contact');
+    $router->get('contact', [PageController::class, 'contact'])
+        ->name('contact');
 
-        $router->get('services', [PageController::class, 'services'])
-            ->name('services');
+    $router->get('services', [PageController::class, 'services'])
+        ->name('services');
 
-        $router->post('contact', [PageController::class, 'contactPost'])
-            ->name('contact.send');
+    $router->post('contact', [PageController::class, 'contactPost'])
+        ->name('contact.send');
 
-        $router->get('faq', [PageController::class, 'faq'])
-            ->name('faq');
+    $router->get('faq', [PageController::class, 'faq'])
+        ->name('faq');
 
-        $router->get('team', [PageController::class, 'team'])
-            ->name('team');
+    $router->get('team', [PageController::class, 'team'])
+        ->name('team');
 
-        $router->get('kb', [PageController::class, 'kb'])
-            ->name('kb');
+    $router->get('kb', [PageController::class, 'kb'])
+        ->name('kb');
 
-        $router->get('kb/{kb_item}', [PageController::class, 'kbDetails'])
-            ->name('kb.details');
+    $router->get('kb/{kb_item}', [PageController::class, 'kbDetails'])
+        ->name('kb.details');
 
-        $router->get('blog/type/{typeId}', [PageController::class, 'blogByType'])
-            ->name('blog.by_type');
+    $router->get('blog/type/{typeId}', [PageController::class, 'blogByType'])
+        ->name('blog.by_type');
 
-        $router->get('kb/type/{typeId}', [PageController::class, 'kbByType'])
-            ->name('kb.by_type');
+    $router->get('kb/type/{typeId}', [PageController::class, 'kbByType'])
+        ->name('kb.by_type');
 
-        $router->get('blog', [PageController::class, 'blog'])
-            ->name('blog');
+    $router->get('blog', [PageController::class, 'blog'])
+        ->name('blog');
 
-        $router->get('blog/{post}', [PageController::class, 'blogDetails'])
-            ->name('blog.details');
+    $router->get('blog/{post}', [PageController::class, 'blogDetails'])
+        ->name('blog.details');
 
-        // Public ticket submission (no auth required)
-        $router->post('ticket/store', [HomeController::class, 'ticketPublicStore'])
-            ->name('ticket.public.store');
+    // Public ticket submission (no auth required)
+    $router->post('ticket/store', [HomeController::class, 'ticketPublicStore'])
+        ->name('ticket.public.store');
 
-            
+
     $router->middleware('auth')->group(static function (Router $router): void {
         $router->get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -497,7 +497,7 @@ $router->prefix('/')->group(static function (Router $router): void {
         $router->post('contact/tickets/{ticket}/comment', [ContactsTicketController::class, 'addComment'])
             ->name('contact.tickets.comment')
             ->middleware('auth');
-            
+
 
         // Organizations
 
@@ -543,16 +543,9 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->middleware('auth');
 
         // Reports
-        $router->get('reports', [ReportsController::class, 'index'])
-            ->name('reports')
+        $router->get('reports/staff-performance', [ReportsController::class, 'staffPerformance'])
+            ->name('reports.staff-performance')
             ->middleware('auth');
-
-        $router->post('/cke/image', [ImagesController::class, 'ckeImageUpload'])
-            ->name('cke.image');
-
-        $router->get('/img/{path}', [ImagesController::class, 'show'])
-            ->where('path', '.*')
-            ->name('image');
 
         // Public Chat
         $router->post('chat/init', [ChatController::class, 'init'])

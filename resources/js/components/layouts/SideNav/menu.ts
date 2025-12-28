@@ -1,6 +1,7 @@
 import { LucideBook, LucideBuilding, LucideFileText, LucideHelpCircle, LucideMessageCircle, LucideNotebook, LucideTicket, LucideUser } from 'lucide-react';
 import type { IconType } from 'react-icons/lib';
 import {
+  LuChartBar,
   LuMonitorDot,
   LuSettings,
   LuShield,
@@ -96,6 +97,14 @@ export const menuItemsData: MenuItemType[] = [
     label: 'Organizations',
     icon: LucideBuilding,
     href: '/organizations',
+  },
+  {
+    key: 'Reports',
+    label: 'Reports',
+    icon: LuChartBar,
+    children: [
+      { key: 'Staff Performance', label: 'Staff Performance', href: '/reports/staff-performance'},
+    ],
   },
   {
     key: 'Configuration',
