@@ -153,7 +153,7 @@ final class ReportsController extends Controller
                         'name' => $staff->name,
                         'email' => $staff->email,
                         'title' => $staff->title ?? 'Staff Member',
-                        'avatar' => $staff->photo_path,
+                        'avatar' => $staff->profile_picture_url,
                     ],
                     'summary' => [
                         'tickets_created' => $ticketsCreated,

@@ -11,6 +11,8 @@ use Illuminate\Foundation\Auth;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use League\Flysystem\GoogleCloudStorage\UniformBucketLevelAccessVisibility;
+use Illuminate\Support\Facades\Storage;
 
 final class User extends Auth\User
 {
@@ -19,6 +21,10 @@ final class User extends Auth\User
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $appends = [
+        'profile_picture_url',
     ];
 
     /**
@@ -30,6 +36,35 @@ final class User extends Auth\User
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the profile picture URL with a signed link.
+     */
+    public function getProfilePictureUrlAttribute(): ?string
+    {
+        if (empty($this->profile_picture)) {
+            return null;
+        }
+
+        try {
+            $keyFilePath = storage_path(Settings::get('gcs_key_file_path', 'app/gcs/upload-service-account.json'));
+
+            config([
+                'filesystems.disks.gcs.driver'             => 'gcs',
+                'filesystems.disks.gcs.project_id'         => Settings::get('gcs_project_id'),
+                'filesystems.disks.gcs.key_file_path'      => $keyFilePath,
+                'filesystems.disks.gcs.bucket'             => Settings::get('gcs_bucket'),
+                'filesystems.disks.gcs.path_prefix'        => Settings::get('gcs_path_prefix'),
+                'filesystems.disks.gcs.storage_api_uri'    => Settings::get('gcs_api_uri'),
+                'filesystems.disks.gcs.visibility_handler' => UniformBucketLevelAccessVisibility::class,
+                'filesystems.disks.gcs.throw'              => true,
+            ]);
+
+            return Storage::disk('gcs')->temporaryUrl($this->profile_picture, now()->addMinutes(60));
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

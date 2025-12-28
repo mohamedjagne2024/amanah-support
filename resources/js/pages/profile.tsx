@@ -1,14 +1,16 @@
-import { useForm } from '@inertiajs/react';
-import { Save } from 'lucide-react';
+import { useForm, router } from '@inertiajs/react';
+import { Save, Camera, User as UserIcon } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
 import InputError from '@/components/input-error';
+import { useRef, useState } from 'react';
 import PageHeader from '@/components/Pageheader';
 
 interface User {
   id: number;
   name: string;
   email: string;
+  profile_picture_url: string | null;
 }
 
 interface ProfileProps {
@@ -16,6 +18,10 @@ interface ProfileProps {
 }
 
 export default function Profile({ user }: ProfileProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(user.profile_picture_url);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const profileForm = useForm({
     name: user.name || '',
     email: user.email || '',
@@ -29,8 +35,24 @@ export default function Profile({ user }: ProfileProps) {
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    profileForm.put('/user/profile-information', {
+
+    const formData = new FormData();
+    formData.append('name', profileForm.data.name);
+    formData.append('email', profileForm.data.email);
+    formData.append('_method', 'PUT');
+
+    if (selectedFile) {
+      formData.append('profile_picture', selectedFile);
+    }
+
+    router.post('/user/profile-information', formData, {
       preserveState: true,
+      onSuccess: () => {
+        setSelectedFile(null);
+      },
+      onError: (errors) => {
+        profileForm.setError(errors);
+      },
     });
   };
 
@@ -42,6 +64,22 @@ export default function Profile({ user }: ProfileProps) {
         passwordForm.reset();
       },
     });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -61,47 +99,95 @@ export default function Profile({ user }: ProfileProps) {
               </div>
             </div>
             <div className="card-body">
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block font-medium text-default-900 text-sm mb-2"
-                  >
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required
-                    value={profileForm.data.name}
-                    onChange={(e) => profileForm.setData('name', e.target.value)}
-                    className="form-input"
-                    placeholder="Your name"
-                    autoComplete="name"
-                  />
-                  <InputError message={profileForm.errors.name} />
+              <form onSubmit={handleProfileSubmit} className="space-y-6">
+                {/* Profile Picture */}
+                <div className="flex items-center gap-6">
+                  <div className="relative group">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                      {previewUrl ? (
+                        <img
+                          src={previewUrl}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <UserIcon className="w-12 h-12 text-gray-400" />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={triggerFileInput}
+                      className="absolute bottom-0 right-0 bg-primary hover:bg-primary/90 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-105"
+                      title="Change profile picture"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-default-900">Profile Picture</h4>
+                    <p className="text-sm text-default-500 mt-1">
+                      JPG, PNG or GIF. Max size 2MB.
+                    </p>
+                    {selectedFile && (
+                      <p className="text-sm text-green-600 mt-2">
+                        New image selected: {selectedFile.name}
+                      </p>
+                    )}
+                    <InputError message={profileForm.errors.profile_picture} />
+                  </div>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block font-medium text-default-900 text-sm mb-2"
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    value={profileForm.data.email}
-                    onChange={(e) => profileForm.setData('email', e.target.value)}
-                    className="form-input"
-                    placeholder="Your email"
-                    autoComplete="email"
-                  />
-                  <InputError message={profileForm.errors.email} />
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        htmlFor="name"
+                        className="block font-medium text-default-900 text-sm mb-2"
+                      >
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        value={profileForm.data.name}
+                        onChange={(e) => profileForm.setData('name', e.target.value)}
+                        className="form-input"
+                        placeholder="Your name"
+                        autoComplete="name"
+                      />
+                      <InputError message={profileForm.errors.name} />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="block font-medium text-default-900 text-sm mb-2"
+                      >
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        value={profileForm.data.email}
+                        onChange={(e) => profileForm.setData('email', e.target.value)}
+                        className="form-input"
+                        placeholder="Your email"
+                        autoComplete="email"
+                      />
+                      <InputError message={profileForm.errors.email} />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex justify-end pt-4">

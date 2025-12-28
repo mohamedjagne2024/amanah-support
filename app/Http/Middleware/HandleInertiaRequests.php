@@ -20,30 +20,33 @@ final class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         return \array_merge(parent::share($request), [
-            'auth.user' => fn () => $user?->only('id', 'name', 'email'),
+            'auth.user' => fn() => $user ? array_merge(
+                $user->only('id', 'name', 'email'),
+                ['profile_picture_url' => $user->profile_picture_url]
+            ) : null,
 
-            'auth.permissions' => fn () => $user?->getAllPermissions()->pluck('name')->toArray() ?? [],
+            'auth.permissions' => fn() => $user?->getAllPermissions()->pluck('name')->toArray() ?? [],
 
-            'auth.roles' => fn () => $user?->getRoleNames()->toArray() ?? [],
+            'auth.roles' => fn() => $user?->getRoleNames()->toArray() ?? [],
 
-            'fortify.features' => fn () => \config('fortify.features', []),
+            'fortify.features' => fn() => \config('fortify.features', []),
 
-            'location.params' => fn () => (object) $request->query(),
-            'location.search' => fn () => \sprintf('?%s', $request->getQueryString() ?: ''),
+            'location.params' => fn() => (object) $request->query(),
+            'location.search' => fn() => \sprintf('?%s', $request->getQueryString() ?: ''),
 
-            'flash' => fn () => [
+            'flash' => fn() => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
 
-            'settings.dateFormat' => fn () => [
+            'settings.dateFormat' => fn() => [
                 'php' => Settings::where('name', 'date_format')->first()?->value ?? 'Y-m-d',
                 'js' => DateFormatHelper::phpToJsFormat(
                     Settings::where('name', 'date_format')->first()?->value ?? 'Y-m-d'
                 ),
             ],
 
-            'pusher' => fn () => [
+            'pusher' => fn() => [
                 'key' => Settings::where('name', 'pusher_app_key')->first()?->value,
                 'cluster' => Settings::where('name', 'pusher_app_cluster')->first()?->value,
             ],

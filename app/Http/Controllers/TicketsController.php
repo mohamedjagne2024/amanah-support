@@ -112,6 +112,7 @@ class TicketsController extends Controller
                         'uid' => $ticket->uid,
                         'subject' => $ticket->subject,
                         'contact' => $ticket->contact ? $ticket->contact->name : null,
+                        'contact_photo' => $ticket->contact ? $ticket->contact->profile_picture_url : null,
                         'priority' => $ticket->priority_label,
                         'category' => $ticket->category ? $ticket->category->name : null,
                         'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : null,
@@ -119,6 +120,7 @@ class TicketsController extends Controller
                         'status' => $ticket->status_label,
                         'due' => Carbon::parse($ticket->due)->format(Settings::get('date_format')),
                         'assigned_to' => $ticket->assignedTo ? $ticket->assignedTo->name : null,
+                        'assigned_to_photo' => $ticket->assignedTo ? $ticket->assignedTo->profile_picture_url : null,
                         'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
                         'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format')),
                     ];
@@ -426,6 +428,7 @@ class TicketsController extends Controller
                 'created_by' => $ticket->createdBy ? [
                     'id' => $ticket->createdBy->id,
                     'name' => $ticket->createdBy->name,
+                    'profile_picture_url' => $ticket->createdBy->profile_picture_url,
                 ] : null,
             ],
         ]);

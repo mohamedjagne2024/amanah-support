@@ -62,7 +62,7 @@ final class ContactsController extends Controller
                     'country_id' => $user->country_id,
                     'organization_id' => $user->organization_id,
                     'organization' => $user->organization?->name,
-                    'photo' => $user->photo_path,
+                    'photo' => $user->profile_picture_url,
                     'created_at' => $user->created_at?->toDateString(),
                 ];
             });
@@ -131,7 +131,7 @@ final class ContactsController extends Controller
             'address' => $validated['address'] ?? null,
             'country_id' => $validated['country_id'] ?? null,
             'organization_id' => $validated['organization_id'] ?? null,
-            'photo_path' => $photoPath,
+            'profile_picture' => $photoPath,
             'password' => !empty($validated['password'])
                 ? Hash::make($validated['password'])
                 : Hash::make(Str::random(16)),
@@ -175,11 +175,11 @@ final class ContactsController extends Controller
         ]);
 
         if (Request::file('photo')) {
-            if (!empty($user->photo_path) && File::exists(public_path($user->photo_path))) {
-                File::delete(public_path($user->photo_path));
+            if (!empty($user->profile_picture) && File::exists(public_path($user->profile_picture))) {
+                File::delete(public_path($user->profile_picture));
             }
             $user->update([
-                'photo_path' => '/files/' . Request::file('photo')->store('users', ['disk' => 'file_uploads']),
+                'profile_picture' => '/files/' . Request::file('photo')->store('users', ['disk' => 'file_uploads']),
             ]);
         }
 

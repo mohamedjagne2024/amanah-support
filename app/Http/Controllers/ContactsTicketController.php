@@ -77,6 +77,7 @@ class ContactsTicketController extends Controller
                         'status' => $ticket->status_label,
                         'status_slug' => $ticket->status,
                         'assigned_to' => $ticket->assignedTo ? $ticket->assignedTo->name : 'Unassigned',
+                        'assigned_to_photo' => $ticket->assignedTo ? $ticket->assignedTo->profile_picture_url : null,
                         'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format') . ' H:i'),
                         'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format') . ' H:i'),
                     ];
@@ -170,6 +171,7 @@ class ContactsTicketController extends Controller
                 'created_by' => $ticket->createdBy ? [
                     'id' => $ticket->createdBy->id,
                     'name' => $ticket->createdBy->name,
+                    'profile_picture_url' => $ticket->createdBy->profile_picture_url,
                 ] : null,
             ],
         ]);

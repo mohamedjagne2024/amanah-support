@@ -27,6 +27,7 @@ type TicketRecord = {
   status: string | null;
   status_slug: string | null;
   assigned_to: string | null;
+  assigned_to_photo: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -199,13 +200,18 @@ export default function ContactTicketIndex({
       {
         accessorKey: "assigned_to",
         header: "Staff Member",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const assignedTo = getValue<string | null>();
+          const photo = row.original.assigned_to_photo;
           return assignedTo && assignedTo !== 'Unassigned' ? (
             <div className="flex items-center gap-2 min-w-[120px]">
-              <div className="size-7 rounded-full bg-success/10 flex items-center justify-center text-success font-medium text-xs uppercase shrink-0">
-                {assignedTo.charAt(0)}
-              </div>
+              {photo ? (
+                <img src={photo} alt={assignedTo} className="size-7 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="size-7 rounded-full bg-success/10 flex items-center justify-center text-success font-medium text-xs uppercase shrink-0">
+                  {assignedTo.charAt(0)}
+                </div>
+              )}
               <span className="text-sm text-default-700 truncate">{assignedTo}</span>
             </div>
           ) : (

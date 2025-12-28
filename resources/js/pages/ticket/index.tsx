@@ -40,6 +40,7 @@ type TicketRecord = {
   uid: string;
   subject: string;
   contact: string | null;
+  contact_photo: string | null;
   priority: string | null;
   category: string | null;
   sub_category: string | null;
@@ -47,6 +48,7 @@ type TicketRecord = {
   status: string | null;
   due: string | null;
   assigned_to: string | null;
+  assigned_to_photo: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -377,13 +379,18 @@ export default function Index({
       {
         accessorKey: "contact",
         header: "Contact",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const contact = getValue<string | null>();
+          const photo = row.original.contact_photo;
           return contact ? (
             <div className="flex items-center gap-2 min-w-[140px]">
-              <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs uppercase shrink-0">
-                {contact.charAt(0)}
-              </div>
+              {photo ? (
+                <img src={photo} alt={contact} className="size-8 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs uppercase shrink-0">
+                  {contact.charAt(0)}
+                </div>
+              )}
               <span className="text-sm text-default-700 truncate">{contact}</span>
             </div>
           ) : (
@@ -444,13 +451,18 @@ export default function Index({
       {
         accessorKey: "assigned_to",
         header: "Assigned To",
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const assignedTo = getValue<string | null>();
+          const photo = row.original.assigned_to_photo;
           return assignedTo ? (
             <div className="flex items-center gap-2 min-w-[140px]">
-              <div className="size-7 rounded-full bg-success/10 flex items-center justify-center text-success font-medium text-xs uppercase shrink-0">
-                {assignedTo.charAt(0)}
-              </div>
+              {photo ? (
+                <img src={photo} alt={assignedTo} className="size-7 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="size-7 rounded-full bg-success/10 flex items-center justify-center text-success font-medium text-xs uppercase shrink-0">
+                  {assignedTo.charAt(0)}
+                </div>
+              )}
               <span className="text-sm text-default-700 truncate">{assignedTo}</span>
             </div>
           ) : (

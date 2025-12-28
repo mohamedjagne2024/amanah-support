@@ -3,14 +3,10 @@ import { TbSearch } from 'react-icons/tb';
 import SimpleBar from 'simplebar-react';
 import SidenavToggle from './SidenavToggle';
 import ThemeModeToggle from './ThemeModeToggle';
-import NotificationToggle from './NotificationToggle';
 import {
   LuBellRing,
   LuClock,
-  LuHeart,
   LuLogOut,
-  LuMoveRight,
-  LuShoppingBag,
   LuUser,
   LuBell,
   LuLoader,
@@ -429,14 +425,22 @@ const Topbar = () => {
 
           <div className="topbar-item hs-dropdown relative inline-flex">
             <button className="hs-dropdown-toggle cursor-pointer bg-pink-100 rounded-full">
-              <img src="/assets/images/user/avatar.jpg" alt="user" className="rounded-full size-9.5" />
+              <img 
+                src={auth.user.profile_picture_url || '/assets/images/user/avatar.jpg'} 
+                alt="user" 
+                className="rounded-full size-9.5 object-cover" 
+              />
             </button>
             <div className="hs-dropdown-menu min-w-48">
               <div className="p-2">
                 <h6 className="mb-2 text-default-500">{t('common.welcome')}</h6>
                 <Link href="#!" className="flex gap-3">
                   <div className="relative inline-block">
-                    <img src="/assets/images/user/avatar.jpg" alt="user" className="size-12 rounded" />
+                    <img 
+                      src={auth.user.profile_picture_url || '/assets/images/user/avatar.jpg'} 
+                      alt="user" 
+                      className="size-12 rounded object-cover" 
+                    />
                     <span className="-top-1 -end-1 absolute w-2.5 h-2.5 bg-green-400 border-2 border-white rounded-full"></span>
                   </div>
                   <div>

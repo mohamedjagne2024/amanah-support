@@ -91,8 +91,18 @@ export default function LandingNav({
             {/* Profile Dropdown - Show when logged in */}
             {isLoggedIn && (
               <Popover>
-                <PopoverButton className="size-10 rounded-full bg-default-100 flex items-center justify-center hover:bg-default-200 transition-colors focus:outline-none data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-primary">
-                  <UserIcon className="size-5 text-default-600" />
+                <PopoverButton className="size-10 rounded-full bg-default-100 flex items-center justify-center hover:bg-default-200 transition-colors focus:outline-none data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-primary overflow-hidden">
+                  {auth?.user?.profile_picture_url ? (
+                    <img 
+                      src={auth.user.profile_picture_url} 
+                      alt={auth.user.name || 'Profile'} 
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-default-600 font-medium text-sm uppercase">
+                      {auth?.user?.name?.charAt(0) || <UserIcon className="size-5" />}
+                    </span>
+                  )}
                 </PopoverButton>
                 <PopoverPanel
                   transition

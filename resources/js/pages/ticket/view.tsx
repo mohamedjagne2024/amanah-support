@@ -43,6 +43,7 @@ type CommentType = {
   user?: {
     id: number;
     name: string;
+    profile_picture_url?: string | null;
   };
 };
 
@@ -82,6 +83,7 @@ type TicketData = {
   created_by: {
     id: number;
     name: string;
+    profile_picture_url?: string | null;
   } | null;
 };
 
@@ -127,7 +129,7 @@ export default function View({
       type: 'system' | 'assignment' | 'created';
       message: string;
       created_at: string;
-      user?: { id: number; name: string };
+      user?: { id: number; name: string; profile_picture_url?: string | null };
     }> = [];
     
     // Add ticket created event with the user who created it
@@ -377,9 +379,17 @@ export default function View({
                   {activityLog.map((activity, index) => (
                     <div key={`${activity.type}-${activity.id}-${index}`} className="flex gap-3">
                       {activity.type === 'created' && activity.user ? (
-                        <div className="size-8 rounded-full bg-success/10 flex items-center justify-center text-success font-semibold text-sm uppercase shrink-0">
-                          {activity.user.name.charAt(0)}
-                        </div>
+                        activity.user.profile_picture_url ? (
+                          <img 
+                            src={activity.user.profile_picture_url} 
+                            alt={activity.user.name} 
+                            className="size-8 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="size-8 rounded-full bg-success/10 flex items-center justify-center text-success font-semibold text-sm uppercase shrink-0">
+                            {activity.user.name.charAt(0)}
+                          </div>
+                        )
                       ) : activity.type === 'assignment' ? (
                         <div className="size-8 rounded-full bg-info/10 flex items-center justify-center shrink-0">
                           <UserPlus className="size-4 text-info" />
@@ -460,9 +470,17 @@ export default function View({
                     {/* Always show existing comments */}
                     {localComments.map((comment: CommentType) => (
                       <div key={comment.id} className="flex gap-3 p-4 bg-default-50 rounded-lg">
-                        <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
-                          {comment.user?.name?.charAt(0) || 'U'}
-                        </div>
+                        {comment.user?.profile_picture_url ? (
+                          <img 
+                            src={comment.user.profile_picture_url} 
+                            alt={comment.user.name || 'User'} 
+                            className="size-10 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
+                            {comment.user?.name?.charAt(0) || 'U'}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-medium text-default-900">

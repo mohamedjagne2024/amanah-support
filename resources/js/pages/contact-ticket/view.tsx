@@ -41,6 +41,7 @@ type CommentType = {
   user?: {
     id: number;
     name: string;
+    profile_picture_url?: string | null;
   };
 };
 
@@ -77,6 +78,7 @@ type TicketData = {
   created_by: {
     id: number;
     name: string;
+    profile_picture_url?: string | null;
   } | null;
 };
 
@@ -362,9 +364,17 @@ export default function ContactTicketView({
                         {/* Always show existing comments */}
                         {localComments.map((comment: CommentType) => (
                           <div key={comment.id} className="flex gap-3 p-4 bg-default-50 rounded-lg">
-                            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
-                              {comment.user?.name?.charAt(0) || 'U'}
-                            </div>
+                            {comment.user?.profile_picture_url ? (
+                              <img 
+                                src={comment.user.profile_picture_url} 
+                                alt={comment.user.name || 'User'} 
+                                className="size-10 rounded-full object-cover shrink-0"
+                              />
+                            ) : (
+                              <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
+                                {comment.user?.name?.charAt(0) || 'U'}
+                              </div>
+                            )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="font-medium text-default-900">
