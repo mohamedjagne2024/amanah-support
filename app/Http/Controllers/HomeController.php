@@ -11,7 +11,6 @@ use App\Models\FrontPage;
 use App\Models\Message;
 use App\Models\Participant;
 use App\Models\Settings;
-use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\TicketEntry;
 use App\Models\Type;
@@ -28,7 +27,8 @@ class HomeController extends Controller
 {
     use HasGoogleCloudStorage;
 
-    public function index(){
+    public function index()
+    {
         return Inertia::render('landing/home', [
             'title' => 'Home - Amanah Support',
             'page' => FrontPage::where('slug', 'home')->first(),
@@ -50,7 +50,8 @@ class HomeController extends Controller
         ]);
     }
 
-    public function ticketOpen(){
+    public function ticketOpen()
+    {
         $enable_options = Settings::where('name', 'enable_options')->value('value');
         $require_login = collect(json_decode($enable_options, true))
             ->first(fn($option) => $option['slug'] === 'require_login_submit_ticket' && $option['value'] ?? false);
@@ -62,7 +63,7 @@ class HomeController extends Controller
         $hide_ticket_fields = [];
 
         $get_hide_ticket_fields = Settings::where('name', 'hide_ticket_fields')->first();
-        if(!empty($get_hide_ticket_fields)){
+        if (!empty($get_hide_ticket_fields)) {
             $hide_ticket_fields = json_decode($get_hide_ticket_fields->value, true);
         }
         return Inertia::render('Landing/OpenTicket', [
@@ -82,20 +83,21 @@ class HomeController extends Controller
         ]);
     }
 
-    public function ticketPublicStore() {
+    public function ticketPublicStore()
+    {
         $required_fields = [];
         $hide_ticket_fields = [];
 
         $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
         $get_hide_ticket_fields = Settings::where('name', 'hide_ticket_fields')->first();
-        if(!empty($get_required_fields)){
+        if (!empty($get_required_fields)) {
             $required_fields = json_decode($get_required_fields->value, true);
         }
-        if(!empty($get_hide_ticket_fields)){
+        if (!empty($get_hide_ticket_fields)) {
             $hide_ticket_fields = json_decode($get_hide_ticket_fields->value, true);
         }
 
-        $is_required = array_filter($required_fields, function ($rf) use ($hide_ticket_fields){
+        $is_required = array_filter($required_fields, function ($rf) use ($hide_ticket_fields) {
             return !in_array($rf, $hide_ticket_fields);
         });
 
@@ -114,7 +116,7 @@ class HomeController extends Controller
         $contact = User::where('email', $ticket_data['email'])->first();
         $plain_password = null;
 
-        if(empty($contact)){
+        if (empty($contact)) {
             $plain_password = $this->genRendomPassword();
             $contact = User::create([
                 'name' => $ticket_data['name'],
@@ -125,7 +127,6 @@ class HomeController extends Controller
             $contact->assignRole('contact');
         }
 
-        $status = Status::where('slug', 'LIKE', '%pending%')->first();
         $ticketObject = [
             'subject' => $ticket_data['subject'],
             'details' => $ticket_data['details'],
@@ -133,24 +134,22 @@ class HomeController extends Controller
             'category_id' => $ticket_data['category_id'],
             'sub_category_id' => $ticket_data['sub_category_id'],
             'type_id' => $ticket_data['type_id'],
-            'contact_id' => $contact->id
+            'contact_id' => $contact->id,
+            'status' => 'pending', // default status for new tickets
+            'priority' => 'low', // default priority for new tickets
         ];
-
-        if($status){
-            $ticketObject['status_id'] = $status->id;
-        }
 
         $ticket = Ticket::create($ticketObject);
 
-        if(!empty($ticket_data['custom_field'])){
-            foreach ($ticket_data['custom_field'] as $cfk => $cfv){
-                if(!empty($ticket_field)){
+        if (!empty($ticket_data['custom_field'])) {
+            foreach ($ticket_data['custom_field'] as $cfk => $cfv) {
+                if (!empty($ticket_field)) {
                     TicketEntry::create(['ticket_id' => $ticket->id, 'field_id' => $ticket_field->id, 'name' => $cfk, 'label' => $ticket_field->label, 'value' => $cfv]);
                 }
             }
         }
 
-        if(Request::hasFile('files')){
+        if (Request::hasFile('files')) {
             $files = Request::file('files');
             $this->handleAttachmentUploads($ticket, $files);
         }
@@ -174,7 +173,8 @@ class HomeController extends Controller
         return Redirect::route('home')->with('success', 'The ticket has been submitted. We will send you a message to follow up on the ticket update. Please check your spam folder.');
     }
 
-    private function genRendomPassword() {
+    private function genRendomPassword()
+    {
         $alphabet = "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
         $pass = array(); //remember to declare $pass as an array
         $alphaLength = strlen($alphabet) - 1; //put the length -1 in cache
@@ -205,7 +205,7 @@ class HomeController extends Controller
 
         // Create an initial welcome message
         $initialMessage = "Thank you for submitting your ticket. Your ticket ID is #{$ticket->uid}. Our support team will review your request and respond shortly.";
-        
+
         $message = new Message();
         $message->conversation_id = $conversation->id;
         if ($adminUser) {
@@ -234,11 +234,11 @@ class HomeController extends Controller
         // Configure GCS from database settings
         $this->configureGCS();
 
-        foreach ($files as $file) {            
+        foreach ($files as $file) {
             // Upload to Google Cloud Storage
             $path = $this->uploadToStorage($file, 'tickets');
 
-            if($path){
+            if ($path) {
                 Attachment::create([
                     'ticket_id' => $ticket->id,
                     'name' => $file->getClientOriginalName(),

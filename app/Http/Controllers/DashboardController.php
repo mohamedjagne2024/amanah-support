@@ -26,36 +26,28 @@ class DashboardController extends Controller
 
         $metrics = [
             'totalTickets' => Ticket::count(),
-            'openTickets' => Ticket::whereHas('status', function ($q) {
-                $q->where('slug', 'not like', '%closed%')
-                    ->where('slug', 'not like', '%resolved%');
-            })->count(),
-            'closedTickets' => Ticket::whereHas('status', function ($q) {
-                $q->where('slug', 'like', '%closed%')
-                    ->orWhere('slug', 'like', '%resolved%');
-            })->count(),
+            'openTickets' => Ticket::whereNotIn('status', ['closed', 'resolved'])->count(),
+            'closedTickets' => Ticket::whereIn('status', ['closed', 'resolved'])->count(),
             'unassignedTickets' => Ticket::whereNull('assigned_to')->count(),
         ];
 
         // Charts
-        $ticketsByStatus = Ticket::select('status_id', DB::raw('count(*) as count'))
-            ->with('status')
-            ->groupBy('status_id')
+        $ticketsByStatus = Ticket::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
             ->get()
             ->map(function ($item) {
                 return [
-                    'status' => $item->status->name ?? 'Unknown',
+                    'status' => Ticket::STATUSES[$item->status] ?? 'Unknown',
                     'count' => $item->count
                 ];
             })->values();
 
-        $ticketsByPriority = Ticket::select('priority_id', DB::raw('count(*) as count'))
-            ->with('priority')
-            ->groupBy('priority_id')
+        $ticketsByPriority = Ticket::select('priority', DB::raw('count(*) as count'))
+            ->groupBy('priority')
             ->get()
             ->map(function ($item) {
                 return [
-                    'priority' => $item->priority->name ?? 'Unknown',
+                    'priority' => Ticket::PRIORITIES[$item->priority] ?? 'Unknown',
                     'count' => $item->count
                 ];
             })->values();
@@ -88,7 +80,7 @@ class DashboardController extends Controller
             });
 
         // Recent Activities
-        $recentTickets = Ticket::with(['status', 'priority', 'category', 'user'])
+        $recentTickets = Ticket::with(['category', 'user'])
             ->latest()
             ->take(6)
             ->get()
@@ -104,8 +96,8 @@ class DashboardController extends Controller
                     'title' => $ticket->subject,
                     'uid' => $ticket->uid,
                     'user_name' => $uName,
-                    'status' => $ticket->status->name ?? 'Unknown',
-                    'priority' => $ticket->priority->name ?? 'Unknown',
+                    'status' => $ticket->status_label,
+                    'priority' => $ticket->priority_label,
                     'category' => $ticket->category->name ?? 'Unknown',
                     'created_at' => $ticket->created_at->diffForHumans(),
                 ];

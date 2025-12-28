@@ -34,12 +34,12 @@ type DepartmentOption = {
 };
 
 type PriorityOption = {
-  id: number;
+  value: string;
   name: string;
 };
 
 type StatusOption = {
-  id: number;
+  value: string;
   name: string;
 };
 
@@ -81,16 +81,12 @@ type TicketData = {
   uid: string;
   contact_id: number | null;
   contact: any;
-  priority_id: number | null;
+  priority: string;
   created_at: string;
   updated_at: string;
-  priority: string;
-  status_id: number | null;
-  status: {
-    id: number;
-    name: string;
-    slug: string;
-  } | null;
+  priority_label: string;
+  status: string;
+  status_label: string;
   closed: boolean;
   review: any;
   department_id: number | null;
@@ -154,8 +150,8 @@ export default function Edit({
 
   const { data, setData, post, processing, errors, reset } = useForm({
     contact_id: ticket.contact_id?.toString() || '',
-    priority_id: ticket.priority_id?.toString() || '',
-    status_id: ticket.status_id?.toString() || '',
+    priority: ticket.priority || '',
+    status: ticket.status || '',
     type_id: ticket.type_id?.toString() || '',
     department_id: ticket.department_id?.toString() || '',
     assigned_to: ticket.assigned_to?.toString() || '',
@@ -207,7 +203,7 @@ export default function Edit({
     () =>
       priorities.map((priority) => ({
         label: priority.name,
-        value: priority.id,
+        value: priority.value,
       })),
     [priorities]
   );
@@ -216,7 +212,7 @@ export default function Edit({
     () =>
       statuses.map((status) => ({
         label: status.name,
-        value: status.id,
+        value: status.value,
       })),
     [statuses]
   );
@@ -430,11 +426,11 @@ export default function Edit({
 
               {/* Status Badges Row */}
               <div className="flex flex-wrap items-center gap-2 mt-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(ticket.status?.name || null)}`}>
-                  {ticket.status?.name || 'Unknown'}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(ticket.status_label)}`}>
+                  {ticket.status_label}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityBadgeClass(ticket.priority)}`}>
-                  {ticket.priority}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityBadgeClass(ticket.priority_label)}`}>
+                  {ticket.priority_label}
                 </span>
                 {parsedTags.length > 0 && (
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-default-200 text-default-700 flex items-center gap-1">
@@ -727,45 +723,45 @@ export default function Edit({
 
                   {/* Priority */}
                   <div>
-                    <input type="hidden" name="priority_id" value={data.priority_id} />
+                    <input type="hidden" name="priority" value={data.priority} />
                     <Combobox
                       label="Priority"
                       options={priorityOptions}
                       value={
                         priorityOptions.find(
-                          (opt) => String(opt.value) === data.priority_id
+                          (opt) => String(opt.value) === data.priority
                         ) || null
                       }
                       onChange={(option) =>
-                        setData('priority_id', option?.value?.toString() || '')
+                        setData('priority', option?.value?.toString() || '')
                       }
                       placeholder="Select priority"
                       disabled={processing}
                       isClearable
                       isSearchable
-                      error={errors.priority_id}
+                      error={errors.priority}
                     />
                   </div>
 
                   {/* Status */}
                   <div>
-                    <input type="hidden" name="status_id" value={data.status_id} />
+                    <input type="hidden" name="status" value={data.status} />
                     <Combobox
                       label="Status"
                       options={statusOptions}
                       value={
                         statusOptions.find(
-                          (opt) => String(opt.value) === data.status_id
+                          (opt) => String(opt.value) === data.status
                         ) || null
                       }
                       onChange={(option) =>
-                        setData('status_id', option?.value?.toString() || '')
+                        setData('status', option?.value?.toString() || '')
                       }
                       placeholder="Select status"
                       disabled={processing}
                       isClearable
                       isSearchable
-                      error={errors.status_id}
+                      error={errors.status}
                     />
                   </div>
 

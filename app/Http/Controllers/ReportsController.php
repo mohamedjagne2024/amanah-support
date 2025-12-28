@@ -59,18 +59,14 @@ final class ReportsController extends Controller
 
                 // Open tickets assigned to staff
                 $ticketsOpenQuery = Ticket::where('assigned_to', $selectedStaffId)
-                    ->whereHas('status', function ($q) {
-                        $q->whereIn('slug', ['open', 'pending', 'in-progress']);
-                    });
+                    ->whereIn('status', ['open', 'pending', 'waiting_on_customer']);
                 if ($startDate) $ticketsOpenQuery->where('created_at', '>=', $startDate);
                 if ($endDate) $ticketsOpenQuery->where('created_at', '<=', $endDate);
                 $ticketsOpen = $ticketsOpenQuery->count();
 
                 // Closed tickets assigned to staff
                 $ticketsClosedQuery = Ticket::where('assigned_to', $selectedStaffId)
-                    ->whereHas('status', function ($q) {
-                        $q->whereIn('slug', ['closed', 'resolved', 'completed']);
-                    });
+                    ->whereIn('status', ['closed', 'resolved']);
                 if ($startDate) $ticketsClosedQuery->where('created_at', '>=', $startDate);
                 if ($endDate) $ticketsClosedQuery->where('created_at', '<=', $endDate);
                 $ticketsClosed = $ticketsClosedQuery->count();
@@ -284,9 +280,8 @@ final class ReportsController extends Controller
     private function getTicketsByStatus(int $staffId, ?Carbon $startDate, ?Carbon $endDate): array
     {
         $query = Ticket::where('assigned_to', $staffId)
-            ->join('status', 'tickets.status_id', '=', 'status.id')
-            ->select('status.name as status', DB::raw('COUNT(*) as count'))
-            ->groupBy('status.id', 'status.name');
+            ->select('status', DB::raw('COUNT(*) as count'))
+            ->groupBy('status');
 
         if ($startDate) {
             $query->where('tickets.created_at', '>=', $startDate);
@@ -297,7 +292,7 @@ final class ReportsController extends Controller
 
         return $query->get()
             ->map(fn($item) => [
-                'status' => $item->status,
+                'status' => Ticket::STATUSES[$item->status] ?? $item->status,
                 'count' => (int) $item->count,
             ])
             ->toArray();
@@ -306,9 +301,8 @@ final class ReportsController extends Controller
     private function getTicketsByPriority(int $staffId, ?Carbon $startDate, ?Carbon $endDate): array
     {
         $query = Ticket::where('assigned_to', $staffId)
-            ->join('priorities', 'tickets.priority_id', '=', 'priorities.id')
-            ->select('priorities.name as priority', DB::raw('COUNT(*) as count'))
-            ->groupBy('priorities.id', 'priorities.name');
+            ->select('priority', DB::raw('COUNT(*) as count'))
+            ->groupBy('priority');
 
         if ($startDate) {
             $query->where('tickets.created_at', '>=', $startDate);
@@ -319,7 +313,7 @@ final class ReportsController extends Controller
 
         return $query->get()
             ->map(fn($item) => [
-                'priority' => $item->priority,
+                'priority' => Ticket::PRIORITIES[$item->priority] ?? $item->priority,
                 'count' => (int) $item->count,
             ])
             ->toArray();
@@ -330,7 +324,7 @@ final class ReportsController extends Controller
         $activities = collect();
 
         // Recent tickets
-        $ticketsQuery = Ticket::with(['status', 'priority'])
+        $ticketsQuery = Ticket::query()
             ->where('assigned_to', $staffId)
             ->orderBy('created_at', 'desc')
             ->limit(10);
@@ -348,8 +342,8 @@ final class ReportsController extends Controller
                 'id' => $ticket->id,
                 'uid' => $ticket->uid,
                 'title' => $ticket->subject,
-                'status' => $ticket->status?->name ?? '-',
-                'priority' => $ticket->priority?->name ?? '-',
+                'status' => $ticket->status_label,
+                'priority' => $ticket->priority_label,
                 'created_at' => $ticket->created_at,
                 'formatted_date' => Carbon::parse($ticket->created_at)->format('M d, Y H:i'),
             ]);
@@ -468,27 +462,21 @@ final class ReportsController extends Controller
 
                 // Open tickets
                 $ticketsOpenQuery = Ticket::whereIn('contact_id', $contactIds)
-                    ->whereHas('status', function ($q) {
-                        $q->whereIn('slug', ['open', 'pending', 'in-progress']);
-                    });
+                    ->whereIn('status', ['open', 'pending', 'waiting_on_customer']);
                 if ($startDate) $ticketsOpenQuery->where('created_at', '>=', $startDate);
                 if ($endDate) $ticketsOpenQuery->where('created_at', '<=', $endDate);
                 $ticketsOpen = $ticketsOpenQuery->count();
 
                 // Closed tickets
                 $ticketsClosedQuery = Ticket::whereIn('contact_id', $contactIds)
-                    ->whereHas('status', function ($q) {
-                        $q->whereIn('slug', ['closed', 'resolved', 'completed']);
-                    });
+                    ->whereIn('status', ['closed', 'resolved']);
                 if ($startDate) $ticketsClosedQuery->where('created_at', '>=', $startDate);
                 if ($endDate) $ticketsClosedQuery->where('created_at', '<=', $endDate);
                 $ticketsClosed = $ticketsClosedQuery->count();
 
                 // Pending tickets
                 $ticketsPendingQuery = Ticket::whereIn('contact_id', $contactIds)
-                    ->whereHas('status', function ($q) {
-                        $q->where('slug', 'pending');
-                    });
+                    ->where('status', 'pending');
                 if ($startDate) $ticketsPendingQuery->where('created_at', '>=', $startDate);
                 if ($endDate) $ticketsPendingQuery->where('created_at', '<=', $endDate);
                 $ticketsPending = $ticketsPendingQuery->count();
@@ -684,9 +672,8 @@ final class ReportsController extends Controller
         }
 
         $query = Ticket::whereIn('contact_id', $contactIds)
-            ->join('status', 'tickets.status_id', '=', 'status.id')
-            ->select('status.name as status', DB::raw('COUNT(*) as count'))
-            ->groupBy('status.id', 'status.name');
+            ->select('status', DB::raw('COUNT(*) as count'))
+            ->groupBy('status');
 
         if ($startDate) {
             $query->where('tickets.created_at', '>=', $startDate);
@@ -697,7 +684,7 @@ final class ReportsController extends Controller
 
         return $query->get()
             ->map(fn($item) => [
-                'status' => $item->status,
+                'status' => Ticket::STATUSES[$item->status] ?? $item->status,
                 'count' => (int) $item->count,
             ])
             ->toArray();
@@ -710,9 +697,8 @@ final class ReportsController extends Controller
         }
 
         $query = Ticket::whereIn('contact_id', $contactIds)
-            ->join('priorities', 'tickets.priority_id', '=', 'priorities.id')
-            ->select('priorities.name as priority', DB::raw('COUNT(*) as count'))
-            ->groupBy('priorities.id', 'priorities.name');
+            ->select('priority', DB::raw('COUNT(*) as count'))
+            ->groupBy('priority');
 
         if ($startDate) {
             $query->where('tickets.created_at', '>=', $startDate);
@@ -723,7 +709,7 @@ final class ReportsController extends Controller
 
         return $query->get()
             ->map(fn($item) => [
-                'priority' => $item->priority,
+                'priority' => Ticket::PRIORITIES[$item->priority] ?? $item->priority,
                 'count' => (int) $item->count,
             ])
             ->toArray();
@@ -788,7 +774,7 @@ final class ReportsController extends Controller
 
         if (!empty($ticketIds)) {
             // Recent tickets
-            $ticketsQuery = Ticket::with(['status', 'priority', 'contact'])
+            $ticketsQuery = Ticket::with(['contact'])
                 ->whereIn('id', $ticketIds)
                 ->orderBy('created_at', 'desc')
                 ->limit(10);
@@ -806,8 +792,8 @@ final class ReportsController extends Controller
                     'id' => $ticket->id,
                     'uid' => $ticket->uid,
                     'title' => $ticket->subject,
-                    'status' => $ticket->status?->name ?? '-',
-                    'priority' => $ticket->priority?->name ?? '-',
+                    'status' => $ticket->status_label,
+                    'priority' => $ticket->priority_label,
                     'contact' => $ticket->contact?->name ?? '-',
                     'created_at' => $ticket->created_at,
                     'formatted_date' => Carbon::parse($ticket->created_at)->format('M d, Y H:i'),

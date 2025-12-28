@@ -13,12 +13,14 @@ class CreateTicketsTable extends Migration
      */
     public function up()
     {
-        if (Schema::hasTable('tickets')) { return; }
+        if (Schema::hasTable('tickets')) {
+            return;
+        }
         Schema::create('tickets', function (Blueprint $table) {
             $table->increments('id');
             $table->string('uid', 100)->nullable()->index();
             $table->string('subject', 250)->index();
-            $table->integer('status_id')->nullable()->index();
+            $table->string('status')->nullable()->index();
             $table->timestamp('open')->useCurrent();
             $table->timestamp('due')->nullable();
             $table->timestamp('close')->nullable();
@@ -29,7 +31,7 @@ class CreateTicketsTable extends Migration
             $table->string('email')->nullable();
             $table->string('created_user_id', 50)->nullable()->index();
             $table->string('location', 200)->nullable();
-            $table->integer('priority_id')->nullable()->index();
+            $table->string('priority')->nullable()->index();
             $table->integer('department_id')->nullable()->index();
             $table->integer('category_id')->nullable()->index();
             $table->integer('sub_category_id')->nullable()->index();

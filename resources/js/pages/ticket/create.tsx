@@ -21,7 +21,7 @@ type DepartmentOption = {
 };
 
 type PriorityOption = {
-  id: number;
+  value: string;
   name: string;
 };
 
@@ -60,7 +60,7 @@ export default function Create({
 
   const { data, setData, post, processing, errors } = useForm({
     contact_id: '',
-    priority_id: '',
+    priority: '',
     type_id: '',
     department_id: '',
     assigned_to: '',
@@ -102,7 +102,7 @@ export default function Create({
     () =>
       priorities.map((priority) => ({
         label: priority.name,
-        value: priority.id,
+        value: priority.value,
       })),
     [priorities]
   );
@@ -225,7 +225,7 @@ export default function Create({
                   </div>
 
                   <div>
-                    <input type="hidden" name="priority_id" value={data.priority_id} />
+                    <input type="hidden" name="priority" value={data.priority} />
                     <Combobox
                       label={
                         <>
@@ -235,17 +235,17 @@ export default function Create({
                       options={priorityOptions}
                       value={
                         priorityOptions.find(
-                          (opt) => String(opt.value) === data.priority_id
+                          (opt) => String(opt.value) === data.priority
                         ) || null
                       }
                       onChange={(option) =>
-                        setData('priority_id', option?.value?.toString() || '')
+                        setData('priority', option?.value?.toString() || '')
                       }
                       placeholder="Select priority"
                       disabled={processing}
                       isClearable
                       isSearchable
-                      error={errors.priority_id}
+                      error={errors.priority}
                     />
                   </div>
 

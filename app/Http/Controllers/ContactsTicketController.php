@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Department;
 use App\Models\FrontPage;
-use App\Models\Priority;
 use App\Models\Settings;
-use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\Comment;
 use Carbon\Carbon;
@@ -42,13 +40,9 @@ class ContactsTicketController extends Controller
         // Handle filtering by status type
         $type = Request::input('type');
         if ($type == 'open') {
-            $ticketQuery->whereHas('status', function ($query) {
-                $query->where('slug', 'not like', '%close%');
-            });
+            $ticketQuery->where('status', '!=', 'closed');
         } elseif ($type == 'closed') {
-            $ticketQuery->whereHas('status', function ($query) {
-                $query->where('slug', 'like', '%close%');
-            });
+            $ticketQuery->where('status', 'closed');
         }
 
         // Handle sorting
@@ -62,16 +56,15 @@ class ContactsTicketController extends Controller
             'title' => 'My Tickets',
             'filters' => Request::all(),
             'footer' => $this->getFooter(),
-            'statuses' => Status::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'statuses' => collect(Ticket::STATUSES)->map(function ($label, $value) {
+                return ['value' => $value, 'name' => $label];
+            })->values(),
             'departments' => Department::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
             'tickets' => $ticketQuery
-                ->filter(Request::only(['search', 'status_id', 'department_id']))
+                ->filter(Request::only(['search', 'status', 'department_id']))
                 ->paginate($limit)
                 ->withQueryString()
                 ->through(function ($ticket) {
@@ -80,9 +73,9 @@ class ContactsTicketController extends Controller
                         'uid' => $ticket->uid,
                         'subject' => $ticket->subject,
                         'department' => $ticket->department ? $ticket->department->name : null,
-                        'priority' => $ticket->priority ? $ticket->priority->name : null,
-                        'status' => $ticket->status ? $ticket->status->name : null,
-                        'status_slug' => $ticket->status ? $ticket->status->slug : null,
+                        'priority' => $ticket->priority_label,
+                        'status' => $ticket->status_label,
+                        'status_slug' => $ticket->status,
                         'assigned_to' => $ticket->assignedTo ? $ticket->assignedTo->name : 'Unassigned',
                         'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format') . ' H:i'),
                         'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format') . ' H:i'),
@@ -153,13 +146,13 @@ class ContactsTicketController extends Controller
                 'uid' => $ticket->uid,
                 'contact_id' => $ticket->contact_id,
                 'contact' => $ticket->contact ?: null,
-                'priority_id' => $ticket->priority_id,
+                'priority' => $ticket->priority,
                 'created_at' => $ticket->created_at,
                 'updated_at' => $ticket->updated_at,
-                'priority' => $ticket->priority ? $ticket->priority->name : 'N/A',
-                'status_id' => $ticket->status_id,
-                'status' => $ticket->status ?: null,
-                'closed' => $ticket->status && $ticket->status->slug == 'closed',
+                'priority_label' => $ticket->priority_label,
+                'status' => $ticket->status,
+                'status_label' => $ticket->status_label,
+                'closed' => $ticket->is_closed,
                 'department_id' => $ticket->department_id,
                 'department' => $ticket->department ? $ticket->department->name : 'N/A',
                 'category_id' => $ticket->category_id,
@@ -219,17 +212,11 @@ class ContactsTicketController extends Controller
         // Set the contact_id to the logged-in user
         $request_data['contact_id'] = $user['id'];
 
-        // Set default priority if not provided
-        $priority = Priority::orderBy('name')->first();
-        if (!empty($priority)) {
-            $request_data['priority_id'] = $priority->id;
-        }
+        // Set default priority to low if not provided
+        $request_data['priority'] = 'low';
 
-        // Set default status (active/open)
-        $status = Status::where('slug', 'like', '%active%')->first();
-        if (!empty($status)) {
-            $request_data['status_id'] = $status->id;
-        }
+        // Set default status to pending for new tickets
+        $request_data['status'] = 'pending';
 
         // Remove files from request_data as it's handled separately
         unset($request_data['files']);

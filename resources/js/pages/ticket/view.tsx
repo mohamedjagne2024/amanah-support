@@ -51,16 +51,12 @@ type TicketData = {
   uid: string;
   contact_id: number | null;
   contact: any;
-  priority_id: number | null;
+  priority: string;
   created_at: string;
   updated_at: string;
-  priority: string;
-  status_id: number | null;
-  status: {
-    id: number;
-    name: string;
-    slug: string;
-  } | null;
+  priority_label: string;
+  status: string;
+  status_label: string;
   closed: boolean;
   review: any;
   department_id: number | null;
@@ -266,7 +262,7 @@ export default function View({
               <div className="size-14 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Ticket className="size-7 text-primary" />
               </div>
-              {ticket.status?.slug?.includes('open') && (
+              {ticket.status === 'open' && (
                 <span className="absolute -top-1 -right-1 size-4 bg-success rounded-full border-2 border-white" />
               )}
             </div>
@@ -318,12 +314,12 @@ export default function View({
 
               {/* Status Badges Row */}
               <div className="flex flex-wrap items-center gap-2 mt-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(ticket.status?.name || null)}`}>
-                  {ticket.status?.name || 'Unknown'}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(ticket.status_label)}`}>
+                  {ticket.status_label}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getPriorityBadgeClass(ticket.priority)}`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getPriorityBadgeClass(ticket.priority_label)}`}>
                   <Star className="size-3" />
-                  {ticket.priority}
+                  {ticket.priority_label}
                 </span>
                 {parsedTags.length > 0 && (
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-default-200 text-default-700 flex items-center gap-1">

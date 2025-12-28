@@ -11,10 +11,8 @@ use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Department;
 use App\Models\PendingEmail;
-use App\Models\Priority;
 use App\Models\Review;
 use App\Models\Settings;
-use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\TicketEntry;
 use App\Models\TicketField;
@@ -65,9 +63,7 @@ class TicketsController extends Controller
 
         // Handle high priority filter
         if ($type == 'high_priority') {
-            $ticketQuery->whereHas('priority', function ($query) {
-                $query->where('name', 'like', '%high%');
-            });
+            $ticketQuery->where('priority', 'high')->orWhere('priority', 'urgent');
         }
 
         if (Request::has(['field', 'direction'])) {
@@ -85,10 +81,9 @@ class TicketsController extends Controller
         return Inertia::render('ticket/index', [
             'title' => 'Tickets',
             'filters' => Request::all(),
-            'priorities' => Priority::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'priorities' => collect(Ticket::PRIORITIES)->map(function ($label, $value) {
+                return ['value' => $value, 'name' => $label];
+            })->values(),
             'assignees' => [],
             'types' => Type::orderBy('name')
                 ->get()
@@ -102,12 +97,11 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'statuses' => Status::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'statuses' => collect(Ticket::STATUSES)->map(function ($label, $value) {
+                return ['value' => $value, 'name' => $label];
+            })->values(),
             'tickets' => $ticketQuery
-                ->filter(Request::only(['search', 'priority_id', 'status_id', 'type_id', 'category_id', 'department_id']))
+                ->filter(Request::only(['search', 'priority', 'status', 'type_id', 'category_id', 'department_id']))
                 ->byContact($byContact)
                 ->byAssign($byAssign)
                 ->paginate($limit)
@@ -118,11 +112,11 @@ class TicketsController extends Controller
                         'uid' => $ticket->uid,
                         'subject' => $ticket->subject,
                         'contact' => $ticket->contact ? $ticket->contact->name : null,
-                        'priority' => $ticket->priority ? $ticket->priority->name : null,
+                        'priority' => $ticket->priority_label,
                         'category' => $ticket->category ? $ticket->category->name : null,
                         'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : null,
                         'rating' => $ticket->review ? $ticket->review->rating : 0,
-                        'status' => $ticket->status ? $ticket->status->name : null,
+                        'status' => $ticket->status_label,
                         'due' => Carbon::parse($ticket->due)->format(Settings::get('date_format')),
                         'assigned_to' => $ticket->assignedTo ? $ticket->assignedTo->name : null,
                         'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
@@ -162,11 +156,21 @@ class TicketsController extends Controller
             foreach ($fileContents as $data) {
                 $findExistingTicket = Ticket::where('uid', $data['UID'])->first();
                 if (empty($findExistingTicket)) {
-                    $priority = Priority::firstOrCreate(['name' => $data['Priority']]);
+                    // Map priority from CSV to static value
+                    $priority = strtolower($data['Priority'] ?? 'low');
+                    if (!array_key_exists($priority, Ticket::PRIORITIES)) {
+                        $priority = 'low';
+                    }
+
+                    // Map status from CSV to static value
+                    $status = strtolower(str_replace(' ', '_', $data['Status'] ?? 'pending'));
+                    if (!array_key_exists($status, Ticket::STATUSES)) {
+                        $status = 'pending';
+                    }
+
                     $category = Category::firstOrCreate(['name' => $data['Category']]);
                     $sub_category = Category::firstOrCreate(['name' => $data['Sub Category']]);
                     $department = Department::firstOrCreate(['name' => $data['Department']]);
-                    $status = Status::firstOrCreate(['name' => $data['Status']]);
                     $assignTo = User::where(['email' => $data['Assigned To Email']])->first();
                     if (empty($assignTo) && !empty($data['Assigned To Email']) && !empty($data['Assigned To Name'])) {
                         $aName = $this->splitName($data['Assigned To Name']);
@@ -176,11 +180,11 @@ class TicketsController extends Controller
                     $ticket = Ticket::create([
                         'uid' => $data['UID'],
                         'subject' => $data['Subject'],
-                        'priority_id' => $priority->id,
+                        'priority' => $priority,
                         'category_id' => $category->id,
                         'sub_category_id' => $sub_category->id,
                         'department_id' => $department->id,
-                        'status_id' => $status->id,
+                        'status' => $status,
                         'assigned_to' => $assignTo ? $assignTo->id : null
                     ]);
                 }
@@ -208,11 +212,11 @@ class TicketsController extends Controller
             fputcsv($handle, [
                 $ticket->uid,
                 $ticket->subject,
-                $ticket->priority ? $ticket->priority->name : null,
+                $ticket->priority_label,
                 $ticket->category ? $ticket->category->name : null,
                 $ticket->subCategory ? $ticket->subCategory->name : null,
                 $ticket->department ? $ticket->department->name : null,
-                $ticket->status ? $ticket->status->name : null,
+                $ticket->status_label,
                 $ticket->assignedTo ? $ticket->assignedTo->email : null,
                 $ticket->assignedTo ? $ticket->assignedTo->first_name . ' ' . $ticket->assignedTo->last_name : null,
                 $ticket->created_at
@@ -256,20 +260,18 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'priorities' => Priority::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'priorities' => collect(Ticket::PRIORITIES)->map(function ($label, $value) {
+                return ['value' => $value, 'name' => $label];
+            })->values(),
             'departments' => Department::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
             'all_categories' => Category::orderBy('name')
                 ->get(),
-            'statuses' => Status::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'statuses' => collect(Ticket::STATUSES)->map(function ($label, $value) {
+                return ['value' => $value, 'name' => $label];
+            })->values(),
             'types' => Type::orderBy('name')
                 ->get()
                 ->map
@@ -289,8 +291,8 @@ class TicketsController extends Controller
         $user = Auth()->user();
         $request_data = Request::validate([
             'contact_id' => ['nullable', Rule::exists('users', 'id')],
-            'priority_id' => ['nullable', Rule::exists('priorities', 'id')],
-            'status_id' => ['nullable', Rule::exists('status', 'id')],
+            'priority' => ['nullable', 'string', Rule::in(array_keys(Ticket::PRIORITIES))],
+            'status' => ['nullable', 'string', Rule::in(array_keys(Ticket::STATUSES))],
             'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
             'assigned_to' => [in_array('assigned_to', $required_fields) ? 'required' : 'nullable', Rule::exists('users', 'id')],
             'category_id' => [in_array('category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
@@ -304,19 +306,13 @@ class TicketsController extends Controller
             $request_data['contact_id'] = $user['id'];
         }
 
-        if (empty($request_data['priority_id'])) {
-            $priority = Priority::orderBy('name')->first();
-            if (!empty($priority)) {
-                $request_data['priority_id'] = $priority->id;
-            }
+        // Set default priority if not provided
+        if (empty($request_data['priority'])) {
+            $request_data['priority'] = 'low';
         }
 
-        if (empty($request_data['status_id'])) {
-            $status = Status::where('slug', 'like', '%active%')->first();
-            if (!empty($status)) {
-                $request_data['status_id'] = $status->id;
-            }
-        }
+        // Set default status to 'pending' for new tickets
+        $request_data['status'] = 'pending';
 
         $ticket = Ticket::create($request_data);
 
@@ -402,13 +398,13 @@ class TicketsController extends Controller
                 'uid' => $ticket->uid,
                 'contact_id' => $ticket->contact_id,
                 'contact' => $ticket->contact ?: null,
-                'priority_id' => $ticket->priority_id,
+                'priority' => $ticket->priority,
                 'created_at' => $ticket->created_at,
                 'updated_at' => $ticket->updated_at,
-                'priority' => $ticket->priority ? $ticket->priority->name : 'N/A',
-                'status_id' => $ticket->status_id,
-                'status' => $ticket->status ?: null,
-                'closed' => $ticket->status && $ticket->status->slug == 'closed',
+                'priority_label' => $ticket->priority_label,
+                'status' => $ticket->status,
+                'status_label' => $ticket->status_label,
+                'closed' => $ticket->is_closed,
                 'review' => $ticket->review,
                 'department_id' => $ticket->department_id,
                 'department' => $ticket->department ? $ticket->department->name : 'N/A',
@@ -491,20 +487,18 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'priorities' => Priority::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'priorities' => collect(Ticket::PRIORITIES)->map(function ($label, $value) {
+                return ['value' => $value, 'name' => $label];
+            })->values(),
             'departments' => Department::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
             'all_categories' => Category::orderBy('name')
                 ->get(),
-            'statuses' => Status::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'statuses' => collect(Ticket::STATUSES)->map(function ($label, $value) {
+                return ['value' => $value, 'name' => $label];
+            })->values(),
             'attachments' => Attachment::orderBy('name')
                 ->with('user')
                 ->where('ticket_id', $ticket->id ?? null)
@@ -533,13 +527,13 @@ class TicketsController extends Controller
                 'uid' => $ticket->uid,
                 'contact_id' => $ticket->contact_id,
                 'contact' => $ticket->contact ?: null,
-                'priority_id' => $ticket->priority_id,
+                'priority' => $ticket->priority,
                 'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
                 'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format')),
-                'priority' => $ticket->priority ? $ticket->priority->name : 'N/A',
-                'status_id' => $ticket->status_id,
-                'status' => $ticket->status ?: null,
-                'closed' => $ticket->status && $ticket->status->slug == 'closed',
+                'priority_label' => $ticket->priority_label,
+                'status' => $ticket->status,
+                'status_label' => $ticket->status_label,
+                'closed' => $ticket->is_closed,
                 'review' => $ticket->review,
                 'department_id' => $ticket->department_id,
                 'department' => $ticket->department ? $ticket->department->name : 'N/A',
@@ -574,8 +568,8 @@ class TicketsController extends Controller
         $user = Auth()->user();
         $request_data = Request::validate([
             'contact_id' => ['nullable', Rule::exists('users', 'id')],
-            'priority_id' => ['nullable', Rule::exists('priorities', 'id')],
-            'status_id' => ['nullable', Rule::exists('status', 'id')],
+            'priority' => ['nullable', 'string', Rule::in(array_keys(Ticket::PRIORITIES))],
+            'status' => ['nullable', 'string', Rule::in(array_keys(Ticket::STATUSES))],
             'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
             'assigned_to' => [in_array('assigned_to', $required_fields) ? 'required' : 'nullable', Rule::exists('users', 'id')],
             'category_id' => [in_array('category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
@@ -599,16 +593,16 @@ class TicketsController extends Controller
             return Redirect::route('tickets.edit', $ticket->uid)->with('success', 'Added the review!');
         }
 
-        $closed_status = Status::where('slug', 'like', '%close%')->first();
-
         $update_message = null;
-        if ($closed_status && ($ticket->status_id != $closed_status->id) && ($request_data['status_id'] ?? null) == $closed_status->id) {
+        // Check for status change
+        if ($ticket->status !== 'closed' && ($request_data['status'] ?? null) === 'closed') {
             $update_message = 'The ticket has been closed.';
-        } elseif ($ticket->status_id != ($request_data['status_id'] ?? null)) {
+        } elseif ($ticket->status !== ($request_data['status'] ?? $ticket->status)) {
             $update_message = 'The status has been changed for this ticket.';
         }
 
-        if ($ticket->priority_id != ($request_data['priority_id'] ?? null)) {
+        // Check for priority change
+        if ($ticket->priority !== ($request_data['priority'] ?? $ticket->priority)) {
             $update_message = 'The priority has been changed for this ticket.';
         }
 

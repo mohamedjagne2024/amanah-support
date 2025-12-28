@@ -10,7 +10,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileInformationController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ImagesController;
 use App\Http\Controllers\ImapController;
 use App\Http\Controllers\OrganizationsController;
 use App\Http\Controllers\ReportsController;
@@ -18,8 +17,6 @@ use App\Http\Controllers\FaqsController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\PendingUsersController;
 use App\Http\Controllers\CategoriesController;
-use App\Http\Controllers\PrioritiesController;
-use App\Http\Controllers\StatusesController;
 use App\Http\Controllers\DepartmentsController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\TypesController;
@@ -186,72 +183,6 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('categories.restore')
             ->middleware('auth');
 
-
-        /** Chat functions */
-        // Chat
-        $router->get('chat', [ChatController::class, 'index'])
-            ->name('chat')
-            ->middleware('auth');
-
-        $router->get('chat/{id}', [ChatController::class, 'chat'])
-            ->name('chat.current')
-            ->middleware('auth');
-
-        $router->get('chat/create', [ChatController::class, 'create'])
-            ->name('chat.create')
-            ->middleware('auth');
-
-        $router->post('chat/message', [ChatController::class, 'newMessage'])
-            ->name('chat.message')
-            ->middleware('auth');
-
-        $router->post('chat', [ChatController::class, 'store'])
-            ->name('chat.store')
-            ->middleware('auth');
-
-        $router->get('chat/{chat}/edit', [ChatController::class, 'edit'])
-            ->name('chat.edit')
-            ->middleware('auth');
-
-        $router->put('chat/{chat}', [ChatController::class, 'update'])
-            ->name('chat.update')
-            ->middleware('auth');
-
-        $router->delete('chat/{chat}', [ChatController::class, 'destroy'])
-            ->name('chat.destroy')
-            ->middleware('auth');
-
-        $router->put('chat/{chat}/restore', [ChatController::class, 'restore'])
-            ->name('chat.restore')
-            ->middleware('auth');
-
-        /** Priorities functions */
-        $router->get('settings/priorities', [PrioritiesController::class, 'index'])
-            ->name('priorities')
-            ->middleware('auth');
-
-        $router->get('settings/priorities/create', [PrioritiesController::class, 'create'])
-            ->name('priorities.create')
-            ->middleware('auth');
-
-        $router->post('settings/priorities', [PrioritiesController::class, 'store'])
-            ->name('priorities.store')
-            ->middleware('auth');
-
-        $router->get('settings/priorities/{priority}/edit', [PrioritiesController::class, 'edit'])
-            ->name('priorities.edit')
-            ->middleware('auth');
-
-        $router->put('settings/priorities/{priority}/restore', [PrioritiesController::class, 'restore'])
-            ->name('priorities.restore')
-            ->middleware('auth');
-
-        $router->delete('settings/priorities/{priority}', [PrioritiesController::class, 'destroy'])
-            ->name('priorities.destroy')
-            ->middleware('auth');
-
-    // End - Priorities
-
         /** Faq Route */
         $router->get('faqs', [FaqsController::class, 'index'])
             ->name('faqs')
@@ -305,38 +236,6 @@ $router->prefix('/')->group(static function (Router $router): void {
         $router->delete('knowledge_base/{knowledge_base}', [KnowledgeBaseController::class, 'destroy'])
             ->name('knowledge_base.destroy')
             ->middleware('auth');
-
-
-        /** Status Routing */
-        // Statuses
-        $router->get('settings/statuses', [StatusesController::class, 'index'])
-            ->name('statuses')
-            ->middleware('auth');
-
-        $router->get('settings/statuses/create', [StatusesController::class, 'create'])
-            ->name('statuses.create')
-            ->middleware('auth');
-
-        $router->post('settings/statuses', [StatusesController::class, 'store'])
-            ->name('statuses.store')
-            ->middleware('auth');
-
-        $router->get('settings/statuses/{status}/edit', [StatusesController::class, 'edit'])
-            ->name('statuses.edit')
-            ->middleware('auth');
-
-        $router->put('settings/statuses/{status}', [StatusesController::class, 'update'])
-            ->name('statuses.update')
-            ->middleware('auth');
-
-        $router->put('settings/statuses/{status}/restore', [StatusesController::class, 'restore'])
-            ->name('statuses.restore')
-            ->middleware('auth');
-
-        $router->delete('settings/statuses/{status}', [StatusesController::class, 'destroy'])
-            ->name('statuses.destroy')
-            ->middleware('auth');
-        // End - Statuses
 
 
 

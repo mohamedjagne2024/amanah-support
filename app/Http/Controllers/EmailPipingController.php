@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Contact;
-use App\Models\Priority;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,7 +14,7 @@ class EmailPipingController extends Controller
 {
     public function receiveEmailWebhook(Request $request)
     {
-//        Log::info('Incoming email webhook:', $request->all());
+        //        Log::info('Incoming email webhook:', $request->all());
 
         $data = $request->validate([
             'from' => 'required|string',
@@ -54,7 +53,7 @@ class EmailPipingController extends Controller
         }
 
         $subject = strtolower($data['subject'] ?? '');
-        $priority_id = $this->detectPriorityId($subject);
+        $priority = $this->detectPriority($subject);
         $category_id = $this->detectCategoryId($subject);
 
         $cleanBody = $this->getCleanPlainBody($data['body'] ?? '');
@@ -68,16 +67,16 @@ class EmailPipingController extends Controller
             'message_id' => $data['message_id'] ?? null,
             'in_reply_to' => $data['in_reply_to'] ?? null,
             'contact_id'    => $contact->id,
-            'priority_id'   => $priority_id,
+            'priority'   => $priority,
             'category_id'   => $category_id,
             'parent_id' => $parentTicket?->id,
             'created_by' => null, // or from config
-            'status_id' => 1, // e.g. open
+            'status' => 'pending', // default status for new tickets
             'open' => now(),
             'created_at' => $data['date'] ?? now(),
         ]);
 
-//        Log::info('New ticket saved with ID: ' . $ticket->id);
+        //        Log::info('New ticket saved with ID: ' . $ticket->id);
 
         return response()->json(['status' => 'ticket saved', 'id' => $ticket->id]);
     }
@@ -101,25 +100,25 @@ class EmailPipingController extends Controller
         return null;
     }
 
-    protected function detectPriorityId(string $subject, int $threshold = 80): ?int
+    protected function detectPriority(string $subject, int $threshold = 80): string
     {
         $subjectWords = preg_split('/\W+/', strtolower($subject), -1, PREG_SPLIT_NO_EMPTY);
-        $priorities = Priority::all();
 
-        foreach ($priorities as $priority) {
-            $priorityWords = preg_split('/\W+/', strtolower($priority->name), -1, PREG_SPLIT_NO_EMPTY);
+        foreach (Ticket::PRIORITIES as $key => $label) {
+            $priorityWords = preg_split('/\W+/', strtolower($label), -1, PREG_SPLIT_NO_EMPTY);
 
             foreach ($subjectWords as $sw) {
                 foreach ($priorityWords as $pw) {
                     similar_text($sw, $pw, $percent);
                     if ($percent >= $threshold) {
-                        return $priority->id;
+                        return $key;
                     }
                 }
             }
         }
 
-        return null;
+        // Default to low priority
+        return 'low';
     }
 
     protected function detectCategoryId(string $subject, int $threshold = 80): ?int

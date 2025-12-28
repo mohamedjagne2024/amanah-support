@@ -14,7 +14,7 @@ class Ticket extends Model
     protected $fillable = [
         'uid',
         'subject',
-        'status_id',
+        'status',
         'open',
         'due',
         'close',
@@ -25,7 +25,7 @@ class Ticket extends Model
         'email',
         'created_user_id',
         'location',
-        'priority_id',
+        'priority',
         'department_id',
         'category_id',
         'sub_category_id',
@@ -40,6 +40,51 @@ class Ticket extends Model
         'estimated_hours',
         'actual_hours',
     ];
+
+    /**
+     * Static priority values
+     */
+    public const PRIORITIES = [
+        'low' => 'Low',
+        'medium' => 'Medium',
+        'high' => 'High',
+        'urgent' => 'Urgent',
+    ];
+
+    /**
+     * Static status values
+     */
+    public const STATUSES = [
+        'open' => 'Open',
+        'pending' => 'Pending',
+        'resolved' => 'Resolved',
+        'closed' => 'Closed',
+        'waiting_on_customer' => 'Waiting on Customer',
+    ];
+
+    /**
+     * Get the priority label
+     */
+    public function getPriorityLabelAttribute(): string
+    {
+        return self::PRIORITIES[$this->priority] ?? 'N/A';
+    }
+
+    /**
+     * Get the status label
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return self::STATUSES[$this->status] ?? 'N/A';
+    }
+
+    /**
+     * Check if the ticket is closed
+     */
+    public function getIsClosedAttribute(): bool
+    {
+        return $this->status === 'closed';
+    }
 
     protected static function booted()
     {
@@ -73,10 +118,7 @@ class Ticket extends Model
         return $this->belongsTo(User::class, 'created_user_id');
     }
 
-    public function priority()
-    {
-        return $this->belongsTo(Priority::class, 'priority_id');
-    }
+
 
     public function review()
     {
@@ -103,10 +145,7 @@ class Ticket extends Model
         return $this->hasMany(Review::class);
     }
 
-    public function status()
-    {
-        return $this->belongsTo(Status::class, 'status_id');
-    }
+
 
     public function department()
     {
@@ -187,20 +226,18 @@ class Ticket extends Model
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
-            $statusIds = Status::where('slug', 'like', '%' . $search . '%')->pluck('id');
-            $priorityIds = Priority::where('name', 'like', '%' . $search . '%')->pluck('id');
             $assignedIds = User::where('first_name', 'like', '%' . $search . '%')->orWhere('last_name', 'like', '%' . $search . '%')->pluck('id');
             $query
                 ->where('subject', 'like', '%' . $search . '%')
                 ->orWhere('uid', 'like', '%' . $search . '%')
-                ->orWhereIn('status_id', $statusIds)
-                ->orWhereIn('priority_id', $priorityIds)
+                ->orWhere('status', 'like', '%' . $search . '%')
+                ->orWhere('priority', 'like', '%' . $search . '%')
                 ->orWhereIn('assigned_to', $assignedIds)
                 ->orWhereIn('user_id', $assignedIds);
-        })->when($filters['priority_id'] ?? null, function ($query, $priority) {
-            $query->where('priority_id', $priority);
-        })->when($filters['status_id'] ?? null, function ($query, $status) {
-            $query->where('status_id', $status);
+        })->when($filters['priority'] ?? null, function ($query, $priority) {
+            $query->where('priority', $priority);
+        })->when($filters['status'] ?? null, function ($query, $status) {
+            $query->where('status', $status);
         })->when($filters['type_id'] ?? null, function ($query, $status) {
             $query->where('type_id', $status);
         })->when($filters['category_id'] ?? null, function ($query, $status) {

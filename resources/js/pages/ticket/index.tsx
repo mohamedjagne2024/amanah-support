@@ -11,12 +11,12 @@ import PageHeader from "@/components/Pageheader";
 import Breadcrumb from "@/components/BreadCrumb";
 
 type Priority = {
-  id: number;
+  value: string;
   name: string;
 };
 
 type Status = {
-  id: number;
+  value: string;
   name: string;
 };
 
@@ -63,8 +63,8 @@ type TicketPaginator = {
 
 type TicketFilters = {
   search?: string | null;
-  priority_id?: string | null;
-  status_id?: string | null;
+  priority?: string | null;
+  status?: string | null;
   type_id?: string | null;
   category_id?: string | null;
   department_id?: string | null;
@@ -106,8 +106,8 @@ export default function Index({
 
   const safeFilters: TicketFilters = {
     search: filters?.search ?? "",
-    priority_id: filters?.priority_id ?? "",
-    status_id: filters?.status_id ?? "",
+    priority: filters?.priority ?? "",
+    status: filters?.status ?? "",
     type_id: filters?.type_id ?? "",
     category_id: filters?.category_id ?? "",
     department_id: filters?.department_id ?? "",
@@ -252,8 +252,8 @@ export default function Index({
     const params = new URLSearchParams();
     
     if (safeFilters.search) params.append('search', safeFilters.search);
-    if (safeFilters.priority_id) params.append('priority_id', safeFilters.priority_id);
-    if (safeFilters.status_id) params.append('status_id', safeFilters.status_id);
+    if (safeFilters.priority) params.append('priority', safeFilters.priority);
+    if (safeFilters.status) params.append('status', safeFilters.status);
     if (safeFilters.type_id) params.append('type_id', safeFilters.type_id);
     if (safeFilters.category_id) params.append('category_id', safeFilters.category_id);
     if (safeFilters.department_id) params.append('department_id', safeFilters.department_id);
@@ -269,8 +269,8 @@ export default function Index({
   const submitQuery = useCallback(
     (partial: Partial<{ 
       search: string; 
-      priority_id: string; 
-      status_id: string; 
+      priority: string; 
+      status: string; 
       type_id: string; 
       category_id: string; 
       department_id: string; 
@@ -281,8 +281,8 @@ export default function Index({
     }>) => {
       const query = {
         search: partial.search ?? safeFilters.search ?? "",
-        priority_id: partial.priority_id ?? safeFilters.priority_id ?? "",
-        status_id: partial.status_id ?? safeFilters.status_id ?? "",
+        priority: partial.priority ?? safeFilters.priority ?? "",
+        status: partial.status ?? safeFilters.status ?? "",
         type_id: partial.type_id ?? safeFilters.type_id ?? "",
         category_id: partial.category_id ?? safeFilters.category_id ?? "",
         department_id: partial.department_id ?? safeFilters.department_id ?? "",
@@ -294,8 +294,8 @@ export default function Index({
 
       const hasChanged = 
         query.search !== (safeFilters.search ?? "") ||
-        query.priority_id !== (safeFilters.priority_id ?? "") ||
-        query.status_id !== (safeFilters.status_id ?? "") ||
+        query.priority !== (safeFilters.priority ?? "") ||
+        query.status !== (safeFilters.status ?? "") ||
         query.type_id !== (safeFilters.type_id ?? "") ||
         query.category_id !== (safeFilters.category_id ?? "") ||
         query.department_id !== (safeFilters.department_id ?? "") ||
@@ -311,7 +311,7 @@ export default function Index({
       const sanitized = Object.fromEntries(
         Object.entries(query).filter(([key, value]) => {
           if (value == null) return false;
-          if ((key === "search" || key === "priority_id" || key === "status_id" || key === "type_id" || key === "category_id" || key === "department_id") && value === "") {
+          if ((key === "search" || key === "priority" || key === "status" || key === "type_id" || key === "category_id" || key === "department_id") && value === "") {
             return false;
           }
           if (key === "page" && value === 1) {
@@ -332,7 +332,7 @@ export default function Index({
         onFinish: () => setIsLoading(false)
       });
     },
-    [safeTickets.current_page, safeTickets.per_page, safeFilters.search, safeFilters.priority_id, safeFilters.status_id, safeFilters.type_id, safeFilters.category_id, safeFilters.department_id, safeFilters.sort_by, safeFilters.sort_direction]
+    [safeTickets.current_page, safeTickets.per_page, safeFilters.search, safeFilters.priority, safeFilters.status, safeFilters.type_id, safeFilters.category_id, safeFilters.department_id, safeFilters.sort_by, safeFilters.sort_direction]
   );
 
   const columns = useMemo<ColumnDef<TicketRecord, unknown>[]>(
@@ -476,21 +476,21 @@ export default function Index({
   const tableFilters = useMemo<DataTableFilter[]>(
     () => [
       {
-        id: "priority_id",
+        id: "priority",
         label: "Priority",
         placeholder: "All priorities",
         options: (priorities ?? []).map(p => ({
           label: p.name,
-          value: String(p.id)
+          value: String(p.value)
         }))
       },
       {
-        id: "status_id",
+        id: "status",
         label: "Status",
         placeholder: "All statuses",
         options: (statuses ?? []).map(s => ({
           label: s.name,
-          value: String(s.id)
+          value: String(s.value)
         }))
       },
       {
@@ -702,17 +702,17 @@ export default function Index({
             searchPlaceholder="Search by ticket ID, subject, or requester..."
             filters={tableFilters}
             filterValues={{
-              priority_id: safeFilters.priority_id ?? "",
-              status_id: safeFilters.status_id ?? "",
+              priority: safeFilters.priority ?? "",
+              status: safeFilters.status ?? "",
               type_id: safeFilters.type_id ?? "",
               category_id: safeFilters.category_id ?? "",
               department_id: safeFilters.department_id ?? ""
             }}
             onFilterChange={(filterId, value) => {
-              if (filterId === "priority_id") {
-                submitQuery({ priority_id: value, page: 1 });
-              } else if (filterId === "status_id") {
-                submitQuery({ status_id: value, page: 1 });
+              if (filterId === "priority") {
+                submitQuery({ priority: value, page: 1 });
+              } else if (filterId === "status") {
+                submitQuery({ status: value, page: 1 });
               } else if (filterId === "type_id") {
                 submitQuery({ type_id: value, page: 1 });
               } else if (filterId === "category_id") {
