@@ -520,7 +520,7 @@ export default function Edit({
                       </>
                     ) : (
                       <div 
-                        className="prose prose-sm max-w-none p-4 bg-default-50 rounded-lg border border-default-200 min-h-[100px]"
+                        className="max-w-none p-4 bg-default-50 rounded-lg border border-default-200 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-default-300 [&_blockquote]:pl-4 [&_blockquote]:italic"
                         dangerouslySetInnerHTML={{ __html: data.details || '<p class="text-default-400 italic">No description provided</p>' }}
                       />
                     )}

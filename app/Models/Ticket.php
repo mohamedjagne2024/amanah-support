@@ -58,63 +58,78 @@ class Ticket extends Model
         });
     }
 
-    public function resolveRouteBinding($value, $field = null) {
+    public function resolveRouteBinding($value, $field = null)
+    {
         return $this->where($field ?? 'id', $value)->firstOrFail();
     }
 
-    public function scopeOrderBySubject($query){
+    public function scopeOrderBySubject($query)
+    {
         $query->orderBy('subject');
     }
 
-    public function createdBy(){
+    public function createdBy()
+    {
         return $this->belongsTo(User::class, 'created_user_id');
     }
 
-    public function priority(){
+    public function priority()
+    {
         return $this->belongsTo(Priority::class, 'priority_id');
     }
 
-    public function review(){
+    public function review()
+    {
         return $this->belongsTo(Review::class, 'review_id');
     }
 
-    public function attachments(){
+    public function attachments()
+    {
         return $this->hasMany(Attachment::class);
     }
 
-    public function comments(){
+    public function comments()
+    {
         return $this->hasMany(Comment::class);
     }
 
-    public function ticketEntries(){
+    public function ticketEntries()
+    {
         return $this->hasMany(TicketEntry::class, 'ticket_id');
     }
 
-    public function reviews(){
+    public function reviews()
+    {
         return $this->hasMany(Review::class);
     }
 
-    public function status(){
+    public function status()
+    {
         return $this->belongsTo(Status::class, 'status_id');
     }
 
-    public function department(){
+    public function department()
+    {
         return $this->belongsTo(Department::class, 'department_id');
     }
 
-    public function ticketType(){
+    public function ticketType()
+    {
         return $this->belongsTo(Type::class, 'type_id');
     }
 
-    public function contact(){
+    public function contact()
+    {
         return $this->belongsTo(User::class, 'contact_id');
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function category(){
+    public function category()
+    {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
@@ -128,48 +143,56 @@ class Ticket extends Model
         return $this->hasMany(Ticket::class, 'parent_id');
     }
 
-    public function subCategory(){
+    public function subCategory()
+    {
         return $this->belongsTo(Category::class, 'sub_category_id');
     }
 
-    public function assignedTo(){
+    public function assignedTo()
+    {
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    public function conversations(){
+    public function conversations()
+    {
         return $this->hasMany(Conversation::class, 'ticket_id');
     }
 
-    public function getDueAttribute($date){
+    public function getDueAttribute($date)
+    {
         return Carbon::parse($date)->format('Y-m-d');
     }
 
-    public function scopeByContact($query, $id){
-        if(!empty($id)){
+    public function scopeByContact($query, $id)
+    {
+        if (!empty($id)) {
             $query->where('contact_id', $id);
         }
     }
 
-    public function scopeByUser($query, $id){
-        if(!empty($id)){
+    public function scopeByUser($query, $id)
+    {
+        if (!empty($id)) {
             $query->where('user_id', $id);
         }
     }
 
-    public function scopeByAssign($query, $id){
-        if(!empty($id)){
+    public function scopeByAssign($query, $id)
+    {
+        if (!empty($id)) {
             $query->where('assigned_to', $id);
         }
     }
 
-    public function scopeFilter($query, array $filters){
+    public function scopeFilter($query, array $filters)
+    {
         $query->when($filters['search'] ?? null, function ($query, $search) {
-            $statusIds = Status::where('slug', 'like', '%'.$search.'%')->pluck('id');
-            $priorityIds = Priority::where('name', 'like', '%'.$search.'%')->pluck('id');
-            $assignedIds = User::where('first_name', 'like', '%'.$search.'%')->orWhere('last_name', 'like', '%'.$search.'%')->pluck('id');
+            $statusIds = Status::where('slug', 'like', '%' . $search . '%')->pluck('id');
+            $priorityIds = Priority::where('name', 'like', '%' . $search . '%')->pluck('id');
+            $assignedIds = User::where('first_name', 'like', '%' . $search . '%')->orWhere('last_name', 'like', '%' . $search . '%')->pluck('id');
             $query
-                ->where('subject', 'like', '%'.$search.'%')
-                ->orWhere('uid', 'like', '%'.$search.'%')
+                ->where('subject', 'like', '%' . $search . '%')
+                ->orWhere('uid', 'like', '%' . $search . '%')
                 ->orWhereIn('status_id', $statusIds)
                 ->orWhereIn('priority_id', $priorityIds)
                 ->orWhereIn('assigned_to', $assignedIds)

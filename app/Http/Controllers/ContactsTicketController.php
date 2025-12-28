@@ -13,6 +13,11 @@ use App\Models\Comment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
+use App\Events\TicketNewComment;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Attachment;
+use App\Models\Type;
+use App\Events\TicketCreated;
 
 class ContactsTicketController extends Controller
 {
@@ -102,7 +107,7 @@ class ContactsTicketController extends Controller
         }
 
         // Get attachments with URLs
-        $attachments = \App\Models\Attachment::orderBy('name')
+        $attachments = Attachment::orderBy('name')
             ->with('user')
             ->where('ticket_id', $ticket->id ?? null)
             ->get()
@@ -113,8 +118,8 @@ class ContactsTicketController extends Controller
                 // Check if it's a GCS path or local path
                 if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
                     $url = $path;
-                } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-                    $url = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+                } elseif (Storage::disk('public')->exists($path)) {
+                    $url = Storage::disk('public')->url($path);
                 } else {
                     $url = '/storage/' . $path;
                 }
@@ -190,7 +195,7 @@ class ContactsTicketController extends Controller
                 ->map
                 ->only('id', 'name'),
             'all_categories' => Category::orderBy('name')->get(),
-            'types' => \App\Models\Type::orderBy('name')
+            'types' => Type::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
@@ -236,7 +241,7 @@ class ContactsTicketController extends Controller
             foreach (Request::file('files') as $file) {
                 $path = $file->store('tickets', ['disk' => 'public']);
                 if ($path) {
-                    \App\Models\Attachment::create([
+                    Attachment::create([
                         'ticket_id' => $ticket->id,
                         'name' => $file->getClientOriginalName(),
                         'size' => $file->getSize(),
@@ -246,6 +251,8 @@ class ContactsTicketController extends Controller
                 }
             }
         }
+
+        event(new TicketCreated(['ticket_id' => $ticket->id, 'source' => 'contact']));
 
         return redirect()->route('contact.tickets')->with('success', 'Ticket created successfully.');
     }
@@ -343,7 +350,7 @@ class ContactsTicketController extends Controller
         ];
 
         // Dispatch Pusher event for real-time updates
-        event(new \App\Events\TicketNewComment(
+        event(new TicketNewComment(
             $ticket->id,
             $ticket->uid,
             $commentData

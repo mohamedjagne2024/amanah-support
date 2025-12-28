@@ -138,7 +138,7 @@ final class ContactsController extends Controller
         ]);
 
         // Assign the contact role
-        $user->assignRole('contact');
+        $user->assignRole('Contact');
 
         return redirect()
             ->route('contacts')
