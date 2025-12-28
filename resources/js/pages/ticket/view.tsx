@@ -107,6 +107,7 @@ export default function View({
   const [localComments, setLocalComments] = useState<CommentType[]>(initialComments);
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
 
   // Listen for real-time comment updates via Pusher
   useTicketCommentListener(ticket.id, (newComment) => {
@@ -217,6 +218,7 @@ export default function View({
       }
       
       setCommentText('');
+      setEditorKey((prev) => prev + 1);
       setShowNewComment(false);
     } catch {
       // Error handling - comment failed to submit
@@ -442,32 +444,7 @@ export default function View({
                 </button>
               </div>
               <div className="card-body">
-                {showNewComment ? (
-                  <form onSubmit={handleSubmitComment} className="space-y-4">
-                    <TextEditor
-                      placeholder="Write your message..."
-                      onChange={handleCommentChange}
-                      showToolbar={true}
-                      className="min-h-[150px]"
-                    />
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowNewComment(false)}
-                        className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting || !commentText.trim()}
-                        className="btn bg-primary text-white btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Send Message
-                      </button>
-                    </div>
-                  </form>
-                ) : localComments.length === 0 ? (
+                {localComments.length === 0 && !showNewComment ? (
                   <div className="text-center py-12">
                     <div className="size-16 mx-auto mb-4 rounded-full bg-default-100 flex items-center justify-center">
                       <MessageSquare className="size-8 text-default-400" />
@@ -484,6 +461,7 @@ export default function View({
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {/* Always show existing comments */}
                     {localComments.map((comment: CommentType) => (
                       <div key={comment.id} className="flex gap-3 p-4 bg-default-50 rounded-lg">
                         <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
@@ -505,13 +483,43 @@ export default function View({
                         </div>
                       </div>
                     ))}
-                    <button
-                      onClick={() => setShowNewComment(true)}
-                      className="w-full btn btn-sm bg-transparent text-default-600 border border-dashed border-default-300 hover:bg-primary/10 hover:text-primary"
-                    >
-                      <Plus className="size-4 me-1" />
-                      Add Reply
-                    </button>
+                    
+                    {/* Show reply form or add reply button */}
+                    {showNewComment ? (
+                      <form onSubmit={handleSubmitComment} className="space-y-4 pt-4 border-t border-default-200">
+                        <TextEditor
+                          key={editorKey}
+                          placeholder="Write your message..."
+                          onChange={handleCommentChange}
+                          showToolbar={true}
+                          className="min-h-[150px]"
+                        />
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowNewComment(false)}
+                            className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isSubmitting || !commentText.trim()}
+                            className="btn bg-primary text-white btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Send Message
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <button
+                        onClick={() => setShowNewComment(true)}
+                        className="w-full btn btn-sm bg-transparent text-default-600 border border-dashed border-default-300 hover:bg-primary/10 hover:text-primary"
+                      >
+                        <Plus className="size-4 me-1" />
+                        Add Reply
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
