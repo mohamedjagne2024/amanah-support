@@ -160,12 +160,12 @@ export default function ChatWidget() {
       const response = await fetch('/chat/contact/conversation');
       if (response.ok) {
         const data = await response.json();
-        if (data) {
+        if (data && data.id) {
           setConversation(data);
         }
       }
     } catch (error) {
-      console.error('Failed to check existing conversation:', error);
+      // Silent fail
     } finally {
       setIsLoading(false);
       setHasCheckedConversation(true);
@@ -192,15 +192,14 @@ export default function ChatWidget() {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Chat initialized:', data);
         if (data && data.id) {
           setConversation(data);
         }
       } else {
-        console.error('Failed to start chat:', response.status, response.statusText);
+        // Handle error silently
       }
     } catch (error) {
-      console.error('Failed to start chat:', error);
+      // Handle error silently
     } finally {
       setIsStarting(false);
     }
@@ -219,7 +218,7 @@ export default function ChatWidget() {
         }
       }
     } catch (error) {
-      console.error('Failed to refresh messages:', error);
+      // Silent fail
     }
   };
 
@@ -296,6 +295,7 @@ export default function ChatWidget() {
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+          'Accept': 'application/json',
         },
         body: formData,
       });
@@ -314,9 +314,11 @@ export default function ChatWidget() {
         });
         setNewMessage('');
         setAttachments([]);
+      } else {
+        // Handle error silently
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
+      // Handle error silently
     } finally {
       setIsSending(false);
     }
@@ -476,8 +478,9 @@ export default function ChatWidget() {
                   })
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <p className="text-sm text-default-500">No messages yet. Send a message to start the conversation.</p>
+                    <div className="text-center px-6">
+                      <p className="text-sm text-default-500 font-medium">No messages yet</p>
+                      <p className="text-xs text-default-400 mt-2">Type your message below and press the send button to start the conversation.</p>
                     </div>
                   </div>
                 )}
