@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Events\ContactCreated;
 use App\Models\Country;
 use App\Models\Organization;
 use App\Models\User;
@@ -122,6 +123,11 @@ final class ContactsController extends Controller
             $photoPath = '/files/' . Request::file('photo')->store('users', ['disk' => 'file_uploads']);
         }
 
+        // Store plain password before hashing for email notification
+        $plainPassword = !empty($validated['password'])
+            ? $validated['password']
+            : Str::random(16);
+
         /** @var User */
         $user = User::create([
             'name' => $validated['name'],
@@ -132,13 +138,14 @@ final class ContactsController extends Controller
             'country_id' => $validated['country_id'] ?? null,
             'organization_id' => $validated['organization_id'] ?? null,
             'profile_picture' => $photoPath,
-            'password' => !empty($validated['password'])
-                ? Hash::make($validated['password'])
-                : Hash::make(Str::random(16)),
+            'password' => Hash::make($plainPassword),
         ]);
 
         // Assign the contact role
         $user->assignRole('Contact');
+
+        // Fire event to send email notification with login credentials
+        event(new ContactCreated(['id' => $user->id, 'password' => $plainPassword]));
 
         return redirect()
             ->route('contacts')

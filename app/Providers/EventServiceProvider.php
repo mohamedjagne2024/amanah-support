@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Events\AssignedUser;
 use App\Events\CommentAdded;
+use App\Events\ContactCreated;
 use App\Events\ForgotPassword;
 use App\Events\SendMail;
 use App\Events\TicketAdded;
@@ -12,6 +13,7 @@ use App\Events\TicketNewComment;
 use App\Events\TicketUpdated;
 use App\Events\UserCreated;
 use App\Listeners\CommentAddedNotification;
+use App\Listeners\ContactCreatedNotification;
 use App\Listeners\SendAssignedUserNotification;
 use App\Listeners\SendForgotPasswordNotification;
 use App\Listeners\SendMailNotification;
@@ -56,6 +58,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         UserCreated::class => [
             UserCreatedNotification::class
+        ],
+        ContactCreated::class => [
+            ContactCreatedNotification::class
         ],
         ForgotPassword::class => [
             SendForgotPasswordNotification::class
