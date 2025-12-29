@@ -1,10 +1,12 @@
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, usePage } from '@inertiajs/react';
 import { Save, Camera, User as UserIcon } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
+import PublicLayout from '@/layouts/public-layout';
 import PageMeta from '@/components/PageMeta';
 import InputError from '@/components/input-error';
 import { useRef, useState } from 'react';
 import PageHeader from '@/components/Pageheader';
+import type { SharedData, Auth } from '@/types';
 
 interface User {
   id: number;
@@ -15,12 +17,18 @@ interface User {
 
 interface ProfileProps {
   user: User;
+  footer?: any;
 }
 
-export default function Profile({ user }: ProfileProps) {
+export default function Profile({ user, footer }: ProfileProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(user.profile_picture_url);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { auth } = usePage<SharedData>().props;
+  
+  // Check if user is a contact user (not admin/staff)
+  const userRoles = (auth as Auth & { roles?: string[] })?.roles || [];
+  const isContact = userRoles.includes('Contact');
 
   const profileForm = useForm({
     name: user.name || '',
@@ -82,12 +90,21 @@ export default function Profile({ user }: ProfileProps) {
     fileInputRef.current?.click();
   };
 
-  return (
-    <AppLayout>
+  // Profile content component to avoid duplication
+  const ProfileContent = () => (
+    <>
       <PageMeta title="Profile" />
-      <main className='max-w-4xl'>
-        <PageHeader title="Profile" subtitle="Manage your account settings" />
-        <div className="space-y-6">
+      <main className={`max-w-4xl ${isContact ? 'mx-auto' : ''}`}>
+        {!isContact && <PageHeader title="Profile" subtitle="Manage your account settings" />}
+        {isContact && (
+          <section className="pt-32 pb-8 px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-default-900">Profile</h1>
+              <p className="text-default-600 mt-2">Manage your account settings</p>
+            </div>
+          </section>
+        )}
+        <div className={`space-y-6 ${isContact ? 'px-4 sm:px-6 lg:px-8' : ''}`}>
           {/* Personal Information Section */}
           <div className="card">
             <div className="card-header">
@@ -316,6 +333,21 @@ export default function Profile({ user }: ProfileProps) {
           </div>
         </div>
       </main>
+    </>
+  );
+
+  // Conditionally render with the appropriate layout
+  if (isContact) {
+    return (
+      <PublicLayout currentPage="/profile" footer={footer} showToast>
+        <ProfileContent />
+      </PublicLayout>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <ProfileContent />
     </AppLayout>
   );
 }

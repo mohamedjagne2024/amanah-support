@@ -1,5 +1,5 @@
 import PageMeta from '@/components/PageMeta';
-import { LandingNav, LandingFooter } from '@/components/landing';
+import PublicLayout from '@/layouts/public-layout';
 
 type PageData = {
   title?: string;
@@ -25,10 +25,7 @@ export default function Terms({ title, data: pageInfo, footer }: TermsPageProps)
     <>
       <PageMeta title={title || 'Terms of Service'} />
       
-      <div className="min-h-screen bg-default-50">
-        {/* Navigation */}
-        <LandingNav currentPage="/terms" />
-
+      <PublicLayout currentPage="/terms" footer={footer}>
         {/* Hero Section */}
         <section className="pt-32 pb-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
@@ -52,13 +49,7 @@ export default function Terms({ title, data: pageInfo, footer }: TermsPageProps)
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <div className="mt-12">
-          <LandingFooter footerData={footer} />
-        </div>
-      </div>
+      </PublicLayout>
     </>
   );
 }
-

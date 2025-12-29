@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from '@inertiajs/react';
 import { Search, BookOpen, Calendar, ChevronRight, Tag } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
-import { LandingNav, LandingFooter } from '@/components/landing';
+import PublicLayout from '@/layouts/public-layout';
 
 type TypeOption = {
   id: number;
@@ -68,9 +68,8 @@ export default function KnowledgeBase({ title, kb, types = [], filters, footer }
   return (
     <>
       <PageMeta title={title || 'Knowledge Base'} />
-      <LandingNav currentPage="kb" />
       
-      <div className="min-h-screen bg-default-50 pt-16">
+      <PublicLayout currentPage="kb" footer={footer} className="pt-16">
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent py-16 lg:py-24">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -206,11 +205,7 @@ export default function KnowledgeBase({ title, kb, types = [], filters, footer }
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <LandingFooter footerData={footer} />
-      </div>
+      </PublicLayout>
     </>
   );
 }
-

@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use Inertia\Middleware;
 use App\Models\Settings;
+use App\Models\Message;
 use Illuminate\Http\Request;
 use App\Navigation\Navigation;
 use App\Helpers\DateFormatHelper;
@@ -50,6 +51,10 @@ final class HandleInertiaRequests extends Middleware
                 'key' => Settings::where('name', 'pusher_app_key')->first()?->value,
                 'cluster' => Settings::where('name', 'pusher_app_cluster')->first()?->value,
             ],
+
+            'unreadChatCount' => fn() => Message::where('is_read', 0)
+                ->whereNotNull('contact_id')
+                ->count(),
         ]);
     }
 }

@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { LuChevronRight } from 'react-icons/lu';
 import { menuItemsData, type MenuItemType } from './menu';
 import { getAllMenuHrefs, isItemActive, isMenuActive } from './navigation-utils';
+import type { SharedData } from '@/types';
 
 const MenuItemWithChildren = ({ item, allHrefs }: { item: MenuItemType; allHrefs: string[] }) => {
   const { url } = usePage();
@@ -57,18 +58,45 @@ const MenuItem = ({ item, allHrefs }: { item: MenuItemType; allHrefs: string[] }
           </span>
         )}
         <div className="menu-text">{item.label}</div>
+        {item.badge !== undefined && item.badge !== 0 && item.badge !== '' && (
+          <span 
+            className={`ms-auto px-2 py-0.5 rounded-full text-xs font-medium ${
+              item.badgeColor || 'bg-primary text-white'
+            }`}
+          >
+            {typeof item.badge === 'number' && item.badge > 99 ? '99+' : item.badge}
+          </span>
+        )}
       </Link>
     </li>
   );
 };
 
 const AppMenu = () => {
+  const { props } = usePage<SharedData>();
+  const unreadChatCount = props.unreadChatCount || 0;
+
   // Get all hrefs from menu items for proper active state detection
   const allHrefs = useMemo(() => getAllMenuHrefs(menuItemsData), []);
 
+  // Enhance menu items with dynamic data
+  const enhancedMenuItems = useMemo(() => {
+    return menuItemsData.map(item => {
+      // Add badge to Chat menu item
+      if (item.key === 'Chat') {
+        return {
+          ...item,
+          badge: unreadChatCount,
+          badgeColor: 'bg-primary text-white'
+        };
+      }
+      return item;
+    });
+  }, [unreadChatCount]);
+
   return (
     <ul className="side-nav p-3 hs-accordion-group">
-      {menuItemsData.map((item: MenuItemType) =>
+      {enhancedMenuItems.map((item: MenuItemType) =>
         item.isTitle ? (
           <li className="menu-title" key={item.key}>
             <span>{item.label}</span>

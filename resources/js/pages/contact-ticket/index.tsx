@@ -2,9 +2,8 @@ import { Link, router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { DataTable, Badge, type DataTableRowAction } from "@/components/DataTable";
-import { LandingNav, LandingFooter } from "@/components/landing";
+import PublicLayout from "@/layouts/public-layout";
 import PageMeta from "@/components/PageMeta";
-import Toastify from "@/components/Toastify";
 import { Ticket, Plus, RefreshCw } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -264,9 +263,7 @@ export default function ContactTicketIndex({
     <>
       <PageMeta title={title} />
       
-      <div className="min-h-screen bg-default-50">
-        {/* Navigation */}
-        <LandingNav currentPage="/contact/tickets" />
+      <PublicLayout currentPage="/contact/tickets" footer={footer} showToast>
 
         {/* Page Content */}
         <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
@@ -405,12 +402,7 @@ export default function ContactTicketIndex({
             />
           </div>
         </section>
-
-        {/* Footer */}
-        <LandingFooter footerData={footer} />
-      </div>
-      
-      <Toastify />
+      </PublicLayout>
     </>
   );
 }

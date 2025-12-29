@@ -15,10 +15,9 @@ import {
   Eye,
   Download,
 } from 'lucide-react';
-import { LandingNav, LandingFooter } from '@/components/landing';
+import PublicLayout from '@/layouts/public-layout';
 import PageMeta from '@/components/PageMeta';
 import TextEditor from '@/components/TextEditor';
-import Toastify from '@/components/Toastify';
 import Breadcrumb from '@/components/Breadcrumb';
 import { useTicketCommentListener } from '@/hooks/usePusher';
 
@@ -205,9 +204,7 @@ export default function ContactTicketView({
     <>
       <PageMeta title={title} />
       
-      <div className="min-h-screen bg-default-50">
-        {/* Navigation */}
-        <LandingNav currentPage="/contact/tickets" />
+      <PublicLayout currentPage="/contact/tickets" footer={footer} showToast>
 
         {/* Page Content */}
         <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
@@ -552,12 +549,7 @@ export default function ContactTicketView({
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <LandingFooter footerData={footer} />
-      </div>
-      
-      <Toastify />
+      </PublicLayout>
     </>
   );
 }

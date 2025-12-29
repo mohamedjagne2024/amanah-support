@@ -5,10 +5,12 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Traits\HasGoogleCloudStorage;
 
 class Attachment extends Model
 {
-    use HasFactory;
+    use HasFactory, HasGoogleCloudStorage;
 
     public function resolveRouteBinding($value, $field = null)
     {
@@ -20,11 +22,13 @@ class Attachment extends Model
         return $this->hasOne(Message::class);
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function ticket(){
+    public function ticket()
+    {
         return $this->belongsTo(Ticket::class, 'ticket_id');
     }
 
@@ -33,7 +37,18 @@ class Attachment extends Model
         $query->orderBy('name');
     }
 
-    public function getCreatedAtAttribute($date){
+    public function getCreatedAtAttribute($date)
+    {
         return Carbon::parse($date)->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * Get the signed URL for the attachment.
+     */
+    protected function url(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->path ? $this->getStorageUrl($this->path) : null,
+        );
     }
 }

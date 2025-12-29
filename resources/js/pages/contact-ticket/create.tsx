@@ -1,8 +1,7 @@
 import { useForm } from "@inertiajs/react";
 import { FormEvent, useMemo, useRef, useState } from "react";
-import { LandingNav, LandingFooter } from "@/components/landing";
+import PublicLayout from "@/layouts/public-layout";
 import PageMeta from "@/components/PageMeta";
-import Toastify from "@/components/Toastify";
 import { Ticket, ArrowLeft, Send, Upload, X, FileText } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import Combobox, { SelectOption } from "@/components/Combobox";
@@ -111,9 +110,7 @@ export default function CreateContactTicket({
     <>
       <PageMeta title={title} />
       
-      <div className="min-h-screen bg-default-50">
-        {/* Navigation */}
-        <LandingNav currentPage="/contact/tickets" />
+      <PublicLayout currentPage="/contact/tickets" footer={footer} showToast>
 
         {/* Page Content */}
         <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
@@ -336,12 +333,7 @@ export default function CreateContactTicket({
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <LandingFooter footerData={footer} />
-      </div>
-      
-      <Toastify />
+      </PublicLayout>
     </>
   );
 }

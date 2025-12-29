@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, Calendar, Tag, BookOpen, ChevronRight } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
-import { LandingNav, LandingFooter } from '@/components/landing';
+import PublicLayout from '@/layouts/public-layout';
 
 type TypeOption = {
   id: number;
@@ -50,9 +50,8 @@ export default function KbDetails({ title, kb, types = [], random_kb = [], foote
   return (
     <>
       <PageMeta title={title} />
-      <LandingNav currentPage="kb" />
       
-      <div className="min-h-screen bg-default-50 pt-16">
+      <PublicLayout currentPage="kb" footer={footer} className="pt-16">
         {/* Breadcrumb */}
         <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent py-8">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,13 +172,7 @@ export default function KbDetails({ title, kb, types = [], random_kb = [], foote
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="mt-12">
-          <LandingFooter footerData={footer} />
-        </div>
-      </div>
+      </PublicLayout>
     </>
   );
 }
-

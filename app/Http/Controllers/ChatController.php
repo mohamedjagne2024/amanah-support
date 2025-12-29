@@ -107,9 +107,23 @@ class ChatController extends Controller
             },
             'messages.attachments',
             'messages.user',
+            'messages.contact',
             'participant',
             'participant.user'
         ])->find($newConversation->id);
+
+        // Map attachments with signed URLs
+        if ($conversation && $conversation->messages) {
+            $conversation->messages->map(function ($message) {
+                if ($message->attachments) {
+                    $message->attachments->map(function ($attachment) {
+                        $attachment->url = $this->getStorageUrl($attachment->path);
+                        return $attachment;
+                    });
+                }
+                return $message;
+            });
+        }
 
         return response()->json($conversation);
     }
@@ -122,11 +136,26 @@ class ChatController extends Controller
                 $q->orderBy('updated_at', 'asc');
             },
             'messages.attachments',
+            'messages.contact',
             'participant',
             'participant.user'
         ])->where(function ($query) use ($id) {
             $query->where('id', $id)->orWhere('slug', $id);
         })->where('contact_id', $contact_id)->first();
+
+        // Map attachments with signed URLs  
+        if ($conversation && $conversation->messages) {
+            $conversation->messages->map(function ($message) {
+                if ($message->attachments) {
+                    $message->attachments->map(function ($attachment) {
+                        $attachment->url = $this->getStorageUrl($attachment->path);
+                        return $attachment;
+                    });
+                }
+                return $message;
+            });
+        }
+
         return response()->json($conversation);
     }
 
@@ -144,9 +173,23 @@ class ChatController extends Controller
             },
             'messages.attachments',
             'messages.user',
+            'messages.contact',
             'participant',
             'participant.user'
         ])->where('contact_id', $user->id)->first();
+
+        // Map attachments with signed URLs
+        if ($conversation && $conversation->messages) {
+            $conversation->messages->map(function ($message) {
+                if ($message->attachments) {
+                    $message->attachments->map(function ($attachment) {
+                        $attachment->url = $this->getStorageUrl($attachment->path);
+                        return $attachment;
+                    });
+                }
+                return $message;
+            });
+        }
 
         return response()->json($conversation);
     }
@@ -154,22 +197,39 @@ class ChatController extends Controller
     public function chat($id)
     {
         Message::where(['conversation_id' => $id, 'is_read' => 0])->update(array('is_read' => 1));
+
+        $chat = Conversation::with([
+            'creator',
+            'messages' => function ($q) {
+                $q->orderBy('updated_at', 'asc');
+            },
+            'messages.user',
+            'messages.contact',
+            'messages.attachments',
+            'participant',
+            'participant.user'
+        ])
+            ->where(function ($query) use ($id) {
+                $query->where('id', $id)->orWhere('slug', $id);
+            })->first();
+
+        // Map messages with attachment URLs
+        if ($chat && $chat->messages) {
+            $chat->messages->map(function ($message) {
+                if ($message->attachments) {
+                    $message->attachments->map(function ($attachment) {
+                        $attachment->url = $this->getStorageUrl($attachment->path);
+                        return $attachment;
+                    });
+                }
+                return $message;
+            });
+        }
+
         return Inertia::render('chat/index', [
             'title' => 'Chat',
             'filters' => Request::all(['search']),
-            'chat' => Conversation::with([
-                'creator',
-                'messages' => function ($q) {
-                    $q->orderBy('updated_at', 'asc');
-                },
-                'messages.user',
-                'messages.attachments',
-                'participant',
-                'participant.user'
-            ])
-                ->where(function ($query) use ($id) {
-                    $query->where('id', $id)->orWhere('slug', $id);
-                })->first(),
+            'chat' => $chat,
             'conversations' => Conversation::orderBy('updated_at', 'DESC')
                 ->filter(Request::all(['search']))
                 ->withCount([
@@ -255,6 +315,14 @@ class ChatController extends Controller
         // Load relationships for the response and broadcast
         $message = Message::with(['contact', 'user', 'attachments'])->where('id', $newMessage->id)->first();
 
+        // Map attachments with signed URLs
+        if ($message->attachments) {
+            $message->attachments->map(function ($attachment) {
+                $attachment->url = $this->getStorageUrl($attachment->path);
+                return $attachment;
+            });
+        }
+
         broadcast(new NewPublicChatMessage($message))->toOthers();
 
         return response()->json($message);
@@ -305,6 +373,14 @@ class ChatController extends Controller
         }
 
         $message = Message::with(['contact', 'user', 'attachments'])->where('id', $newMessage->id)->first();
+
+        // Map attachments with signed URLs
+        if ($message->attachments) {
+            $message->attachments->map(function ($attachment) {
+                $attachment->url = $this->getStorageUrl($attachment->path);
+                return $attachment;
+            });
+        }
 
         broadcast(new NewPublicChatMessage($message))->toOthers();
 

@@ -183,7 +183,7 @@ final class RolesAndPermissionsSeeder extends Seeder
         ];
 
         // Delete permissions that are not in the seeder list
-        $permissionNames = array_map(fn ($name) => $name, $permissions);
+        $permissionNames = array_map(fn($name) => $name, $permissions);
         Permission::where('guard_name', 'web')
             ->whereNotIn('name', $permissionNames)
             ->delete();
@@ -358,25 +358,6 @@ final class RolesAndPermissionsSeeder extends Seeder
 
         $user = Role::firstOrCreate(['name' => 'User', 'guard_name' => 'web']);
         $user->givePermissionTo([
-            'dashboard.view',
-            'tickets.view',
-            'tickets.create',
-            'tickets.comment',
-            'notes.view',
-            'notes.save',
-            'contacts.view',
-            'chat.view',
-            'chat.message',
-            'chat.init',
-            'chat.conversation',
-            'chat.send_message',
-            'faqs.view',
-            'knowledge_base.view',
-            'images.view',
-        ]);
-
-        $contact = Role::firstOrCreate(['name' => 'Contact', 'guard_name' => 'web']);
-        $contact->givePermissionTo([
             'dashboard.view',
             'tickets.view',
             'tickets.create',

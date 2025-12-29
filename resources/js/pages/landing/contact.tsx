@@ -8,7 +8,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
-import { LandingNav, LandingFooter } from '@/components/landing';
+import PublicLayout from '@/layouts/public-layout';
 
 type PageData = {
   content?: {
@@ -53,7 +53,6 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
   const location = pageData.location || {};
   const phone = pageData.phone || {};
   const email = pageData.email || {};
-  const contactForm = pageData.contact_form || {};
 
   const { data, setData, post, processing, errors, reset } = useForm({
     name: '',
@@ -77,10 +76,7 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
     <>
       <PageMeta title={title || 'Contact Us'} />
       
-      <div className="min-h-screen bg-default-50">
-        {/* Navigation */}
-        <LandingNav currentPage="/contact" />
-
+      <PublicLayout currentPage="/contact" footer={footer}>
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
@@ -280,13 +276,7 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <div className="mt-20">
-          <LandingFooter footerData={footer} />
-        </div>
-      </div>
+      </PublicLayout>
     </>
   );
 }
-

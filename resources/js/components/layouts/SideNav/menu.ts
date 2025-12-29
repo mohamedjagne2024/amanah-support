@@ -19,6 +19,8 @@ export type MenuItemType = {
   parentKey?: string;
   target?: string;
   isDisabled?: boolean;
+  badge?: number | string;
+  badgeColor?: string;
 };
 
 export const menuItemsData: MenuItemType[] = [

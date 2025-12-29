@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, Search, HelpCircle } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
-import { LandingNav, LandingFooter } from '@/components/landing';
+import PublicLayout from '@/layouts/public-layout';
+import { Link } from '@inertiajs/react';
 
 type FaqItem = {
   id: number;
@@ -60,9 +61,8 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
   return (
     <>
       <PageMeta title={title || 'FAQ'} />
-      <LandingNav currentPage="faq" />
       
-      <div className="min-h-screen bg-default-50 pt-16">
+      <PublicLayout currentPage="faq" footer={footer} className="pt-16">
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent py-16 lg:py-24">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -175,16 +175,12 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
             <p className="text-default-600 mb-6">
               Can't find what you're looking for? Our support team is here to help.
             </p>
-            <a href="/contact" className="btn bg-primary text-white">
+            <Link href="/contact" className="btn bg-primary text-white">
               Contact Support
-            </a>
+            </Link>
           </div>
         </div>
-
-        {/* Footer */}
-        <LandingFooter footerData={footer} />
-      </div>
+      </PublicLayout>
     </>
   );
 }
-

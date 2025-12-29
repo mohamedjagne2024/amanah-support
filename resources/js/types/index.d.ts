@@ -24,6 +24,7 @@ export interface SharedData {
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
+    unreadChatCount?: number;
     [key: string]: unknown;
 }
 

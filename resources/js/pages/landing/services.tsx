@@ -21,7 +21,7 @@ import {
   Code,
 } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
-import { LandingNav, LandingFooter } from '@/components/landing';
+import PublicLayout from '@/layouts/public-layout';
 
 type ServiceItem = {
   name: string;
@@ -86,10 +86,7 @@ export default function Services({ title, data: pageInfo, footer }: ServicesPage
     <>
       <PageMeta title={title || 'Services'} />
       
-      <div className="min-h-screen bg-default-50">
-        {/* Navigation */}
-        <LandingNav currentPage="/services" />
-
+      <PublicLayout currentPage="/services" footer={footer}>
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
@@ -171,11 +168,7 @@ export default function Services({ title, data: pageInfo, footer }: ServicesPage
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <LandingFooter footerData={footer} />
-      </div>
+      </PublicLayout>
     </>
   );
 }
-

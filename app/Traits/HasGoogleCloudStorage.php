@@ -22,7 +22,7 @@ trait HasGoogleCloudStorage
     protected function configureGCS(): void
     {
         $keyFilePath = storage_path(Settings::get('gcs_key_file_path', 'app/gcs/upload-service-account.json'));
-        
+
         config([
             'filesystems.disks.gcs.driver'             => 'gcs',
             'filesystems.disks.gcs.project_id'         => Settings::get('gcs_project_id'),
@@ -50,27 +50,27 @@ trait HasGoogleCloudStorage
     {
         // Detect if this is a GCS file based on path patterns
         // GCS files are stored with prefixes like: assets/, work-orders/, purchase-orders/
-        $gcsPatterns = ['assets/', 'work-orders/', 'purchase-orders/', 'tickets/'];
+        $gcsPatterns = ['assets/', 'work-orders/', 'purchase-orders/', 'tickets/', 'chat/'];
         $isGcsFile = false;
-        
+
         foreach ($gcsPatterns as $pattern) {
             if (str_starts_with($filePath, $pattern)) {
                 $isGcsFile = true;
                 break;
             }
         }
-        
+
         // Also check if the file exists locally (for legacy files stored in public)
         $localPatterns = ['images/', 'storage/', 'uploads/'];
         $isLocalFile = false;
-        
+
         foreach ($localPatterns as $pattern) {
             if (str_starts_with($filePath, $pattern) || str_contains($filePath, '/storage/')) {
                 $isLocalFile = true;
                 break;
             }
         }
-        
+
         // If it looks like a GCS file, try to get from GCS
         if ($isGcsFile && !$isLocalFile) {
             try {
@@ -81,15 +81,15 @@ trait HasGoogleCloudStorage
                 return asset($filePath);
             }
         }
-        
+
         // If it's explicitly a local file, return local asset URL
         if ($isLocalFile) {
             return asset($filePath);
         }
-        
+
         // Fallback: use the current upload_destination setting
         $uploadDestination = Settings::get('upload_destination', 'public');
-        
+
         if ($uploadDestination === 'gcs') {
             try {
                 $this->configureGCS();
@@ -99,7 +99,7 @@ trait HasGoogleCloudStorage
                 return asset($filePath);
             }
         }
-        
+
         return asset($filePath);
     }
 
@@ -121,9 +121,9 @@ trait HasGoogleCloudStorage
     protected function uploadToStorage($file, string $directory): string|false
     {
         $this->configureGCS();
-        
+
         $uniqueFileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-        
+
         return Storage::disk('gcs')->putFileAs($directory, $file, $uniqueFileName);
     }
 
@@ -136,7 +136,7 @@ trait HasGoogleCloudStorage
     protected function deleteFromStorage(string $filePath): bool
     {
         $this->configureGCS();
-        
+
         try {
             return Storage::disk('gcs')->delete($filePath);
         } catch (\Exception $e) {

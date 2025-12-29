@@ -7,7 +7,9 @@ import {
   Send,
   Copy,
   Trash2,
-  Clock
+  Clock,
+  FileText,
+  X
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
@@ -223,6 +225,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
   const [replyContent, setReplyContent] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>(chat?.messages || []);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -280,21 +283,39 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
     setReplyContent(content);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles = [...attachments, ...Array.from(files)].slice(0, 5);
+      setAttachments(newFiles);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRemoveFile = (index: number) => {
+    const updated = attachments.filter((_, i) => i !== index);
+    setAttachments(updated);
+  };
+
   const handleSendMessage = async () => {
-    if (!replyContent.trim() || !chat || isSending) return;
+    if ((!replyContent.trim() && attachments.length === 0) || !chat || isSending) return;
     
     setIsSending(true);
     try {
+      const formData = new FormData();
+      formData.append('conversation_id', chat.id.toString());
+      formData.append('message', replyContent);
+      
+      attachments.forEach((file) => {
+        formData.append('files[]', file);
+      });
+
       const response = await fetch('/chat/message', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
-        body: JSON.stringify({
-          conversation_id: chat.id,
-          message: replyContent,
-        }),
+        body: formData,
       });
       
       if (response.ok) {
@@ -306,6 +327,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
           return [...prev, newMessage];
         });
         setReplyContent('');
+        setAttachments([]);
       } else {
         console.error('Failed to send message:', response.status, response.statusText);
       }
@@ -499,6 +521,27 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                             }`}
                           >
                             <div className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.message }} />
+                            {/* Attachments */}
+                            {message.attachments && message.attachments.length > 0 && (
+                              <div className="mt-3 space-y-2">
+                                {message.attachments.map((attachment) => (
+                                  <a
+                                    key={attachment.id}
+                                    href={attachment.url || attachment.path}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                                      isAgent 
+                                        ? 'bg-white/10 hover:bg-white/20 text-white' 
+                                        : 'bg-default-50 hover:bg-default-100 text-primary'
+                                    } transition-colors`}
+                                  >
+                                    <FileText className="size-4" />
+                                    <span className="flex-1 truncate">{attachment.name}</span>
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <div className={`flex items-center gap-2 mt-1 ${isAgent ? 'justify-end' : 'justify-start'}`}>
                             <span className="text-xs text-default-500">
@@ -521,6 +564,30 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                     <label className="block font-medium text-default-900 text-sm">Reply</label>
                   </div>
                   
+                  {/* Selected Attachments Preview */}
+                  {attachments.length > 0 && (
+                    <div className="mb-3 p-3 border border-default-200 rounded-lg bg-default-50">
+                      <div className="flex flex-wrap gap-2">
+                        {attachments.map((file, index) => (
+                          <div 
+                            key={index} 
+                            className="flex items-center gap-2 px-3 py-2 bg-white border border-default-200 rounded-lg text-sm"
+                          >
+                            <FileText className="size-4 text-default-500" />
+                            <span className="truncate max-w-[200px]">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(index)}
+                              className="text-default-400 hover:text-danger transition-colors"
+                            >
+                              <X className="size-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Message Input with Attachment */}
                   <div className="relative">
                     <textarea
@@ -535,6 +602,8 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                       type="file"
                       className="hidden"
                       multiple
+                      onChange={handleFileChange}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
                     />
                     <button 
                       type="button"
@@ -551,7 +620,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                     <button
                       type="button"
                       onClick={handleSendMessage}
-                      disabled={!replyContent.trim() || isSending}
+                      disabled={(!replyContent.trim() && attachments.length === 0) || isSending}
                       className="btn bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSending ? (
