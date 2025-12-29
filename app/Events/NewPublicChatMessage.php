@@ -11,7 +11,8 @@ use Illuminate\Queue\SerializesModels;
 use App\Models\Message;
 use Illuminate\Support\Facades\DB;
 
-class NewPublicChatMessage implements ShouldBroadcastNow {
+class NewPublicChatMessage implements ShouldBroadcastNow
+{
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
@@ -24,7 +25,8 @@ class NewPublicChatMessage implements ShouldBroadcastNow {
      *
      * @return void
      */
-    public function __construct( Message $chatMessage) {
+    public function __construct(Message $chatMessage)
+    {
         $this->chatMessage = $chatMessage;
     }
 
@@ -33,7 +35,18 @@ class NewPublicChatMessage implements ShouldBroadcastNow {
      *
      * @return \Illuminate\Broadcasting\Channel|array
      */
-    public function broadcastOn() {
-        return new Channel('chat.'.$this->chatMessage->conversation_id);
+    public function broadcastOn()
+    {
+        return new Channel('chat.' . $this->chatMessage->conversation_id);
+    }
+
+    /**
+     * The event's broadcast name.
+     *
+     * @return string
+     */
+    public function broadcastAs()
+    {
+        return 'new-message';
     }
 }

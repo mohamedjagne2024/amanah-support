@@ -451,6 +451,11 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->middleware('auth');
 
         // Public Chat
+
+        $router->get('chat', [ChatController::class, 'index'])
+            ->name('chat.index')
+            ->middleware('auth');
+
         $router->post('chat/init', [ChatController::class, 'init'])
             ->name('chat.init');
 
@@ -459,6 +464,19 @@ $router->prefix('/')->group(static function (Router $router): void {
 
         $router->post('chat/sendMessage', [ChatController::class, 'sendPublicMessage'])
             ->name('chat.send_message');
+
+        $router->get('chat/contact/conversation', [ChatController::class, 'getContactConversation'])
+            ->name('chat.contact_conversation')
+            ->middleware('auth');
+
+        // This route must come AFTER all specific chat/* routes to avoid conflicts
+        $router->get('chat/{id}', [ChatController::class, 'chat'])
+            ->name('chat.show')
+            ->middleware('auth');
+
+        $router->post('chat/message', [ChatController::class, 'newMessage'])
+            ->name('chat.new_message')
+            ->middleware('auth');
 
         // IMAP Custom
         $router->get('/cron/imap/direct/run', [ImapController::class, 'run'])->name('cron.imap.run');

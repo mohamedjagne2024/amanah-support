@@ -5,11 +5,8 @@ namespace App\Http\Controllers;
 use App\Events\TicketCreated;
 use App\Models\Attachment;
 use App\Models\Category;
-use App\Models\Conversation;
 use App\Models\Department;
 use App\Models\FrontPage;
-use App\Models\Message;
-use App\Models\Participant;
 use App\Models\Settings;
 use App\Models\Ticket;
 use App\Models\TicketEntry;
@@ -21,7 +18,6 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Role;
 
 class HomeController extends Controller
 {
@@ -154,9 +150,6 @@ class HomeController extends Controller
             $this->handleAttachmentUploads($ticket, $files);
         }
 
-        // Create a conversation linked to the ticket and contact
-        $this->createTicketConversation($ticket, $contact);
-
         $variables = [
             'name' => $contact->name,
             'email' => $contact->email,
@@ -186,47 +179,6 @@ class HomeController extends Controller
     }
 
     /**
-     * Create a conversation linked to the ticket and contact.
-     */
-    private function createTicketConversation(Ticket $ticket, User $contact): Conversation
-    {
-        // Create the conversation
-        $conversation = new Conversation();
-        $conversation->contact_id = $contact->id;
-        $conversation->ticket_id = $ticket->id;
-        $conversation->title = "Ticket #{$ticket->uid}: {$ticket->subject}";
-        $conversation->save();
-
-        // Find an admin user to be the initial responder
-        $adminRole = Role::where('name', 'admin')->first();
-        $adminUser = User::whereHas('roles', function ($query) use ($adminRole) {
-            $query->where('roles.id', $adminRole ? $adminRole->id : 0);
-        })->first();
-
-        // Create an initial welcome message
-        $initialMessage = "Thank you for submitting your ticket. Your ticket ID is #{$ticket->uid}. Our support team will review your request and respond shortly.";
-
-        $message = new Message();
-        $message->conversation_id = $conversation->id;
-        if ($adminUser) {
-            $message->user_id = $adminUser->id;
-        }
-        $message->message = $initialMessage;
-        $message->save();
-
-        // Create a participant record
-        $participant = new Participant();
-        if ($adminUser) {
-            $participant->user_id = $adminUser->id;
-        }
-        $participant->contact_id = $contact->id;
-        $participant->conversation_id = $conversation->id;
-        $participant->save();
-
-        return $conversation;
-    }
-
-    /**
      * Handle attachment uploads to Google Cloud Storage.
      */
     private function handleAttachmentUploads(Ticket $ticket, array $files): void
@@ -244,7 +196,7 @@ class HomeController extends Controller
                     'name' => $file->getClientOriginalName(),
                     'size' => $file->getSize(),
                     'path' => $path,
-                    'user_id' => null, // No authenticated user for public submissions
+                    'user_id' => null,
                 ]);
             }
         }

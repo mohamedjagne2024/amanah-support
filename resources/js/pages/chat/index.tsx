@@ -11,28 +11,29 @@ import {
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
-import Breadcrumb from '@/components/BreadCrumb';
-import Combobox, { SelectOption } from '@/components/Combobox';
-import TextEditor from '@/components/TextEditor';
+import { useChatMessageListener } from '@/hooks/usePusher';
 
 type Creator = {
   id: number;
-  first_name: string;
-  last_name: string;
+  name: string;
   email: string;
+  profile_picture_url?: string | null;
 };
 
 type User = {
   id: number;
   name: string;
   email: string;
+  profile_picture_url?: string | null;
 };
 
 type Contact = {
   id: number;
-  first_name: string;
-  last_name: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
+  profile_picture_url?: string | null;
 };
 
 type Attachment = {
@@ -137,8 +138,8 @@ const PlatformIcon = ({ platform }: { platform: string }) => {
   }
 };
 
-// Avatar component with initials
-const Avatar = ({ name, className = '' }: { name: string; className?: string }) => {
+// Avatar component with initials or profile picture
+const Avatar = ({ name, profilePicture, className = '' }: { name: string; profilePicture?: string | null; className?: string }) => {
   const getInitials = (name: string) => {
     const parts = name.split(' ');
     if (parts.length >= 2) {
@@ -161,6 +162,16 @@ const Avatar = ({ name, className = '' }: { name: string; className?: string }) 
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
+
+  if (profilePicture) {
+    return (
+      <img 
+        src={profilePicture} 
+        alt={name}
+        className={`size-10 rounded-full object-cover ${className}`}
+      />
+    );
+  }
 
   return (
     <div className={`size-10 rounded-full ${getColorClass(name)} flex items-center justify-center text-white font-semibold text-sm ${className}`}>
@@ -207,30 +218,11 @@ const formatMessageTime = (dateString: string) => {
   return `${dayStr} ${timeStr}`;
 };
 
-// Filter options
-const ticketFilterOptions: SelectOption[] = [
-  { label: 'All Tickets', value: 'all' },
-  { label: 'Open', value: 'open' },
-  { label: 'In Progress', value: 'in_progress' },
-  { label: 'Closed', value: 'closed' },
-];
-
-// Status options
-const statusOptions: SelectOption[] = [
-  { label: 'Open', value: 'open' },
-  { label: 'In Progress', value: 'in_progress' },
-  { label: 'Resolved', value: 'resolved' },
-  { label: 'Closed', value: 'closed' },
-];
-
 export default function Index({ title, chat, conversations, filters }: ChatPageProps) {
   const [searchValue, setSearchValue] = useState(filters?.search || '');
   const [replyContent, setReplyContent] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [ticketFilter, setTicketFilter] = useState<SelectOption | null>(ticketFilterOptions[0]);
-  const [selectedStatus, setSelectedStatus] = useState<SelectOption | null>(
-    statusOptions.find(s => s.value === 'in_progress') || null
-  );
+  const [isSending, setIsSending] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Message[]>(chat?.messages || []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -245,20 +237,33 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
     next_page_url: conversations?.next_page_url ?? null,
   };
 
-  // Scroll to bottom when chat changes
+  // Sync chatMessages when chat prop changes
+  useEffect(() => {
+    setChatMessages(chat?.messages || []);
+  }, [chat?.messages]);
+
+  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [chat?.messages]);
+  }, [chatMessages]);
+
+  // Listen for real-time chat message updates via Pusher
+  useChatMessageListener(chat?.id || null, (newMessage) => {
+    // Add the new message to local state (only if not already present)
+    setChatMessages(prev => {
+      const exists = prev.some(msg => msg.id === newMessage.id);
+      if (exists) return prev;
+      return [...prev, newMessage as Message];
+    });
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     router.get('/chat', { search: searchValue }, {
       preserveScroll: true,
       preserveState: true,
-      onStart: () => setIsLoading(true),
-      onFinish: () => setIsLoading(false),
     });
   };
 
@@ -275,29 +280,62 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
     setReplyContent(content);
   };
 
-  const handleSendMessage = () => {
-    if (!replyContent.trim() || !chat) return;
+  const handleSendMessage = async () => {
+    if (!replyContent.trim() || !chat || isSending) return;
     
-    router.post('/chat/message', {
-      conversation_id: chat.id,
-      message: replyContent,
-    }, {
-      preserveScroll: true,
-      onSuccess: () => {
+    setIsSending(true);
+    try {
+      const response = await fetch('/chat/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          conversation_id: chat.id,
+          message: replyContent,
+        }),
+      });
+      
+      if (response.ok) {
+        const newMessage = await response.json();
+        // Add to local state with deduplication check
+        setChatMessages(prev => {
+          const exists = prev.some(msg => msg.id === newMessage.id);
+          if (exists) return prev;
+          return [...prev, newMessage];
+        });
         setReplyContent('');
-      },
-    });
+      } else {
+        console.error('Failed to send message:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const getCreatorName = (creator?: Creator) => {
     if (!creator) return 'Unknown';
-    return `${creator.first_name} ${creator.last_name}`;
+    return creator.name || 'Unknown';
   };
 
   const getMessageSenderName = (message: Message) => {
     if (message.user) return message.user.name;
-    if (message.contact) return `${message.contact.first_name} ${message.contact.last_name}`;
+    if (message.contact) {
+      if (message.contact.name) return message.contact.name;
+      if (message.contact.first_name || message.contact.last_name) {
+        return `${message.contact.first_name || ''} ${message.contact.last_name || ''}`.trim();
+      }
+    }
     return 'Unknown';
+  };
+
+  const getMessageSenderProfilePicture = (message: Message): string | null | undefined => {
+    if (message.user) return message.user.profile_picture_url;
+    if (message.contact) return message.contact.profile_picture_url;
+    return null;
   };
 
   const isAgentMessage = (message: Message) => {
@@ -314,24 +352,10 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
             {/* Header */}
             <div className="p-4 border-b border-default-200">
               <h1 className="text-xl font-semibold text-default-900 mb-1">Manage Conversations</h1>
-              <Breadcrumb 
-                items={[
-                  { label: 'Home', href: '/dashboard' },
-                  { label: 'Conversations' }
-                ]}
-              />
             </div>
 
             {/* Filter & Search */}
             <div className="p-4 border-b border-default-200 space-y-3">
-              <Combobox
-                options={ticketFilterOptions}
-                value={ticketFilter}
-                onChange={(option) => setTicketFilter(option)}
-                placeholder="Filter tickets"
-                isSearchable={false}
-              />
-              
               <form onSubmit={handleSearch} className="relative">
                 <input
                   type="text"
@@ -369,7 +393,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                           isActive ? 'bg-primary/5 border-l-2 border-l-primary' : ''
                         }`}
                       >
-                        <Avatar name={creatorName} />
+                        <Avatar name={creatorName} profilePicture={conversation.creator?.profile_picture_url} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
                             <h3 className="font-semibold text-default-900 truncate text-sm">
@@ -432,16 +456,6 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-40">
-                        <Combobox
-                          options={statusOptions}
-                          value={selectedStatus}
-                          onChange={(option) => setSelectedStatus(option)}
-                          placeholder="Select status"
-                          isSearchable={false}
-                          inputClassName="form-input bg-danger/10 text-danger border-danger/20 text-sm py-1.5"
-                        />
-                      </div>
                       <button 
                         type="button"
                         className="btn btn-sm border border-default-200 bg-transparent text-default-600 hover:bg-default-100"
@@ -466,9 +480,10 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
 
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {chat.messages?.map((message) => {
+                  {chatMessages.map((message) => {
                     const isAgent = isAgentMessage(message);
                     const senderName = getMessageSenderName(message);
+                    const senderProfilePicture = getMessageSenderProfilePicture(message);
                     
                     return (
                       <div
@@ -479,7 +494,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                           <div
                             className={`rounded-2xl px-4 py-3 ${
                               isAgent
-                                ? 'bg-success/20 text-default-800 rounded-br-md'
+                                ? 'bg-primary text-white rounded-br-md'
                                 : 'bg-card border border-default-200 text-default-800 rounded-bl-md'
                             }`}
                           >
@@ -490,7 +505,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                               {formatMessageTime(message.updated_at)}
                             </span>
                             {isAgent && (
-                              <Avatar name={senderName} className="size-6 text-xs" />
+                              <Avatar name={senderName} profilePicture={senderProfilePicture} className="size-6 text-xs" />
                             )}
                           </div>
                         </div>
@@ -506,40 +521,50 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                     <label className="block font-medium text-default-900 text-sm">Reply</label>
                   </div>
                   
-                  {/* Text Editor */}
-                  <input type="hidden" name="message" value={replyContent} />
-                  <TextEditor
-                    placeholder="Type your message..."
-                    onChange={handleReplyChange}
-                    showToolbar={true}
-                    className="min-h-[120px]"
-                  />
+                  {/* Message Input with Attachment */}
+                  <div className="relative">
+                    <textarea
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      placeholder="Type your message..."
+                      className="form-input w-full min-h-[120px] resize-none pr-12"
+                      rows={4}
+                    />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      multiple
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute right-3 top-3 p-2 rounded-lg text-default-400 hover:text-default-600 hover:bg-default-100 transition-colors"
+                      title="Attach files"
+                    >
+                      <Paperclip className="size-5" />
+                    </button>
+                  </div>
 
-                  {/* Bottom Actions */}
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        className="hidden"
-                        multiple
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="btn btn-sm border border-default-200 bg-transparent text-default-600 hover:bg-default-100"
-                      >
-                        <Paperclip className="size-4" />
-                      </button>
-                    </div>
+                  {/* Send Button */}
+                  <div className="flex items-center justify-end mt-3">
                     <button
                       type="button"
                       onClick={handleSendMessage}
-                      disabled={!replyContent.trim()}
-                      className="btn bg-success text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!replyContent.trim() || isSending}
+                      className="btn bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Send className="size-4 me-2" />
-                      Send
+                      {isSending ? (
+                        <>
+                          <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin me-2" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="size-4 me-2" />
+                          Send
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

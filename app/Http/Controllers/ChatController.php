@@ -16,10 +16,12 @@ use App\Events\NewChatMessage;
 use Spatie\Permission\Models\Role;
 use App\Traits\HasGoogleCloudStorage;
 
-class ChatController extends Controller {
+class ChatController extends Controller
+{
     use HasGoogleCloudStorage;
 
-    public function index(){
+    public function index()
+    {
         return Inertia::render('chat/index', [
             'title' => 'Chat',
             'filters' => Request::all(['search']),
@@ -30,13 +32,14 @@ class ChatController extends Controller {
                     'messages',
                     'messages as messages_count' => function ($query) {
                         $query->whereNotNull('user_id')->where('is_read', '==', 0);
-                    }])
+                    }
+                ])
                 ->paginate(10)
                 ->withQueryString()
                 ->through(function ($chat) {
                     return [
                         'id' => $chat->id,
-                        'slug' => $chat->slug??'',
+                        'slug' => $chat->slug ?? '',
                         'total_entry' => $chat->messages_count,
                         'title' => $chat->title,
                         'creator' => $chat->creator,
@@ -47,42 +50,46 @@ class ChatController extends Controller {
         ]);
     }
 
-    public function init(){
+    public function init()
+    {
         $request = Request::all();
         $existingContact = User::where('email', $request['email'])->first();
         $newConversation = null;
-        if(empty($existingContact)){
+        if (empty($existingContact)) {
             $existingContact = new User;
             $existingContact->name = $request['name'];
             $existingContact->email = $request['email'];
             $existingContact->password = bcrypt('password');
             $existingContact->assignRole('contact');
             $existingContact->save();
-        }else{
+        } else {
             $newConversation = Conversation::where('contact_id', $existingContact->id)->first();
         }
 
-        if(empty($newConversation)){
+        if (empty($newConversation)) {
             $newConversation = new Conversation;
             $newConversation->contact_id = $existingContact->id;
-            $initialMessage = "Hey ". $existingContact->name. ', welcome to Amanah Support - how can I help?';
-            $newConversation->title = $initialMessage;
+            $newConversation->title = "Support Chat";
             $newConversation->save();
 
+            $initialMessage = "Thank you for starting a chat with us. Our support team will review your request and respond shortly.";
+
+
             $adminRole = Role::where('name', 'admin')->first();
-            $user = User::whereHas('roles', function ($query) use ($adminRole) {
-                $query->where('roles.id', '!=', $adminRole ? $adminRole->id : 0);
-            })->orderBy('role_id', 'ASC')->first();
+            $contactRole = Role::where('name', 'contact')->first();
+            $user = User::whereHas('roles', function ($query) use ($contactRole) {
+                $query->where('roles.id', '!=', $contactRole ? $contactRole->id : 0);
+            })->first();
             $message = new Message;
             $message->conversation_id = $newConversation->id;
-            if(!empty($user)){
+            if (!empty($user)) {
                 $message->user_id = $user->id;
             }
             $message->message = $initialMessage;
             $message->save();
 
             $participant = new Participant;
-            if(!empty($user)){
+            if (!empty($user)) {
                 $participant->user_id = $user->id;
             }
             $participant->contact_id = $existingContact->id;
@@ -95,10 +102,11 @@ class ChatController extends Controller {
 
         $conversation = Conversation::with([
             'creator',
-            'messages' => function($q){
+            'messages' => function ($q) {
                 $q->orderBy('updated_at', 'asc');
             },
             'messages.attachments',
+            'messages.user',
             'participant',
             'participant.user'
         ])->find($newConversation->id);
@@ -106,10 +114,11 @@ class ChatController extends Controller {
         return response()->json($conversation);
     }
 
-    public function getConversation($id, $contact_id){
+    public function getConversation($id, $contact_id)
+    {
         $conversation = Conversation::with([
             'creator',
-            'messages' => function($q){
+            'messages' => function ($q) {
                 $q->orderBy('updated_at', 'asc');
             },
             'messages.attachments',
@@ -121,14 +130,36 @@ class ChatController extends Controller {
         return response()->json($conversation);
     }
 
-    public function chat($id){
+    public function getContactConversation()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $conversation = Conversation::with([
+            'creator',
+            'messages' => function ($q) {
+                $q->orderBy('updated_at', 'asc');
+            },
+            'messages.attachments',
+            'messages.user',
+            'participant',
+            'participant.user'
+        ])->where('contact_id', $user->id)->first();
+
+        return response()->json($conversation);
+    }
+
+    public function chat($id)
+    {
         Message::where(['conversation_id' => $id, 'is_read' => 0])->update(array('is_read' => 1));
         return Inertia::render('chat/index', [
             'title' => 'Chat',
             'filters' => Request::all(['search']),
             'chat' => Conversation::with([
                 'creator',
-                'messages' => function($q){
+                'messages' => function ($q) {
                     $q->orderBy('updated_at', 'asc');
                 },
                 'messages.user',
@@ -145,13 +176,14 @@ class ChatController extends Controller {
                     'messages',
                     'messages as messages_count' => function ($query) {
                         $query->whereNotNull('user_id')->where('is_read', '==', 0);
-                    }])
+                    }
+                ])
                 ->paginate(10)
                 ->withQueryString()
                 ->through(function ($chat) {
                     return [
                         'id' => $chat->id,
-                        'slug' => $chat->slug??'',
+                        'slug' => $chat->slug ?? '',
                         'total_entry' => $chat->messages_count,
                         'title' => $chat->title,
                         'creator' => $chat->creator,
@@ -162,12 +194,13 @@ class ChatController extends Controller {
         ]);
     }
 
-    public function emptyChat(){
+    public function emptyChat()
+    {
         return Inertia::render('chat/index', [
             'filters' => Request::all('search'),
             'chat' => Conversation::with([
                 'creator',
-                'messages' => function($q){
+                'messages' => function ($q) {
                     $q->orderBy('updated_at', 'asc');
                 },
                 'messages.user',
@@ -181,7 +214,8 @@ class ChatController extends Controller {
                     'messages',
                     'messages as messages_count' => function ($query) {
                         $query->where('is_read', '==', 0);
-                    }])
+                    }
+                ])
                 ->paginate(10)
                 ->withQueryString()
                 ->through(function ($chat) {
@@ -197,30 +231,30 @@ class ChatController extends Controller {
         ]);
     }
 
-    public function newMessage(){
+    public function newMessage()
+    {
         $request = Request::all();
         $newMessage = new Message;
-        if(isset($request['user_id'])){
-            $newMessage->user_id = $request['user_id'];
-        }
+        $newMessage->user_id = Auth::id();
         $newMessage->message = $request['message'] ?? '';
         $newMessage->conversation_id = $request['conversation_id'];
         $newMessage->save();
 
         // Handle file attachments
-        if(Request::hasFile('files')){
+        if (Request::hasFile('files')) {
             $files = Request::file('files');
             $this->handleMessageAttachments($newMessage, $files);
         }
 
-        // Update conversation title with last message
-        if(!empty($newMessage->message)){
-            Conversation::where('id', $newMessage->conversation_id)->update(['title' => $newMessage->message]);
+        // Update conversation title with last message (truncate to fit column)
+        if (!empty($newMessage->message)) {
+            $title = mb_substr($newMessage->message, 0, 50);
+            Conversation::where('id', $newMessage->conversation_id)->update(['title' => $title]);
         }
-        
+
         // Load relationships for the response and broadcast
         $message = Message::with(['contact', 'user', 'attachments'])->where('id', $newMessage->id)->first();
-        
+
         broadcast(new NewPublicChatMessage($message))->toOthers();
 
         return response()->json($message);
@@ -231,11 +265,11 @@ class ChatController extends Controller {
         // Configure GCS from database settings
         $this->configureGCS();
 
-        foreach ($files as $file) {            
+        foreach ($files as $file) {
             // Upload to Google Cloud Storage
             $path = $this->uploadToStorage($file, 'chat');
 
-            if($path){
+            if ($path) {
                 Attachment::create([
                     'message_id' => $message->id,
                     'name' => $file->getClientOriginalName(),
@@ -247,10 +281,11 @@ class ChatController extends Controller {
         }
     }
 
-    public function sendPublicMessage(){
+    public function sendPublicMessage()
+    {
         $request = Request::all();
         $newMessage = new Message;
-        if(isset($request['contact_id'])){
+        if (isset($request['contact_id'])) {
             $newMessage->contact_id = $request['contact_id'];
         }
         $newMessage->message = $request['message'] ?? '';
@@ -258,19 +293,20 @@ class ChatController extends Controller {
         $newMessage->save();
 
         // Handle file attachments
-        if(Request::hasFile('files')){
+        if (Request::hasFile('files')) {
             $files = Request::file('files');
             $this->handleMessageAttachments($newMessage, $files);
         }
 
-        // Update conversation title with last message
-        if(!empty($newMessage->message)){
-            Conversation::where('id', $newMessage->conversation_id)->update(['title' => $newMessage->message]);
+        // Update conversation title with last message (truncate to fit column)
+        if (!empty($newMessage->message)) {
+            $title = mb_substr($newMessage->message, 0, 50);
+            Conversation::where('id', $newMessage->conversation_id)->update(['title' => $title]);
         }
-        
+
         $message = Message::with(['contact', 'user', 'attachments'])->where('id', $newMessage->id)->first();
 
-        broadcast(new NewChatMessage($message))->toOthers();
+        broadcast(new NewPublicChatMessage($message))->toOthers();
 
         return response()->json($message);
     }
@@ -287,7 +323,8 @@ class ChatController extends Controller {
         return Redirect::route('chat')->with('success', 'Chat created.');
     }
 
-    public function destroy(Conversation $chat) {
+    public function destroy(Conversation $chat)
+    {
         $chat->delete();
         return Redirect::route('chat')->with('success', 'Conversation deleted.');
     }

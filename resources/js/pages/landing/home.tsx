@@ -20,6 +20,7 @@ import PageMeta from '@/components/PageMeta';
 import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
 import { LandingNav, LandingFooter } from '@/components/landing';
+import ChatWidget from '@/components/ChatWidget';
 import type { SharedData } from '@/types';
 
 type HeroButton = {
@@ -780,6 +781,9 @@ export default function Home({
         {/* Footer */}
         <LandingFooter footerData={footer} />
       </div>
+
+      {/* Chat Widget for Contact Users */}
+      <ChatWidget />
     </>
   );
 }
