@@ -9,7 +9,7 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'color', 'department_id', 'parent_id'];
+    protected $fillable = ['name', 'color'];
 
     public $timestamps = false;
 
@@ -18,22 +18,16 @@ class Category extends Model
         return $this->where($field ?? 'id', $value)->firstOrFail();
     }
 
-    public function tickets(){
+    public function tickets()
+    {
         return $this->hasMany(Ticket::class);
     }
 
-    public function department(){
-        return $this->belongsTo(Department::class);
-    }
-
-    public function parent(){
-        return $this->belongsTo(Category::class, 'parent_id');
-    }
-
-    public function scopeFilter($query, array $filters){
+    public function scopeFilter($query, array $filters)
+    {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
-                $query->where('name', 'like', '%'.$search.'%');
+                $query->where('name', 'like', '%' . $search . '%');
             });
         });
     }

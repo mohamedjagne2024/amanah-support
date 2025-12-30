@@ -157,9 +157,7 @@ class ContactsTicketController extends Controller
                 'department_id' => $ticket->department_id,
                 'department' => $ticket->department ? $ticket->department->name : 'N/A',
                 'category_id' => $ticket->category_id,
-                'sub_category_id' => $ticket->sub_category_id,
                 'category' => $ticket->category ? $ticket->category->name : 'N/A',
-                'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : 'N/A',
                 'assigned_to' => $ticket->assigned_to,
                 'assigned_user' => $ticket->assignedTo ? $ticket->assignedTo->name : 'Unassigned',
                 'type_id' => $ticket->type_id,
@@ -206,7 +204,6 @@ class ContactsTicketController extends Controller
             'details' => ['required', 'string'],
             'department_id' => ['nullable', 'exists:departments,id'],
             'category_id' => ['nullable', 'exists:categories,id'],
-            'sub_category_id' => ['nullable', 'exists:categories,id'],
             'type_id' => ['nullable', 'exists:types,id'],
             'files.*' => ['nullable', 'file', 'max:5120'],
         ]);

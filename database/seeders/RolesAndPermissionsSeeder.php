@@ -8,13 +8,14 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 final class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
         // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Define the permissions that should exist based on routes
         $permissions = [
@@ -24,7 +25,6 @@ final class RolesAndPermissionsSeeder extends Seeder
             // Tickets
             'tickets.view',
             'tickets.create',
-            'tickets.edit',
             'tickets.update',
             'tickets.delete',
             'tickets.restore',
@@ -34,13 +34,13 @@ final class RolesAndPermissionsSeeder extends Seeder
 
             // Notes
             'notes.view',
-            'notes.save',
+            'notes.create',
+            'notes.update',
             'notes.delete',
 
             // Contacts
             'contacts.view',
             'contacts.create',
-            'contacts.edit',
             'contacts.update',
             'contacts.delete',
             'contacts.restore',
@@ -48,7 +48,6 @@ final class RolesAndPermissionsSeeder extends Seeder
             // Categories
             'categories.view',
             'categories.create',
-            'categories.edit',
             'categories.update',
             'categories.delete',
             'categories.restore',
@@ -56,27 +55,13 @@ final class RolesAndPermissionsSeeder extends Seeder
             // Chat
             'chat.view',
             'chat.create',
-            'chat.edit',
             'chat.update',
             'chat.delete',
             'chat.restore',
-            'chat.message',
-            'chat.init',
-            'chat.conversation',
-            'chat.send_message',
-
-            // Priorities
-            'priorities.view',
-            'priorities.create',
-            'priorities.edit',
-            'priorities.update',
-            'priorities.delete',
-            'priorities.restore',
 
             // FAQs
             'faqs.view',
             'faqs.create',
-            'faqs.edit',
             'faqs.update',
             'faqs.delete',
             'faqs.restore',
@@ -84,22 +69,12 @@ final class RolesAndPermissionsSeeder extends Seeder
             // Knowledge Base
             'knowledge_base.view',
             'knowledge_base.create',
-            'knowledge_base.edit',
             'knowledge_base.update',
             'knowledge_base.delete',
-
-            // Statuses
-            'statuses.view',
-            'statuses.create',
-            'statuses.edit',
-            'statuses.update',
-            'statuses.delete',
-            'statuses.restore',
 
             // Departments
             'departments.view',
             'departments.create',
-            'departments.edit',
             'departments.update',
             'departments.delete',
             'departments.restore',
@@ -114,72 +89,44 @@ final class RolesAndPermissionsSeeder extends Seeder
 
             // Email Templates
             'templates.view',
-            'templates.edit',
             'templates.update',
-
-            // Pending Users
-            'pending_users.view',
-            'pending_users.active',
-            'pending_users.decline',
-
-            // Contacts
-            'contacts.view',
-            'contacts.create',
-            'contacts.edit',
-            'contacts.update',
-            'contacts.delete',
-            'contacts.restore',
 
             // Organizations
             'organizations.view',
             'organizations.create',
-            'organizations.edit',
             'organizations.update',
             'organizations.delete',
             'organizations.restore',
 
             // Front Pages
-            'front_pages.view',
-            'front_pages.update',
-            'upload.image',
+            'front_pages.home',
+            'front_pages.about',
+            'front_pages.contact',
+            'front_pages.terms',
+            'front_pages.privacy',
+            'front_pages.footer',
 
             // Reports
             'reports.view',
+            'reports.staff-performance',
+            'reports.support-by-organization',
 
             // Settings
             'settings.general',
             'settings.general.update',
             'settings.user-management',
-            'settings.users.store',
-            'settings.users.assign-roles',
-            'settings.users.assign-permissions',
-            'settings.users.assign-roles-and-permissions',
-            'settings.roles-permissions',
 
             // Users
             'users.view',
             'users.create',
-            'users.edit',
+            'users.update',
             'users.delete',
-            'users.assign-roles',
 
             // Roles
             'roles.view',
             'roles.create',
-            'roles.edit',
+            'roles.update',
             'roles.delete',
-
-            // Permissions
-            'permissions.view',
-
-            // Images
-            'images.cke_upload',
-            'images.view',
-
-            // Cron Jobs (typically admin only)
-            'cron.imap.run',
-            'cron.piping',
-            'cron.queue_work',
         ];
 
         // Delete permissions that are not in the seeder list
@@ -199,181 +146,202 @@ final class RolesAndPermissionsSeeder extends Seeder
 
         $admin = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
         $admin->givePermissionTo([
+            // Dashboard
             'dashboard.view',
+
+            // Tickets - Full access
             'tickets.view',
             'tickets.create',
-            'tickets.edit',
             'tickets.update',
             'tickets.delete',
             'tickets.restore',
             'tickets.comment',
             'tickets.csv.import',
             'tickets.csv.export',
+
+            // Notes - Full access
             'notes.view',
-            'notes.save',
+            'notes.create',
+            'notes.update',
             'notes.delete',
+
+            // Contacts - Full access
             'contacts.view',
             'contacts.create',
-            'contacts.edit',
             'contacts.update',
             'contacts.delete',
             'contacts.restore',
+
+            // Categories - Full access
             'categories.view',
             'categories.create',
-            'categories.edit',
             'categories.update',
             'categories.delete',
             'categories.restore',
+
+            // Chat - Full access
             'chat.view',
             'chat.create',
-            'chat.edit',
             'chat.update',
             'chat.delete',
             'chat.restore',
-            'chat.message',
-            'chat.init',
-            'chat.conversation',
-            'chat.send_message',
-            'priorities.view',
-            'priorities.create',
-            'priorities.edit',
-            'priorities.update',
-            'priorities.delete',
-            'priorities.restore',
+
+            // FAQs - Full access
             'faqs.view',
             'faqs.create',
-            'faqs.edit',
             'faqs.update',
             'faqs.delete',
             'faqs.restore',
+
+            // Knowledge Base - Full access
             'knowledge_base.view',
             'knowledge_base.create',
-            'knowledge_base.edit',
             'knowledge_base.update',
             'knowledge_base.delete',
-            'statuses.view',
-            'statuses.create',
-            'statuses.edit',
-            'statuses.update',
-            'statuses.delete',
-            'statuses.restore',
+
+            // Departments - Full access
             'departments.view',
             'departments.create',
-            'departments.edit',
             'departments.update',
             'departments.delete',
             'departments.restore',
+
+            // Types - Full access
             'types.view',
             'types.create',
             'types.edit',
             'types.update',
             'types.delete',
             'types.restore',
+
+            // Templates - Full access
             'templates.view',
-            'templates.edit',
             'templates.update',
-            'pending_users.view',
-            'pending_users.active',
-            'pending_users.decline',
-            'contacts.view',
-            'contacts.create',
-            'contacts.edit',
-            'contacts.update',
-            'contacts.delete',
-            'contacts.restore',
+
+            // Organizations - Full access
             'organizations.view',
             'organizations.create',
-            'organizations.edit',
             'organizations.update',
             'organizations.delete',
             'organizations.restore',
-            'front_pages.view',
-            'front_pages.update',
-            'upload.image',
+
+            // Front Pages - Full access
+            'front_pages.home',
+            'front_pages.about',
+            'front_pages.contact',
+            'front_pages.terms',
+            'front_pages.privacy',
+            'front_pages.footer',
+
+            // Reports - Full access
             'reports.view',
+            'reports.staff-performance',
+            'reports.support-by-organization',
+
+            // Settings - Full access
             'settings.general',
             'settings.general.update',
             'settings.user-management',
-            'settings.users.store',
-            'settings.users.assign-roles',
-            'settings.users.assign-permissions',
-            'settings.users.assign-roles-and-permissions',
-            'settings.roles-permissions',
+
+            // Users - Full access
             'users.view',
             'users.create',
-            'users.edit',
+            'users.update',
             'users.delete',
-            'users.assign-roles',
+
+            // Roles - Full access
             'roles.view',
             'roles.create',
-            'roles.edit',
+            'roles.update',
             'roles.delete',
-            'permissions.view',
-            'images.cke_upload',
-            'images.view',
-            'cron.imap.run',
-            'cron.piping',
-            'cron.queue_work',
         ]);
 
         $manager = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
         $manager->givePermissionTo([
+            // Dashboard
             'dashboard.view',
+
+            // Tickets - Create, update, view, comment, export
             'tickets.view',
             'tickets.create',
-            'tickets.edit',
             'tickets.update',
             'tickets.comment',
             'tickets.csv.export',
+
+            // Notes - Full access
             'notes.view',
-            'notes.save',
+            'notes.create',
+            'notes.update',
             'notes.delete',
+
+            // Contacts - View, create, update (no delete/restore)
             'contacts.view',
             'contacts.create',
-            'contacts.edit',
             'contacts.update',
+
+            // Categories - View only
+            'categories.view',
+
+            // Chat - View, create, update (no delete/restore)
             'chat.view',
             'chat.create',
-            'chat.edit',
             'chat.update',
-            'chat.message',
-            'chat.init',
-            'chat.conversation',
-            'chat.send_message',
-            'priorities.view',
+
+            // FAQs - View and update
             'faqs.view',
+            'faqs.update',
+
+            // Knowledge Base - View and update
             'knowledge_base.view',
-            'statuses.view',
+            'knowledge_base.update',
+
+            // Departments - View only
             'departments.view',
+
+            // Types - View only
             'types.view',
+
+            // Templates - View only
             'templates.view',
-            'contacts.view',
-            'contacts.create',
-            'contacts.edit',
-            'contacts.update',
+
+            // Organizations - View only
             'organizations.view',
+
+            // Reports - View all reports
             'reports.view',
-            'images.view',
+            'reports.staff-performance',
+            'reports.support-by-organization',
         ]);
 
         $user = Role::firstOrCreate(['name' => 'User', 'guard_name' => 'web']);
         $user->givePermissionTo([
+            // Dashboard
             'dashboard.view',
+
+            // Tickets - View, create, comment only
             'tickets.view',
             'tickets.create',
             'tickets.comment',
+
+            // Notes - View and create only
             'notes.view',
-            'notes.save',
+            'notes.create',
+            'notes.update',
+
+            // Contacts - View only
             'contacts.view',
+
+            // Chat - View only
             'chat.view',
-            'chat.message',
-            'chat.init',
-            'chat.conversation',
-            'chat.send_message',
+
+            // FAQs - View only
             'faqs.view',
+
+            // Knowledge Base - View only
             'knowledge_base.view',
-            'images.view',
         ]);
+
+        Role::firstOrCreate(['name' => 'Contact', 'guard_name' => 'web']);
 
         // Assign Super Admin role to existing super admin users
         User::where('is_super_admin', true)->each(function (User $user): void {

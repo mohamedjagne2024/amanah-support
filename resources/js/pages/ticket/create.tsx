@@ -7,7 +7,7 @@ import InputError from '@/components/input-error';
 import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
 import PageHeader from '@/components/Pageheader';
-import Breadcrumb from '@/components/BreadCrumb';
+import Breadcrumb from '@/components/Breadcrumb';
 
 
 type ContactOption = {
@@ -65,7 +65,6 @@ export default function Create({
     department_id: '',
     assigned_to: '',
     category_id: '',
-    sub_category_id: '',
     subject: '',
     details: '',
     files: [] as File[],
@@ -118,24 +117,11 @@ export default function Create({
 
   const categoryOptions = useMemo<SelectOption[]>(
     () =>
-      all_categories
-        .filter((cat) => cat.parent_id === null)
-        .map((category) => ({
-          label: category.name,
-          value: category.id,
-        })),
+      all_categories.map((category) => ({
+        label: category.name,
+        value: category.id,
+      })),
     [all_categories]
-  );
-
-  const subCategoryOptions = useMemo<SelectOption[]>(
-    () =>
-      all_categories
-        .filter((cat) => cat.parent_id === Number(data.category_id))
-        .map((subCategory) => ({
-          label: subCategory.name,
-          value: subCategory.id,
-        })),
-    [all_categories, data.category_id]
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,62 +314,28 @@ export default function Create({
                   </div>
                 </div>
 
-                {/* Third 2-Column Grid: Category, Sub-category */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <input type="hidden" name="category_id" value={data.category_id} />
-                    <Combobox
-                      label={
-                        <>
-                          Category{requiredFields.includes('category') && <span className="text-danger">*</span>}
-                        </>
-                      }
-                      options={categoryOptions}
-                      value={
-                        categoryOptions.find(
-                          (opt) => String(opt.value) === data.category_id
-                        ) || null
-                      }
-                      onChange={(option) => {
-                        const newCategoryId = option?.value?.toString() || '';
-                        setData((prev) => ({
-                          ...prev,
-                          category_id: newCategoryId,
-                          sub_category_id: '', // Clear sub-category when category changes
-                        }));
-                      }}
-                      placeholder="Select a category"
-                      disabled={processing}
-                      isClearable
-                      isSearchable
-                      error={errors.category_id}
-                    />
-                  </div>
-
-                  <div>
-                    <input type="hidden" name="sub_category_id" value={data.sub_category_id} />
-                    <Combobox
-                      label={
-                        <>
-                          Sub-category{requiredFields.includes('sub_category') && <span className="text-danger">*</span>}
-                        </>
-                      }
-                      options={subCategoryOptions}
-                      value={
-                        subCategoryOptions.find(
-                          (opt) => String(opt.value) === data.sub_category_id
-                        ) || null
-                      }
-                      onChange={(option) =>
-                        setData('sub_category_id', option?.value?.toString() || '')
-                      }
-                      placeholder={data.category_id ? "Select a sub-category" : "Select category first"}
-                      disabled={processing || !data.category_id}
-                      isClearable
-                      isSearchable
-                      error={errors.sub_category_id}
-                    />
-                  </div>
+                {/* Category Field */}
+                <div>
+                  <input type="hidden" name="category_id" value={data.category_id} />
+                  <Combobox
+                    label={
+                      <>
+                        Category{requiredFields.includes('category') && <span className="text-danger">*</span>}
+                      </>
+                    }
+                    options={categoryOptions}
+                    value={
+                      categoryOptions.find(
+                        (opt) => String(opt.value) === data.category_id
+                      ) || null
+                    }
+                    onChange={(option) => setData('category_id', option?.value?.toString() || '')}
+                    placeholder="Select a category"
+                    disabled={processing}
+                    isClearable
+                    isSearchable
+                    error={errors.category_id}
+                  />
                 </div>
 
                 {/* Subject Field - Full Width */}

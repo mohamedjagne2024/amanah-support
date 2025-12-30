@@ -51,7 +51,6 @@ type TypeOption = {
 type CategoryOption = {
   id: number;
   name: string;
-  parent_id: number | null;
 };
 
 type AttachmentType = {
@@ -92,9 +91,7 @@ type TicketData = {
   department_id: number | null;
   department: string;
   category_id: number | null;
-  sub_category_id: number | null;
   category: string;
-  sub_category: string;
   assigned_to: number | null;
   assigned_user: string;
   type_id: number | null;
@@ -156,7 +153,6 @@ export default function Edit({
     department_id: ticket.department_id?.toString() || '',
     assigned_to: ticket.assigned_to?.toString() || '',
     category_id: ticket.category_id?.toString() || '',
-    sub_category_id: ticket.sub_category_id?.toString() || '',
     subject: ticket.subject || '',
     details: ticket.details || '',
     due: ticket.due || '',
@@ -228,24 +224,11 @@ export default function Edit({
 
   const categoryOptions = useMemo<SelectOption[]>(
     () =>
-      all_categories
-        .filter((cat) => cat.parent_id === null)
-        .map((category) => ({
-          label: category.name,
-          value: category.id,
-        })),
+      all_categories.map((category) => ({
+        label: category.name,
+        value: category.id,
+      })),
     [all_categories]
-  );
-
-  const subCategoryOptions = useMemo<SelectOption[]>(
-    () =>
-      all_categories
-        .filter((cat) => cat.parent_id === Number(data.category_id))
-        .map((subCategory) => ({
-          label: subCategory.name,
-          value: subCategory.id,
-        })),
-    [all_categories, data.category_id]
   );
 
   const sourceOptions: SelectOption[] = [
@@ -870,48 +853,12 @@ export default function Edit({
                           (opt) => String(opt.value) === data.category_id
                         ) || null
                       }
-                      onChange={(option) => {
-                        const newCategoryId = option?.value?.toString() || '';
-                        setData((prev) => ({
-                          ...prev,
-                          category_id: newCategoryId,
-                          sub_category_id: '',
-                        }));
-                      }}
+                      onChange={(option) => setData('category_id', option?.value?.toString() || '')}
                       placeholder="Select category"
                       disabled={processing}
                       isClearable
                       isSearchable
                       error={errors.category_id}
-                    />
-                  </div>
-
-                  {/* Sub Category */}
-                  <div>
-                    <input type="hidden" name="sub_category_id" value={data.sub_category_id} />
-                    <Combobox
-                      label={
-                        <>
-                          Sub Category
-                          {requiredFields.includes('sub_category') && (
-                            <span className="text-danger">*</span>
-                          )}
-                        </>
-                      }
-                      options={subCategoryOptions}
-                      value={
-                        subCategoryOptions.find(
-                          (opt) => String(opt.value) === data.sub_category_id
-                        ) || null
-                      }
-                      onChange={(option) =>
-                        setData('sub_category_id', option?.value?.toString() || '')
-                      }
-                      placeholder={data.category_id ? 'Search sub category' : 'Select category first'}
-                      disabled={processing || !data.category_id}
-                      isClearable
-                      isSearchable
-                      error={errors.sub_category_id}
                     />
                   </div>
                 </div>

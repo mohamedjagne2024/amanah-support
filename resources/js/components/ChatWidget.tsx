@@ -381,7 +381,7 @@ export default function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && !isMinimized && (
-        <div className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] bg-card rounded-2xl shadow-2xl border border-default-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto sm:left-auto z-50 w-full h-full sm:w-[380px] sm:h-[520px] bg-card rounded-none sm:rounded-2xl shadow-2xl border border-default-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">

@@ -1,7 +1,7 @@
 import { router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
-import { DataTable, Badge, type DataTableBulkAction, type DataTableRowAction } from "@/components/DataTable";
+import { DataTable, type DataTableBulkAction, type DataTableRowAction } from "@/components/DataTable";
 import { ConfirmDialog } from "@/components/Dialog";
 import Drawer from "@/components/Drawer";
 import AppLayout from "@/layouts/app-layout";
@@ -9,19 +9,11 @@ import PageHeader from "@/components/Pageheader";
 import PageMeta from "@/components/PageMeta";
 import { FolderTree } from "lucide-react";
 
-type DepartmentRecord = {
-  id: number;
-  name: string;
-};
 
 type CategoryRecord = {
   id: number;
   name: string;
   color: string | null;
-  department_id: number | null;
-  parent_id: number | null;
-  department: DepartmentRecord | null;
-  parent: { id: number; name: string } | null;
 };
 
 type CategoryPaginator = {
@@ -43,11 +35,9 @@ type CategoryFilters = {
 type CategoryPageProps = {
   categories: CategoryPaginator;
   filters: CategoryFilters;
-  departments: DepartmentRecord[];
-  parentCategories: { id: number; name: string }[];
 };
 
-export default function Index({ categories, filters, departments, parentCategories }: CategoryPageProps) {
+export default function Index({ categories, filters }: CategoryPageProps) {
   const safeCategories: CategoryPaginator = {
     data: categories?.data ?? [],
     current_page: categories?.current_page ?? 1,
@@ -84,9 +74,7 @@ export default function Index({ categories, filters, departments, parentCategori
   // Form state
   const [formData, setFormData] = useState({ 
     name: "", 
-    color: "", 
-    department_id: "", 
-    parent_id: "" 
+    color: "" 
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -96,8 +84,6 @@ export default function Index({ categories, filters, departments, parentCategori
     setFormData({ 
       name: category?.name ?? "",
       color: category?.color ?? "",
-      department_id: category?.department_id ? String(category.department_id) : "",
-      parent_id: category?.parent_id ? String(category.parent_id) : ""
     });
     setFormErrors({});
     setIsDrawerOpen(true);
@@ -107,7 +93,7 @@ export default function Index({ categories, filters, departments, parentCategori
     setIsDrawerOpen(false);
     setTimeout(() => {
       setEditingCategory(null);
-      setFormData({ name: "", color: "", department_id: "", parent_id: "" });
+      setFormData({ name: "", color: "" });
       setFormErrors({});
     }, 300);
   }, []);
@@ -125,8 +111,6 @@ export default function Index({ categories, filters, departments, parentCategori
     const submitData = {
       name: formData.name,
       color: formData.color || null,
-      department_id: formData.department_id ? Number(formData.department_id) : null,
-      parent_id: formData.parent_id ? Number(formData.parent_id) : null,
     };
 
     router[method](url, submitData, {
@@ -251,45 +235,11 @@ export default function Index({ categories, filters, departments, parentCategori
       {
         accessorKey: "name",
         header: "Name",
-        cell: ({ row, getValue }) => {
-          const isSubcategory = row.original.parent_id !== null;
-          return (
-            <div className="flex items-center gap-2">
-              {isSubcategory && (
-                <span className="text-default-400">—</span>
-              )}
-              <span className={`${isSubcategory ? 'font-normal' : 'font-medium'} text-default-800`}>
-                {getValue<string>()}
-              </span>
-            </div>
-          );
-        },
-        enableSorting: true
-      },
-      {
-        accessorKey: "department",
-        header: "Department",
-        cell: ({ row }) => {
-          const dept = row.original.department;
-          return dept ? (
-            <Badge variant="success">{dept.name}</Badge>
-          ) : (
-            <span className="text-default-400 text-sm">—</span>
-          );
-        },
-        enableSorting: true
-      },
-      {
-        accessorKey: "parent",
-        header: "Parent",
-        cell: ({ row }) => {
-          const parent = row.original.parent;
-          return parent ? (
-            <span className="text-primary text-sm">{parent.name}</span>
-          ) : (
-            <span className="text-default-400 text-sm">—</span>
-          );
-        },
+        cell: ({ getValue }) => (
+          <span className="font-medium text-default-800">
+            {getValue<string>()}
+          </span>
+        ),
         enableSorting: true
       }
     ],
@@ -336,7 +286,7 @@ export default function Index({ categories, filters, departments, parentCategori
       <main>
         <PageHeader 
           title="Categories" 
-          subtitle="Manage ticket categories and subcategories"
+          subtitle="Manage ticket categories"
           icon={FolderTree}
           count={safeCategories.total}
         />
@@ -433,57 +383,6 @@ export default function Index({ categories, filters, departments, parentCategori
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Department
-            </label>
-            <select
-              name="department_id"
-              value={formData.department_id}
-              onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
-              disabled={isSubmitting}
-              className={`form-input w-full ${formErrors.department_id ? 'border-danger focus:ring-danger' : ''}`}
-            >
-              <option value="">— Select Department —</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-            {formErrors.department_id && (
-              <p className="text-danger text-sm mt-1">{formErrors.department_id}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block font-medium text-default-900 text-sm mb-2">
-              Parent Category
-            </label>
-            <select
-              name="parent_id"
-              value={formData.parent_id}
-              onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
-              disabled={isSubmitting}
-              className={`form-input w-full ${formErrors.parent_id ? 'border-danger focus:ring-danger' : ''}`}
-            >
-              <option value="">— None (Main Category) —</option>
-              {parentCategories
-                .filter(cat => !editingCategory || cat.id !== editingCategory.id)
-                .map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-            </select>
-            {formErrors.parent_id && (
-              <p className="text-danger text-sm mt-1">{formErrors.parent_id}</p>
-            )}
-            <p className="text-default-500 text-xs mt-1">
-              Leave empty to create a main category
-            </p>
-          </div>
-
-          <div>
-            <label className="block font-medium text-default-900 text-sm mb-2">
               Color
             </label>
             <input
@@ -515,7 +414,7 @@ export default function Index({ categories, filters, departments, parentCategori
         }}
         onConfirm={handleConfirmDelete}
         title="Confirm Delete"
-        description={`Are you sure you want to delete the category "${deletingCategory?.name}"? ${deletingCategory?.parent_id ? '' : 'Note: You cannot delete categories that have subcategories.'} This action cannot be undone.`}
+        description={`Are you sure you want to delete the category "${deletingCategory?.name}"? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         confirmVariant="danger"
@@ -533,7 +432,7 @@ export default function Index({ categories, filters, departments, parentCategori
         }}
         onConfirm={handleConfirmBulkDelete}
         title="Confirm Bulk Delete"
-        description={`Are you sure you want to delete ${bulkDeleteIds.length} category(ies)? Categories with subcategories cannot be deleted. This action cannot be undone.`}
+        description={`Are you sure you want to delete ${bulkDeleteIds.length} category(ies)? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         confirmVariant="danger"

@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Traits\HasGoogleCloudStorage;
+use Illuminate\Support\Facades\Gate;
 
 class TicketsController extends Controller
 {
@@ -32,6 +33,7 @@ class TicketsController extends Controller
 
     public function index()
     {
+        Gate::authorize('tickets.view');
         $byContact = null;
         $byAssign = null;
         $user = Auth()->user();
@@ -115,7 +117,6 @@ class TicketsController extends Controller
                         'contact_photo' => $ticket->contact ? $ticket->contact->profile_picture_url : null,
                         'priority' => $ticket->priority_label,
                         'category' => $ticket->category ? $ticket->category->name : null,
-                        'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : null,
                         'rating' => $ticket->review ? $ticket->review->rating : 0,
                         'status' => $ticket->status_label,
                         'due' => Carbon::parse($ticket->due)->format(Settings::get('date_format')),
@@ -151,6 +152,7 @@ class TicketsController extends Controller
 
     public function csvImport()
     {
+        Gate::authorize('tickets.csv.import');
         $file = Request::file('file');
         if (!empty($file)) {
 
@@ -171,11 +173,10 @@ class TicketsController extends Controller
                     }
 
                     $category = Category::firstOrCreate(['name' => $data['Category']]);
-                    $sub_category = Category::firstOrCreate(['name' => $data['Sub Category']]);
                     $department = Department::firstOrCreate(['name' => $data['Department']]);
                     $assignTo = User::where(['email' => $data['Assigned To Email']])->first();
                     if (empty($assignTo) && !empty($data['Assigned To Email']) && !empty($data['Assigned To Name'])) {
-                        $aName = $this->splitName($data['Assigned To Name']);
+                        $aName = $data['Assigned To Name'];
                         $assignTo = User::create(['email' => $data['Assigned To Email'], 'first_name' => $aName[0], 'last_name' => $aName[1]]);
                     }
 
@@ -184,7 +185,6 @@ class TicketsController extends Controller
                         'subject' => $data['Subject'],
                         'priority' => $priority,
                         'category_id' => $category->id,
-                        'sub_category_id' => $sub_category->id,
                         'department_id' => $department->id,
                         'status' => $status,
                         'assigned_to' => $assignTo ? $assignTo->id : null
@@ -199,6 +199,7 @@ class TicketsController extends Controller
 
     public function csvExport()
     {
+        Gate::authorize('tickets.csv.export');
         $tickets = Ticket::all();
         $csvFileName = 'tickets.csv';
 
@@ -208,7 +209,7 @@ class TicketsController extends Controller
         ];
 
         $handle = fopen('php://output', 'w');
-        fputcsv($handle, ['UID', 'Subject', 'Priority', 'Category', 'Sub Category', 'Department', 'Status', 'Assigned To Email', 'Assigned To Name', 'Created']);
+        fputcsv($handle, ['UID', 'Subject', 'Priority', 'Category', 'Department', 'Status', 'Assigned To Email', 'Assigned To Name', 'Created']);
 
         foreach ($tickets as $ticket) {
             fputcsv($handle, [
@@ -216,7 +217,6 @@ class TicketsController extends Controller
                 $ticket->subject,
                 $ticket->priority_label,
                 $ticket->category ? $ticket->category->name : null,
-                $ticket->subCategory ? $ticket->subCategory->name : null,
                 $ticket->department ? $ticket->department->name : null,
                 $ticket->status_label,
                 $ticket->assignedTo ? $ticket->assignedTo->email : null,
@@ -232,7 +232,7 @@ class TicketsController extends Controller
 
     public function create()
     {
-        $user = Auth()->user();
+        Gate::authorize('tickets.create');
 
         $required_fields = [];
         $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
@@ -284,6 +284,7 @@ class TicketsController extends Controller
 
     public function store()
     {
+        Gate::authorize('tickets.create');
         $required_fields = [];
 
         $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
@@ -298,7 +299,6 @@ class TicketsController extends Controller
             'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
             'assigned_to' => [in_array('assigned_to', $required_fields) ? 'required' : 'nullable', Rule::exists('users', 'id')],
             'category_id' => [in_array('category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
-            'sub_category_id' => [in_array('sub_category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
             'type_id' => [in_array('ticket_type', $required_fields) ? 'required' : 'nullable', Rule::exists('types', 'id')],
             'subject' => ['required'],
             'details' => ['required'],
@@ -346,6 +346,7 @@ class TicketsController extends Controller
 
     public function show($uid)
     {
+        Gate::authorize('tickets.view');
         $user = Auth()->user();
         $byContact = null;
         $byAssign = null;
@@ -411,9 +412,7 @@ class TicketsController extends Controller
                 'department_id' => $ticket->department_id,
                 'department' => $ticket->department ? $ticket->department->name : 'N/A',
                 'category_id' => $ticket->category_id,
-                'sub_category_id' => $ticket->sub_category_id,
                 'category' => $ticket->category ? $ticket->category->name : 'N/A',
-                'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : 'N/A',
                 'assigned_to' => $ticket->assigned_to,
                 'assigned_user' => $ticket->assignedTo ? $ticket->assignedTo->name : 'Unassigned',
                 'type_id' => $ticket->type_id,
@@ -436,6 +435,7 @@ class TicketsController extends Controller
 
     public function edit($uid)
     {
+        Gate::authorize('tickets.update');
         $user = Auth()->user();
         $byContact = null;
         $byAssign = null;
@@ -541,9 +541,7 @@ class TicketsController extends Controller
                 'department_id' => $ticket->department_id,
                 'department' => $ticket->department ? $ticket->department->name : 'N/A',
                 'category_id' => $ticket->category_id,
-                'sub_category_id' => $ticket->sub_category_id,
                 'category' => $ticket->category ? $ticket->category->name : 'N/A',
-                'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : 'N/A',
                 'assigned_to' => $ticket->assigned_to,
                 'assigned_user' => $ticket->assignedTo ? $ticket->assignedTo->name : 'N/A',
                 'type_id' => $ticket->type_id,
@@ -561,6 +559,7 @@ class TicketsController extends Controller
 
     public function update(Ticket $ticket)
     {
+        Gate::authorize('tickets.update');
         $required_fields = [];
 
         $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
@@ -576,7 +575,6 @@ class TicketsController extends Controller
             'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
             'assigned_to' => [in_array('assigned_to', $required_fields) ? 'required' : 'nullable', Rule::exists('users', 'id')],
             'category_id' => [in_array('category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
-            'sub_category_id' => [in_array('sub_category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
             'type_id' => [in_array('ticket_type', $required_fields) ? 'required' : 'nullable', Rule::exists('types', 'id')],
             'subject' => ['required'],
             'due' => ['nullable'],
@@ -658,6 +656,7 @@ class TicketsController extends Controller
 
     public function newComment()
     {
+        Gate::authorize('tickets.comment');
         $request = Request::all();
         $ticket = Comment::where('ticket_id', $request['ticket_id'])->count();
         if (empty($ticket)) {
@@ -680,6 +679,7 @@ class TicketsController extends Controller
 
     public function destroy($uid)
     {
+        Gate::authorize('tickets.delete');
         $user = Auth()->user();
         $byContact = null;
         $byAssign = null;
@@ -709,6 +709,7 @@ class TicketsController extends Controller
 
     public function bulkDelete()
     {
+        Gate::authorize('tickets.delete');
         $validated = Request::validate([
             'ids' => ['required', 'array'],
             'ids.*' => ['required', 'integer', 'exists:tickets,id'],
@@ -721,6 +722,7 @@ class TicketsController extends Controller
 
     public function restore(Ticket $ticket)
     {
+        Gate::authorize('tickets.restore');
         $ticket->restore();
         return Redirect::back()->with('success', 'Ticket restored.');
     }
@@ -750,19 +752,12 @@ class TicketsController extends Controller
         return $data;
     }
 
-    private function splitName($name)
-    {
-        $name = trim($name);
-        $last_name = (!str_contains($name, ' ')) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $name);
-        $first_name = trim(preg_replace('#' . preg_quote($last_name, '#') . '#', '', $name));
-        return array($first_name, $last_name);
-    }
-
     /**
      * Add a comment to a ticket from the view page.
      */
     public function addComment(Ticket $ticket)
     {
+        Gate::authorize('tickets.comment');
         $request = Request::all();
         $user = Auth()->user();
 

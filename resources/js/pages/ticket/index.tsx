@@ -8,7 +8,7 @@ import PageMeta from "@/components/PageMeta";
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Download, Upload, FileSpreadsheet, ChevronDown, CircleCheck, AlertTriangle, UserX, Clock, Ticket } from "lucide-react";
 import PageHeader from "@/components/Pageheader";
-import Breadcrumb from "@/components/BreadCrumb";
+import Breadcrumb from "@/components/Breadcrumb";
 
 type Priority = {
   value: string;
@@ -405,12 +405,7 @@ export default function Index({
         cell: ({ row }) => (
           <div className="min-w-[120px]">
             {row.original.category ? (
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium text-default-700">{row.original.category}</span>
-                {row.original.sub_category && (
-                  <span className="text-xs text-default-500">{row.original.sub_category}</span>
-                )}
-              </div>
+              <span className="text-sm font-medium text-default-700">{row.original.category}</span>
             ) : (
               <span className="text-sm text-default-400">-</span>
             )}

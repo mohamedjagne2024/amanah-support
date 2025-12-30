@@ -16,7 +16,6 @@ type Department = {
 type CategoryOption = {
   id: number;
   name: string;
-  parent_id?: number | null;
 };
 
 type TypeOption = {
@@ -50,7 +49,6 @@ export default function CreateContactTicket({
     details: '',
     department_id: '',
     category_id: '',
-    sub_category_id: '',
     type_id: '',
     files: [] as File[],
   });
@@ -61,13 +59,8 @@ export default function CreateContactTicket({
   );
 
   const categoryOptions = useMemo<SelectOption[]>(
-    () => all_categories.filter((c) => !c.parent_id).map((c) => ({ label: c.name, value: c.id })),
+    () => all_categories.map((c) => ({ label: c.name, value: c.id })),
     [all_categories]
-  );
-
-  const subCategoryOptions = useMemo<SelectOption[]>(
-    () => all_categories.filter((c) => c.parent_id === Number(data.category_id)).map((c) => ({ label: c.name, value: c.id })),
-    [all_categories, data.category_id]
   );
 
   const typeOptions = useMemo<SelectOption[]>(
@@ -196,43 +189,21 @@ export default function CreateContactTicket({
                     )}
                   </div>
 
-                  {/* Category & Sub-category */}
+                  {/* Category */}
                   {!isFieldHidden('category') && (
-                    <div className="grid sm:grid-cols-2 gap-5">
-                      <div>
-                        <Combobox
-                          label="Category"
-                          options={categoryOptions}
-                          value={categoryOptions.find((opt) => String(opt.value) === data.category_id) || null}
-                          onChange={(option) => {
-                            setData('category_id', option?.value?.toString() || '');
-                            setData('sub_category_id', '');
-                          }}
-                          placeholder="Select category"
-                          disabled={processing}
-                          isClearable
-                          isSearchable
-                        />
-                        {errors.category_id && (
-                          <p className="text-danger text-sm mt-1">{errors.category_id}</p>
-                        )}
-                      </div>
-                      {!isFieldHidden('sub_category') && data.category_id && subCategoryOptions.length > 0 && (
-                        <div>
-                          <Combobox
-                            label="Sub Category"
-                            options={subCategoryOptions}
-                            value={subCategoryOptions.find((opt) => String(opt.value) === data.sub_category_id) || null}
-                            onChange={(option) => setData('sub_category_id', option?.value?.toString() || '')}
-                            placeholder="Select sub category"
-                            disabled={processing}
-                            isClearable
-                            isSearchable
-                          />
-                          {errors.sub_category_id && (
-                            <p className="text-danger text-sm mt-1">{errors.sub_category_id}</p>
-                          )}
-                        </div>
+                    <div>
+                      <Combobox
+                        label="Category"
+                        options={categoryOptions}
+                        value={categoryOptions.find((opt) => String(opt.value) === data.category_id) || null}
+                        onChange={(option) => setData('category_id', option?.value?.toString() || '')}
+                        placeholder="Select category"
+                        disabled={processing}
+                        isClearable
+                        isSearchable
+                      />
+                      {errors.category_id && (
+                        <p className="text-danger text-sm mt-1">{errors.category_id}</p>
                       )}
                     </div>
                   )}
