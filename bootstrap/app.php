@@ -6,12 +6,16 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -24,5 +28,23 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Render HTTP exceptions using Inertia error pages
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
+            // Only handle HTTP exceptions for web requests
+            if (!$request->is('api/*') && $exception instanceof HttpExceptionInterface) {
+                $status = $exception->getStatusCode();
+
+                // Handle specific HTTP error codes with Inertia
+                if (in_array($status, [403, 404, 405, 419, 500, 503])) {
+                    return Inertia::render('error/index', [
+                        'status' => $status,
+                        'message' => $exception->getMessage() ?: null,
+                    ])
+                        ->toResponse($request)
+                        ->setStatusCode($status);
+                }
+            }
+
+            return $response;
+        });
     })->create();
