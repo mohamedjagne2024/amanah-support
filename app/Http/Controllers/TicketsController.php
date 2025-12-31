@@ -727,6 +727,26 @@ class TicketsController extends Controller
         return Redirect::back()->with('success', 'Ticket restored.');
     }
 
+    /**
+     * Close a ticket.
+     */
+    public function close(Ticket $ticket)
+    {
+        Gate::authorize('tickets.update');
+
+        $ticket->update([
+            'status' => 'closed',
+            'close' => now(),
+        ]);
+
+        event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => 'The ticket has been closed.']));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ticket closed successfully.',
+        ]);
+    }
+
     private function sendMailCron($id, $type = null, $value = null)
     {
         PendingEmail::create(['ticket_id' => $id, 'type' => $type, 'value' => $value]);

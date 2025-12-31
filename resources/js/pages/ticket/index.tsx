@@ -230,7 +230,7 @@ export default function Index({
   const getStatusVariant = (status: string | null): 'success' | 'danger' | 'warning' | 'info' | 'primary' | 'default' => {
     if (!status) return 'default';
     const s = status.toLowerCase();
-    if (s.includes('closed') || s.includes('resolved')) return 'success';
+    if (s.includes('closed') || s.includes('resolved')) return 'danger';
     if (s.includes('open') || s.includes('new')) return 'info';
     if (s.includes('pending')) return 'warning';
     if (s.includes('progress')) return 'primary';

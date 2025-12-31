@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import axios from 'axios';
 import { 
@@ -14,12 +14,14 @@ import {
   Star,
   Eye,
   Download,
+  XCircle,
 } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 import PageMeta from '@/components/PageMeta';
 import TextEditor from '@/components/TextEditor';
 import Breadcrumb from '@/components/Breadcrumb';
 import { useTicketCommentListener } from '@/hooks/usePusher';
+import { ConfirmDialog } from '@/components/Dialog';
 
 type AttachmentType = {
   id: number;
@@ -102,6 +104,8 @@ export default function ContactTicketView({
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   // Listen for real-time comment updates via Pusher
   useTicketCommentListener(ticket.id, (newComment) => {
@@ -193,11 +197,24 @@ export default function ContactTicketView({
   const getStatusBadgeClass = (status: string | null) => {
     if (!status) return 'bg-default-200 text-default-700';
     const s = status.toLowerCase();
-    if (s.includes('closed') || s.includes('resolved')) return 'bg-success text-white';
+    if (s.includes('closed') || s.includes('resolved')) return 'bg-danger text-white';
     if (s.includes('open') || s.includes('new')) return 'bg-info text-white';
     if (s.includes('pending')) return 'bg-warning text-white';
     if (s.includes('progress')) return 'bg-primary text-white';
     return 'bg-default-200 text-default-700';
+  };
+
+  const handleCloseTicket = async () => {
+    setIsClosing(true);
+    try {
+      await axios.post(`/contact/tickets/${ticket.id}/close`);
+      setShowCloseModal(false);
+      router.reload();
+    } catch {
+      // Error handling - close failed
+    } finally {
+      setIsClosing(false);
+    }
   };
 
   return (
@@ -291,6 +308,16 @@ export default function ContactTicketView({
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2 shrink-0">
+                  {!ticket.closed && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCloseModal(true)}
+                      className="btn btn-sm bg-danger text-white"
+                    >
+                      <XCircle className="size-4 me-1" />
+                      Close Ticket
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowNewComment(true)}
@@ -548,6 +575,19 @@ export default function ContactTicketView({
               </div>
             </div>
           </div>
+
+          {/* Close Ticket Confirmation Modal */}
+          <ConfirmDialog
+            open={showCloseModal}
+            onOpenChange={setShowCloseModal}
+            onConfirm={handleCloseTicket}
+            title="Close Ticket"
+            description="Are you sure you want to close this ticket? This action will mark the ticket as resolved."
+            confirmText="Close Ticket"
+            cancelText="Cancel"
+            confirmVariant="danger"
+            isLoading={isClosing}
+          />
         </section>
       </PublicLayout>
     </>

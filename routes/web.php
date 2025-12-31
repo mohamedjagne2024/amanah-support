@@ -138,6 +138,10 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('tickets.comment')
             ->middleware('auth');
 
+        $router->post('tickets/{ticket}/close', [TicketsController::class, 'close'])
+            ->name('tickets.close')
+            ->middleware('auth');
+
         /** Contact Functions */
         $router->get('notes', [NotesController::class, 'index'])
             ->name('notes')
@@ -395,6 +399,10 @@ $router->prefix('/')->group(static function (Router $router): void {
 
         $router->post('contact/tickets/{ticket}/comment', [ContactsTicketController::class, 'addComment'])
             ->name('contact.tickets.comment')
+            ->middleware('auth');
+
+        $router->post('contact/tickets/{ticket}/close', [ContactsTicketController::class, 'close'])
+            ->name('contact.tickets.close')
             ->middleware('auth');
 
 

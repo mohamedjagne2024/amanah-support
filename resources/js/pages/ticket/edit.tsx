@@ -341,7 +341,7 @@ export default function Edit({
   const getStatusBadgeClass = (status: string | null) => {
     if (!status) return 'bg-default-200 text-default-700';
     const s = status.toLowerCase();
-    if (s.includes('closed') || s.includes('resolved')) return 'bg-success text-white';
+    if (s.includes('closed') || s.includes('resolved')) return 'bg-danger text-white';
     if (s.includes('open') || s.includes('new')) return 'bg-info text-white';
     if (s.includes('pending')) return 'bg-warning text-white';
     if (s.includes('progress')) return 'bg-primary text-white';
