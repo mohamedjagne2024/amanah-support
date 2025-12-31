@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\Department;
 use App\Models\FrontPage;
 use App\Models\Settings;
@@ -14,7 +13,6 @@ use Inertia\Inertia;
 use App\Events\TicketNewComment;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Attachment;
-use App\Models\Type;
 use App\Events\TicketCreated;
 
 class ContactsTicketController extends Controller

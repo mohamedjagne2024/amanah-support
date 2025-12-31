@@ -25,37 +25,37 @@ class UserCreatedNotification
     public function handle(UserCreated $event): void
     {
         $data = $event->data;
-        
+
         // Get email notification settings
         $notifications = app('App\AmanahSupport')->getSettingsEmailNotifications();
-        
+
         // Check if new_user notification is enabled
         if (empty($notifications['new_user'])) {
             Log::info('UserCreatedNotification: new_user notification is disabled');
             return;
         }
-        
+
         // Get user
         $user = User::find($data['id'] ?? null);
-        
+
         if (!$user) {
             Log::warning('UserCreatedNotification: User not found', ['data' => $data]);
             return;
         }
-        
+
         if (!$user->email) {
             Log::warning('UserCreatedNotification: User has no email', ['user_id' => $user->id]);
             return;
         }
-        
+
         // Get the email template
         $template = EmailTemplate::where('slug', 'user_created')->first();
-        
+
         if (!$template) {
             Log::warning("UserCreatedNotification: Email template 'user_created' not found");
             return;
         }
-        
+
         // Send the notification email
         $this->sendMailWithTemplate($template, $user, $data['password'] ?? '');
     }
@@ -66,7 +66,7 @@ class UserCreatedNotification
     private function sendMailWithTemplate(EmailTemplate $template, User $user, string $password): void
     {
         $html = $template->html;
-        
+
         // Build variables for template substitution
         $variables = [
             'name' => $user->name ?? $user->first_name ?? '',
@@ -75,7 +75,7 @@ class UserCreatedNotification
             'url' => config('app.url') . '/login',
             'sender_name' => config('mail.from.name', 'Support'),
         ];
-        
+
         // Replace template variables
         if (preg_match_all("/{(.*?)}/", $html, $matches)) {
             foreach ($matches[1] as $index => $varname) {
@@ -83,13 +83,13 @@ class UserCreatedNotification
                 $html = str_replace($matches[0][$index], $value, $html);
             }
         }
-        
+
         // Build message data
         $messageData = [
             'html' => $html,
-            'subject' => config('app.name', 'Support') . ' - Your account has been created',
+            'subject' => 'Amanah Support - Your account has been created',
         ];
-        
+
         // Send email (queued or immediate based on config)
         try {
             if (config('queue.enable')) {
@@ -97,7 +97,7 @@ class UserCreatedNotification
             } else {
                 Mail::to($user->email)->send(new SendMailFromHtml($messageData));
             }
-            
+
             Log::info('UserCreatedNotification: Email sent successfully', [
                 'user_id' => $user->id,
                 'recipient' => $user->email,

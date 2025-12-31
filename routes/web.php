@@ -504,6 +504,8 @@ $router->prefix('/')->group(static function (Router $router): void {
         $router->post('/settings/users/{user}/roles', [SettingsController::class, 'assignRoles'])->name('settings.users.assign-roles');
         $router->post('/settings/users/{user}/permissions', [SettingsController::class, 'assignPermissions'])->name('settings.users.assign-permissions');
         $router->post('/settings/users/{user}/roles-and-permissions', [SettingsController::class, 'assignRolesAndPermissions'])->name('settings.users.assign-roles-and-permissions');
+        $router->put('/settings/users/{user}', [SettingsController::class, 'updateUser'])->name('settings.users.update');
+        $router->delete('/settings/users/{user}', [SettingsController::class, 'destroyUser'])->name('settings.users.destroy');
         $router->get('/settings/roles-permissions', [SettingsController::class, 'rolesPermissions'])->name('settings.roles-permissions');
         $router->resource('/settings', SettingsController::class);
 

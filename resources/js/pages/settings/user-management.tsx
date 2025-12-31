@@ -58,6 +58,17 @@ export default function UserManagement({ users, roles, permissions, filters }: U
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Edit User Details drawer state
+  const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
+  const [editingUserForUpdate, setEditingUserForUpdate] = useState<User | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [editFormErrors, setEditFormErrors] = useState<Record<string, string>>({});
+  const [isUpdating, setIsUpdating] = useState(false);
+
   // Create drawer state
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -109,6 +120,63 @@ export default function UserManagement({ users, roles, permissions, filters }: U
       }
     );
   }, [editingUser, selectedRoles, selectedPermissions, handleCloseEditDrawer, isSaving]);
+
+  // Edit User Details drawer handlers
+  const handleOpenEditUserDrawer = useCallback((user: User) => {
+    setEditingUserForUpdate(user);
+    setEditFormData({
+      name: user.name || "",
+      email: user.email || "",
+      password: "",
+    });
+    setEditFormErrors({});
+    setIsEditUserDrawerOpen(true);
+  }, []);
+
+  const handleCloseEditUserDrawer = useCallback(() => {
+    setIsEditUserDrawerOpen(false);
+    setTimeout(() => {
+      setEditingUserForUpdate(null);
+      setEditFormData({
+        name: "",
+        email: "",
+        password: "",
+      });
+      setEditFormErrors({});
+    }, 300);
+  }, []);
+
+  const handleSaveUser = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUserForUpdate || isUpdating) return;
+
+    setIsUpdating(true);
+
+    router.put(
+      `/settings/users/${editingUserForUpdate.id}`,
+      editFormData,
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          handleCloseEditUserDrawer();
+        },
+        onError: (errors) => {
+          setEditFormErrors(errors);
+        },
+        onFinish: () => {
+          setIsUpdating(false);
+        },
+      }
+    );
+  }, [editingUserForUpdate, editFormData, handleCloseEditUserDrawer, isUpdating]);
+
+  const handleDeleteUser = useCallback((user: User) => {
+    if (!confirm(`Are you sure you want to delete ${user.name}?`)) return;
+
+    router.delete(`/settings/users/${user.id}`, {
+      preserveScroll: true,
+    });
+  }, []);
 
   // Create drawer handlers
   const handleOpenCreateDrawer = useCallback(() => {
@@ -285,14 +353,28 @@ export default function UserManagement({ users, roles, permissions, filters }: U
   const rowActions = useMemo<DataTableRowAction<User>[]>(
     () => [
       {
+        label: "Edit User",
+        value: "edit-user",
+        onSelect: (user) => {
+          handleOpenEditUserDrawer(user);
+        }
+      },
+      {
         label: "Manage Roles & Permissions",
         value: "edit",
         onSelect: (user) => {
           handleOpenEditDrawer(user);
         }
       },
+      {
+        label: "Delete User",
+        value: "delete",
+        onSelect: (user) => {
+          handleDeleteUser(user);
+        }
+      },
     ],
-    [handleOpenEditDrawer]
+    [handleOpenEditDrawer, handleOpenEditUserDrawer, handleDeleteUser]
   );
 
   return (
@@ -534,12 +616,12 @@ export default function UserManagement({ users, roles, permissions, filters }: U
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Password <span className="text-danger">*</span>
+              Password <span className="text-default-500 text-xs">(optional - auto-generated if empty)</span>
             </label>
             <input
               type="password"
               name="password"
-              placeholder="Enter password"
+              placeholder="Enter password (optional)"
               value={createFormData.password}
               onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
               disabled={isCreating}
@@ -552,7 +634,7 @@ export default function UserManagement({ users, roles, permissions, filters }: U
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Confirm Password <span className="text-danger">*</span>
+              Confirm Password
             </label>
             <input
               type="password"
@@ -592,6 +674,104 @@ export default function UserManagement({ users, roles, permissions, filters }: U
             </div>
             {createFormErrors.roles && (
               <p className="text-danger text-sm mt-1">{createFormErrors.roles}</p>
+            )}
+          </div>
+        </form>
+      </Drawer>
+
+      {/* Edit User Drawer */}
+      <Drawer
+        isOpen={isEditUserDrawerOpen}
+        onClose={handleCloseEditUserDrawer}
+        title="Edit User"
+        size="lg"
+        placement="right"
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn bg-transparent border border-default-300 text-default-700 hover:bg-default-100"
+              onClick={handleCloseEditUserDrawer}
+              disabled={isUpdating}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="edit-user-form"
+              className="btn bg-primary text-white hover:bg-primary/90 disabled:opacity-75 disabled:cursor-not-allowed"
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <span className="inline-flex items-center gap-2">
+                  <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                "Save Changes"
+              )}
+            </button>
+          </>
+        }
+      >
+        <form id="edit-user-form" onSubmit={handleSaveUser} className="space-y-4">
+          {/* User Info Header */}
+          <div className="bg-default-50 p-4 rounded-lg">
+            <div className="font-semibold text-default-900">{editingUserForUpdate?.name}</div>
+            <div className="text-sm text-default-600">{editingUserForUpdate?.email}</div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              Name <span className="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter user name"
+              value={editFormData.name}
+              onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+              disabled={isUpdating}
+              className={`form-input w-full ${editFormErrors.name ? 'border-danger focus:ring-danger' : ''}`}
+            />
+            {editFormErrors.name && (
+              <p className="text-danger text-sm mt-1">{editFormErrors.name}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              Email <span className="text-danger">*</span>
+            </label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter email address"
+              value={editFormData.email}
+              onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+              disabled={isUpdating}
+              className={`form-input w-full ${editFormErrors.email ? 'border-danger focus:ring-danger' : ''}`}
+            />
+            {editFormErrors.email && (
+              <p className="text-danger text-sm mt-1">{editFormErrors.email}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              New Password <span className="text-default-500 text-xs">(leave blank to keep current)</span>
+            </label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter new password"
+              value={editFormData.password}
+              onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+              disabled={isUpdating}
+              className={`form-input w-full ${editFormErrors.password ? 'border-danger focus:ring-danger' : ''}`}
+            />
+            {editFormErrors.password && (
+              <p className="text-danger text-sm mt-1">{editFormErrors.password}</p>
             )}
           </div>
         </form>

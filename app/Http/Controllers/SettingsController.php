@@ -18,7 +18,10 @@ use App\Http\Requests\AssignPermissionRequest;
 use App\Http\Requests\AssignRolesAndPermissionsRequest;
 use App\Http\Requests\StoreUserRequest;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Pusher\Pusher;
+use App\Events\UserCreated;
 
 final class SettingsController extends Controller
 {
@@ -255,11 +258,16 @@ final class SettingsController extends Controller
 
         $validated = $request->validated();
 
+        // Generate random password if not provided
+        $plainPassword = !empty($validated['password'])
+            ? $validated['password']
+            : Str::random(16);
+
         /** @var User */
         $user = User::query()->create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'password' => Hash::make($plainPassword),
         ]);
 
         // Assign roles if provided
@@ -271,9 +279,53 @@ final class SettingsController extends Controller
             app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         }
 
+        // Fire event to send email notification with login credentials
+        event(new UserCreated(['id' => $user->id, 'password' => $plainPassword]));
+
         return redirect()
             ->route('settings.user-management')
             ->with('success', 'User created successfully.');
+    }
+
+    /**
+     * Update the specified user.
+     */
+    public function updateUser(User $user): RedirectResponse
+    {
+        Gate::authorize('users.edit');
+
+        $validated = request()->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'max:255', 'email', Rule::unique('users')->ignore($user->id)],
+            'password' => ['nullable', 'string'],
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        if (!empty($validated['password'])) {
+            $user->update(['password' => Hash::make($validated['password'])]);
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'User updated successfully.');
+    }
+
+    /**
+     * Delete the specified user.
+     */
+    public function destroyUser(User $user): RedirectResponse
+    {
+        Gate::authorize('users.delete');
+
+        $user->delete();
+
+        return redirect()
+            ->route('settings.user-management')
+            ->with('success', 'User deleted successfully.');
     }
 
     /**
