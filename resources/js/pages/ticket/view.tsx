@@ -468,13 +468,15 @@ export default function View({
             <div className="card">
               <div className="card-header flex items-center justify-between">
                 <h6 className="card-title">Reply</h6>
-                <button
-                  onClick={() => setShowNewComment(true)}
-                  className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
-                >
-                  <Plus className="size-4 me-1" />
-                  New Reply
-                </button>
+                {!ticket.closed && (
+                  <button
+                    onClick={() => setShowNewComment(true)}
+                    className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
+                  >
+                    <Plus className="size-4 me-1" />
+                    New Reply
+                  </button>
+                )}
               </div>
               <div className="card-body">
                 {localComments.length === 0 && !showNewComment ? (
@@ -483,14 +485,18 @@ export default function View({
                       <MessageSquare className="size-8 text-default-400" />
                     </div>
                     <h6 className="text-default-900 font-medium mb-1">No replies yet</h6>
-                    <p className="text-default-500 text-sm mb-4">Reply to discuss this ticket</p>
-                    <button
-                      onClick={() => setShowNewComment(true)}
-                      className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
-                    >
-                      <Plus className="size-4 me-1" />
-                      Reply
-                    </button>
+                    <p className="text-default-500 text-sm mb-4">
+                      {ticket.closed ? 'No replies were made for this ticket' : 'Reply to discuss this ticket'}
+                    </p>
+                    {!ticket.closed && (
+                      <button
+                        onClick={() => setShowNewComment(true)}
+                        className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
+                      >
+                        <Plus className="size-4 me-1" />
+                        Reply
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -525,46 +531,115 @@ export default function View({
                       </div>
                     ))}
                     
-                    {/* Show reply form or add reply button */}
-                    {showNewComment ? (
-                      <form onSubmit={handleSubmitComment} className="space-y-4 pt-4 border-t border-default-200">
-                        <TextEditor
-                          key={editorKey}
-                          placeholder="Write your message..."
-                          onChange={handleCommentChange}
-                          showToolbar={true}
-                          className="min-h-[150px]"
-                        />
-                        <div className="flex items-center justify-end gap-2">
+                    {/* Show reply form or add reply button - only when ticket is open */}
+                    {!ticket.closed && (
+                      <>
+                        {showNewComment ? (
+                          <form onSubmit={handleSubmitComment} className="space-y-4 pt-4 border-t border-default-200">
+                            <TextEditor
+                              key={editorKey}
+                              placeholder="Write your message..."
+                              onChange={handleCommentChange}
+                              showToolbar={true}
+                              className="min-h-[150px]"
+                            />
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setShowNewComment(false)}
+                                className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={isSubmitting || !commentText.trim()}
+                                className="btn bg-primary text-white btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Send Message
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
                           <button
-                            type="button"
-                            onClick={() => setShowNewComment(false)}
-                            className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary"
+                            onClick={() => setShowNewComment(true)}
+                            className="w-full btn btn-sm bg-transparent text-default-600 border border-dashed border-default-300 hover:bg-primary/10 hover:text-primary"
                           >
-                            Cancel
+                            <Plus className="size-4 me-1" />
+                            Add Reply
                           </button>
-                          <button
-                            type="submit"
-                            disabled={isSubmitting || !commentText.trim()}
-                            className="btn bg-primary text-white btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Send Message
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <button
-                        onClick={() => setShowNewComment(true)}
-                        className="w-full btn btn-sm bg-transparent text-default-600 border border-dashed border-default-300 hover:bg-primary/10 hover:text-primary"
-                      >
-                        <Plus className="size-4 me-1" />
-                        Add Reply
-                      </button>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Customer Review Section - Only show if review exists */}
+            {ticket.review && (
+              <div className="card">
+                <div className="card-header">
+                  <h6 className="card-title flex items-center gap-2">
+                    <Star className="size-5 text-warning" />
+                    Customer Review
+                  </h6>
+                </div>
+                <div className="card-body">
+                  <div className="p-4 bg-gradient-to-r from-warning/5 to-primary/5 rounded-xl border border-warning/20">
+                    <div className="flex items-start gap-4">
+                      {/* User Avatar */}
+                      <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg uppercase shrink-0">
+                        {ticket.review.user?.name?.charAt(0) || 'U'}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        {/* User Name and Date */}
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-default-900">
+                            {ticket.review.user?.name || 'Customer'}
+                          </span>
+                          <span className="text-xs text-default-400">
+                            {formatDateTime(ticket.review.created_at)}
+                          </span>
+                        </div>
+                        
+                        {/* Star Rating */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star 
+                                key={star} 
+                                className={`size-5 ${
+                                  star <= ticket.review.rating 
+                                    ? 'text-warning fill-warning' 
+                                    : 'text-default-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm font-semibold text-warning">{ticket.review.rating}/5</span>
+                          <span className="text-sm text-default-500">
+                            {ticket.review.rating === 1 && '(Poor)'}
+                            {ticket.review.rating === 2 && '(Fair)'}
+                            {ticket.review.rating === 3 && '(Good)'}
+                            {ticket.review.rating === 4 && '(Very Good)'}
+                            {ticket.review.rating === 5 && '(Excellent)'}
+                          </span>
+                        </div>
+                        
+                        {/* Review Text */}
+                        {ticket.review.review && (
+                          <div className="text-sm text-default-600 italic bg-white/50 p-3 rounded-lg border border-default-100">
+                            "{ticket.review.review}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Sidebar */}

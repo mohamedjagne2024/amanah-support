@@ -13,6 +13,7 @@ use Inertia\Inertia;
 use App\Events\TicketNewComment;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Attachment;
+use App\Models\Review;
 use App\Events\TicketCreated;
 
 class ContactsTicketController extends Controller
@@ -135,11 +136,22 @@ class ContactsTicketController extends Controller
             ->where('ticket_id', $ticket->id ?? null)
             ->get();
 
+        // Get existing review for this ticket by the current user
+        $review = Review::where('ticket_id', $ticket->id)
+            ->where('user_id', $user['id'])
+            ->first();
+
         return Inertia::render('contact-ticket/view', [
             'title' => $ticket->subject ? '#TKT-' . $ticket->uid . ' ' . $ticket->subject : '',
             'footer' => $this->getFooter(),
             'attachments' => $attachments,
             'comments' => $comments,
+            'review' => $review ? [
+                'id' => $review->id,
+                'rating' => $review->rating,
+                'review' => $review->review,
+                'created_at' => $review->created_at,
+            ] : null,
             'ticket' => [
                 'id' => $ticket->id,
                 'uid' => $ticket->uid,
@@ -359,6 +371,63 @@ class ContactsTicketController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Ticket closed successfully.',
+        ]);
+    }
+
+    /**
+     * Submit a review for a ticket.
+     */
+    public function submitReview($ticketId)
+    {
+        $user = Auth()->user();
+
+        // Only allow reviewing own tickets
+        $ticket = Ticket::where('contact_id', $user['id'])
+            ->where(function ($query) use ($ticketId) {
+                $query->where('uid', $ticketId);
+                $query->orWhere('id', $ticketId);
+            })->first();
+
+        if (empty($ticket)) {
+            abort(404);
+        }
+
+        $request_data = Request::validate([
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'review' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        // Check if user already has a review for this ticket
+        $existingReview = Review::where('ticket_id', $ticket->id)
+            ->where('user_id', $user['id'])
+            ->first();
+
+        if ($existingReview) {
+            // Update existing review
+            $existingReview->update([
+                'rating' => $request_data['rating'],
+                'review' => $request_data['review'] ?? null,
+            ]);
+            $review = $existingReview;
+        } else {
+            // Create new review
+            $review = Review::create([
+                'ticket_id' => $ticket->id,
+                'user_id' => $user['id'],
+                'rating' => $request_data['rating'],
+                'review' => $request_data['review'] ?? null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Review submitted successfully.',
+            'review' => [
+                'id' => $review->id,
+                'rating' => $review->rating,
+                'review' => $review->review,
+                'created_at' => $review->created_at,
+            ],
         ]);
     }
 }

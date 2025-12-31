@@ -1,9 +1,10 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LuChevronRight } from 'react-icons/lu';
 import { menuItemsData, type MenuItemType } from './menu';
 import { getAllMenuHrefs, isItemActive, isMenuActive } from './navigation-utils';
 import type { SharedData } from '@/types';
+import { useUnreadChatListener } from '@/hooks/usePusher';
 
 const MenuItemWithChildren = ({ item, allHrefs }: { item: MenuItemType; allHrefs: string[] }) => {
   const { url } = usePage();
@@ -73,8 +74,31 @@ const MenuItem = ({ item, allHrefs }: { item: MenuItemType; allHrefs: string[] }
 };
 
 const AppMenu = () => {
-  const { props } = usePage<SharedData>();
-  const unreadChatCount = props.unreadChatCount || 0;
+  const { props, url } = usePage<SharedData>();
+  const initialUnreadCount = props.unreadChatCount || 0;
+  
+  // Use local state for real-time updates
+  const [unreadChatCount, setUnreadChatCount] = useState(initialUnreadCount);
+  
+  // Reset count when navigating to chat page (messages get marked as read)
+  useEffect(() => {
+    if (url.startsWith('/chat/')) {
+      setUnreadChatCount(0);
+    }
+  }, [url]);
+  
+  // Sync with server data on page navigation
+  useEffect(() => {
+    setUnreadChatCount(initialUnreadCount);
+  }, [initialUnreadCount]);
+  
+  // Listen for real-time unread message notifications
+  useUnreadChatListener(() => {
+    // Only increment if we're not currently on the chat page
+    if (!url.startsWith('/chat/')) {
+      setUnreadChatCount((prev) => prev + 1);
+    }
+  });
 
   // Get all hrefs from menu items for proper active state detection
   const allHrefs = useMemo(() => getAllMenuHrefs(menuItemsData), []);
@@ -112,3 +136,4 @@ const AppMenu = () => {
 };
 
 export default AppMenu;
+

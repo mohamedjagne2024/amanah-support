@@ -408,7 +408,20 @@ class TicketsController extends Controller
                 'status' => $ticket->status,
                 'status_label' => $ticket->status_label,
                 'closed' => $ticket->is_closed,
-                'review' => $ticket->review,
+                'review' => (function () use ($ticket) {
+                    $latestReview = $ticket->reviews()->with('user')->latest()->first();
+                    if (!$latestReview) return null;
+                    return [
+                        'id' => $latestReview->id,
+                        'rating' => $latestReview->rating,
+                        'review' => $latestReview->review,
+                        'created_at' => $latestReview->created_at,
+                        'user' => $latestReview->user ? [
+                            'id' => $latestReview->user->id,
+                            'name' => $latestReview->user->name,
+                        ] : null,
+                    ];
+                })(),
                 'department_id' => $ticket->department_id,
                 'department' => $ticket->department ? $ticket->department->name : 'N/A',
                 'category_id' => $ticket->category_id,

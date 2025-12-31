@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\NewPublicChatMessage;
+use App\Events\NewUnreadChatMessage;
 use App\Models\Attachment;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -31,7 +32,7 @@ class ChatController extends Controller
                 ->withCount([
                     'messages',
                     'messages as messages_count' => function ($query) {
-                        $query->whereNotNull('user_id')->where('is_read', '==', 0);
+                        $query->whereNotNull('contact_id')->where('is_read', 0);
                     }
                 ])
                 ->paginate(10)
@@ -235,7 +236,7 @@ class ChatController extends Controller
                 ->withCount([
                     'messages',
                     'messages as messages_count' => function ($query) {
-                        $query->whereNotNull('user_id')->where('is_read', '==', 0);
+                        $query->whereNotNull('contact_id')->where('is_read', 0);
                     }
                 ])
                 ->paginate(10)
@@ -273,7 +274,7 @@ class ChatController extends Controller
                 ->withCount([
                     'messages',
                     'messages as messages_count' => function ($query) {
-                        $query->where('is_read', '==', 0);
+                        $query->whereNotNull('contact_id')->where('is_read', 0);
                     }
                 ])
                 ->paginate(10)
@@ -383,6 +384,9 @@ class ChatController extends Controller
         }
 
         broadcast(new NewPublicChatMessage($message))->toOthers();
+
+        // Broadcast to admin notifications channel for real-time badge update
+        broadcast(new NewUnreadChatMessage($message->conversation_id, $message->id));
 
         return response()->json($message);
     }

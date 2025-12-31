@@ -145,3 +145,27 @@ export function useChatMessageListener(
     }
   );
 }
+
+type NewUnreadMessageEvent = {
+  conversationId: number;
+  messageId: number;
+};
+
+/**
+ * Hook to listen for new unread chat messages (used for admin notification badge)
+ * Listens to a global admin channel so the sidebar badge can update in real-time
+ * @param onNewUnreadMessage - Callback when a new unread message arrives
+ */
+export function useUnreadChatListener(
+  onNewUnreadMessage: (data: NewUnreadMessageEvent) => void
+) {
+  usePusherChannel(
+    'admin.notifications',
+    'new-unread-message',
+    (data: NewUnreadMessageEvent) => {
+      if (data) {
+        onNewUnreadMessage(data);
+      }
+    }
+  );
+}
