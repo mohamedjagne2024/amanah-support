@@ -30,19 +30,8 @@ class HomeController extends Controller
             'page' => FrontPage::where('slug', 'home')->first(),
             'footer' => FrontPage::where('slug', 'footer')->first(),
 
-            'hide_ticket_fields' => json_decode(Settings::where('name', 'hide_ticket_fields')->value('value') ?? '[]', true),
             'require_login' => collect(json_decode(Settings::where('name', 'enable_options')->value('value') ?? '[]', true))
                 ->first(fn($option) => $option['slug'] === 'require_login_submit_ticket' && ($option['value'] ?? false)),
-            'departments' => Department::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
-            'all_categories' => Category::orderBy('name')
-                ->get(),
-            'types' => Type::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
         ]);
     }
 
@@ -81,29 +70,9 @@ class HomeController extends Controller
 
     public function ticketPublicStore()
     {
-        $required_fields = [];
-        $hide_ticket_fields = [];
-
-        $get_required_fields = Settings::where('name', 'required_ticket_fields')->first();
-        $get_hide_ticket_fields = Settings::where('name', 'hide_ticket_fields')->first();
-        if (!empty($get_required_fields)) {
-            $required_fields = json_decode($get_required_fields->value, true);
-        }
-        if (!empty($get_hide_ticket_fields)) {
-            $hide_ticket_fields = json_decode($get_hide_ticket_fields->value, true);
-        }
-
-        $is_required = array_filter($required_fields, function ($rf) use ($hide_ticket_fields) {
-            return !in_array($rf, $hide_ticket_fields);
-        });
-
         $ticket_data = Request::validate([
             'name' => ['required', 'max:40'],
             'subject' => ['required'],
-            'department_id' => ['nullable', Rule::exists('departments', 'id')],
-            'category_id' => ['nullable', Rule::exists('categories', 'id')],
-            'sub_category_id' => ['nullable', Rule::exists('categories', 'id')],
-            'type_id' => ['nullable', Rule::exists('types', 'id')],
             'email' => ['required', 'max:60', 'email'],
             'details' => ['required'],
             'custom_field' => ['nullable'],
@@ -126,10 +95,6 @@ class HomeController extends Controller
         $ticketObject = [
             'subject' => $ticket_data['subject'],
             'details' => $ticket_data['details'],
-            'department_id' => $ticket_data['department_id'],
-            'category_id' => $ticket_data['category_id'],
-            'sub_category_id' => $ticket_data['sub_category_id'],
-            'type_id' => $ticket_data['type_id'],
             'contact_id' => $contact->id,
             'status' => 'pending', // default status for new tickets
             'priority' => 'low', // default priority for new tickets

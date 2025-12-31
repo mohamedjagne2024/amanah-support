@@ -89,21 +89,7 @@ type PageData = {
   };
 };
 
-type CategoryOption = {
-  id: number;
-  name: string;
-  parent_id?: number | null;
-};
 
-type DepartmentOption = {
-  id: number;
-  name: string;
-};
-
-type TypeOption = {
-  id: number;
-  name: string;
-};
 
 type CustomField = {
   id: number;
@@ -124,10 +110,6 @@ type HomePageProps = {
     html: PageData | null;
   } | null;
   custom_fields: CustomField[];
-  hide_ticket_fields: string[];
-  departments: DepartmentOption[];
-  all_categories: CategoryOption[];
-  types: TypeOption[];
 };
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -151,10 +133,6 @@ export default function Home({
   title, 
   page, 
   custom_fields = [],
-  hide_ticket_fields = [],
-  departments = [],
-  all_categories = [],
-  types = [],
   footer,
 }: HomePageProps & { footer?: any }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -175,33 +153,11 @@ export default function Home({
     email: '',
     subject: '',
     details: '',
-    department_id: '',
-    category_id: '',
-    sub_category_id: '',
-    type_id: '',
     files: [] as File[],
     custom_field: {} as Record<string, string>,
   });
 
-  const departmentOptions = useMemo<SelectOption[]>(
-    () => departments.map((d) => ({ label: d.name, value: d.id })),
-    [departments]
-  );
 
-  const categoryOptions = useMemo<SelectOption[]>(
-    () => all_categories.filter((c) => !c.parent_id).map((c) => ({ label: c.name, value: c.id })),
-    [all_categories]
-  );
-
-  const subCategoryOptions = useMemo<SelectOption[]>(
-    () => all_categories.filter((c) => c.parent_id === Number(data.category_id)).map((c) => ({ label: c.name, value: c.id })),
-    [all_categories, data.category_id]
-  );
-
-  const typeOptions = useMemo<SelectOption[]>(
-    () => types.map((t) => ({ label: t.name, value: t.id })),
-    [types]
-  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -230,7 +186,6 @@ export default function Home({
     });
   };
 
-  const isFieldHidden = (field: string) => hide_ticket_fields.includes(field);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -582,71 +537,6 @@ export default function Home({
                         {errors.subject && <p className="text-danger text-sm mt-1">{errors.subject}</p>}
                       </div>
 
-                      {/* Optional Fields */}
-                      <div className="grid sm:grid-cols-2 gap-5">
-                        {!isFieldHidden('department') && (
-                          <div>
-                            <Combobox
-                              label="Department"
-                              options={departmentOptions}
-                              value={departmentOptions.find((opt) => String(opt.value) === data.department_id) || null}
-                              onChange={(option) => setData('department_id', option?.value?.toString() || '')}
-                              placeholder="Select department"
-                              disabled={processing || !isLoggedIn}
-                              isClearable
-                              isSearchable
-                            />
-                          </div>
-                        )}
-                        {!isFieldHidden('ticket_type') && (
-                          <div>
-                            <Combobox
-                              label="Type"
-                              options={typeOptions}
-                              value={typeOptions.find((opt) => String(opt.value) === data.type_id) || null}
-                              onChange={(option) => setData('type_id', option?.value?.toString() || '')}
-                              placeholder="Select type"
-                              disabled={processing || !isLoggedIn}
-                              isClearable
-                              isSearchable
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {!isFieldHidden('category') && (
-                        <div className="grid sm:grid-cols-2 gap-5">
-                          <div>
-                            <Combobox
-                              label="Category"
-                              options={categoryOptions}
-                              value={categoryOptions.find((opt) => String(opt.value) === data.category_id) || null}
-                              onChange={(option) => {
-                                setData('category_id', option?.value?.toString() || '');
-                                setData('sub_category_id', '');
-                              }}
-                              placeholder="Select category"
-                              disabled={processing || !isLoggedIn}
-                              isClearable
-                              isSearchable
-                            />
-                          </div>
-                          {!isFieldHidden('sub_category') && data.category_id && subCategoryOptions.length > 0 && (
-                            <div>
-                              <Combobox
-                                label="Sub Category"
-                                options={subCategoryOptions}
-                                value={subCategoryOptions.find((opt) => String(opt.value) === data.sub_category_id) || null}
-                                onChange={(option) => setData('sub_category_id', option?.value?.toString() || '')}
-                                placeholder="Select sub category"
-                                disabled={processing || !isLoggedIn}
-                                isClearable
-                                isSearchable
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
 
                       {/* Details */}
                       <div>

@@ -1,43 +1,19 @@
 import { useForm } from "@inertiajs/react";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import PublicLayout from "@/layouts/public-layout";
 import PageMeta from "@/components/PageMeta";
-import { Ticket, ArrowLeft, Send, Upload, X, FileText } from "lucide-react";
+import { Send, Upload, X, FileText } from "lucide-react";
 import { Link } from "@inertiajs/react";
-import Combobox, { SelectOption } from "@/components/Combobox";
 import TextEditor from "@/components/TextEditor";
 import Breadcrumb from "@/components/Breadcrumb";
 
-type Department = {
-  id: number;
-  name: string;
-};
-
-type CategoryOption = {
-  id: number;
-  name: string;
-};
-
-type TypeOption = {
-  id: number;
-  name: string;
-};
-
 type PageProps = {
   title: string;
-  departments: Department[];
-  all_categories: CategoryOption[];
-  types: TypeOption[];
-  hide_ticket_fields: string[];
   footer?: any;
 };
 
 export default function CreateContactTicket({ 
   title, 
-  departments = [], 
-  all_categories = [],
-  types = [],
-  hide_ticket_fields = [],
   footer 
 }: PageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,28 +23,9 @@ export default function CreateContactTicket({
   const { data, setData, post, processing, errors, reset } = useForm({
     subject: '',
     details: '',
-    department_id: '',
-    category_id: '',
-    type_id: '',
     files: [] as File[],
   });
 
-  const departmentOptions = useMemo<SelectOption[]>(
-    () => departments.map((d) => ({ label: d.name, value: d.id })),
-    [departments]
-  );
-
-  const categoryOptions = useMemo<SelectOption[]>(
-    () => all_categories.map((c) => ({ label: c.name, value: c.id })),
-    [all_categories]
-  );
-
-  const typeOptions = useMemo<SelectOption[]>(
-    () => types.map((t) => ({ label: t.name, value: t.id })),
-    [types]
-  );
-
-  const isFieldHidden = (field: string) => hide_ticket_fields.includes(field);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -151,62 +108,6 @@ export default function CreateContactTicket({
                     )}
                   </div>
 
-                  {/* Optional Fields - Department & Type */}
-                  <div className="grid sm:grid-cols-2 gap-5">
-                    {!isFieldHidden('department') && (
-                      <div>
-                        <Combobox
-                          label="Department"
-                          options={departmentOptions}
-                          value={departmentOptions.find((opt) => String(opt.value) === data.department_id) || null}
-                          onChange={(option) => setData('department_id', option?.value?.toString() || '')}
-                          placeholder="Select department"
-                          disabled={processing}
-                          isClearable
-                          isSearchable
-                        />
-                        {errors.department_id && (
-                          <p className="text-danger text-sm mt-1">{errors.department_id}</p>
-                        )}
-                      </div>
-                    )}
-                    {!isFieldHidden('ticket_type') && (
-                      <div>
-                        <Combobox
-                          label="Type"
-                          options={typeOptions}
-                          value={typeOptions.find((opt) => String(opt.value) === data.type_id) || null}
-                          onChange={(option) => setData('type_id', option?.value?.toString() || '')}
-                          placeholder="Select type"
-                          disabled={processing}
-                          isClearable
-                          isSearchable
-                        />
-                        {errors.type_id && (
-                          <p className="text-danger text-sm mt-1">{errors.type_id}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Category */}
-                  {!isFieldHidden('category') && (
-                    <div>
-                      <Combobox
-                        label="Category"
-                        options={categoryOptions}
-                        value={categoryOptions.find((opt) => String(opt.value) === data.category_id) || null}
-                        onChange={(option) => setData('category_id', option?.value?.toString() || '')}
-                        placeholder="Select category"
-                        disabled={processing}
-                        isClearable
-                        isSearchable
-                      />
-                      {errors.category_id && (
-                        <p className="text-danger text-sm mt-1">{errors.category_id}</p>
-                      )}
-                    </div>
-                  )}
 
                   {/* Details Field */}
                   <div>

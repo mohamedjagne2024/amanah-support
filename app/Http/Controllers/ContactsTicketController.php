@@ -177,21 +177,9 @@ class ContactsTicketController extends Controller
 
     public function create()
     {
-        $hide_ticket_fields = json_decode(Settings::where('name', 'hide_ticket_fields')->value('value') ?? '[]', true);
-
         return Inertia::render('contact-ticket/create', [
             'title' => 'Create New Ticket',
             'footer' => $this->getFooter(),
-            'hide_ticket_fields' => $hide_ticket_fields,
-            'departments' => Department::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
-            'all_categories' => Category::orderBy('name')->get(),
-            'types' => Type::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
         ]);
     }
 
@@ -202,9 +190,6 @@ class ContactsTicketController extends Controller
         $request_data = Request::validate([
             'subject' => ['required', 'string', 'max:255'],
             'details' => ['required', 'string'],
-            'department_id' => ['nullable', 'exists:departments,id'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'type_id' => ['nullable', 'exists:types,id'],
             'files.*' => ['nullable', 'file', 'max:5120'],
         ]);
 
