@@ -120,7 +120,7 @@ export const menuItemsData: MenuItemType[] = [
     icon: LuSettings,
     children: [
       { key: 'General', label: 'General', href: '/settings/general'},
-      { key: 'Departments', label: 'Departments', href: '/settings/departments'},
+      { key: 'Regions', label: 'Regions', href: '/settings/regions'},
       { key: 'Categories', label: 'Categories', href: '/settings/categories'},
       { key: 'Types', label: 'Types', href: '/settings/types'},
       { key: 'Email Templates', label: 'Email Templates', href: '/settings/templates'},

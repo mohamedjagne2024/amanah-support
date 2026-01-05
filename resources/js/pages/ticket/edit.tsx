@@ -28,7 +28,7 @@ type ContactOption = {
   name: string;
 };
 
-type DepartmentOption = {
+type RegionOption = {
   id: number;
   name: string;
 };
@@ -88,8 +88,8 @@ type TicketData = {
   status_label: string;
   closed: boolean;
   review: any;
-  department_id: number | null;
-  department: string;
+  region_id: number | null;
+  region: string;
   category_id: number | null;
   category: string;
   assigned_to: number | null;
@@ -111,7 +111,7 @@ type EditTicketPageProps = {
   ticket: TicketData;
   contacts: ContactOption[];
   usersExceptContacts: ContactOption[];
-  departments: DepartmentOption[];
+  regions: RegionOption[];
   priorities: PriorityOption[];
   statuses: StatusOption[];
   types: TypeOption[];
@@ -126,7 +126,7 @@ export default function Edit({
   ticket,
   contacts,
   usersExceptContacts,
-  departments,
+  regions,
   priorities,
   statuses,
   types,
@@ -149,10 +149,10 @@ export default function Edit({
     contact_id: ticket.contact_id?.toString() || '',
     priority: ticket.priority || '',
     status: ticket.status || '',
-    type_id: ticket.type_id?.toString() || '',
-    department_id: ticket.department_id?.toString() || '',
+    region_id: ticket.region_id?.toString() || '',
     assigned_to: ticket.assigned_to?.toString() || '',
     category_id: ticket.category_id?.toString() || '',
+    type_id: ticket.type_id?.toString() || '',
     subject: ticket.subject || '',
     details: ticket.details || '',
     due: ticket.due || '',
@@ -186,13 +186,13 @@ export default function Edit({
     [usersExceptContacts]
   );
 
-  const departmentOptions = useMemo<SelectOption[]>(
+  const regionOptions = useMemo<SelectOption[]>(
     () =>
-      departments.map((dept) => ({
-        label: dept.name,
-        value: dept.id,
+      regions.map((region) => ({
+        label: region.name,
+        value: region.id,
       })),
-    [departments]
+    [regions]
   );
 
   const priorityOptions = useMemo<SelectOption[]>(
@@ -806,32 +806,32 @@ export default function Edit({
                     />
                   </div>
 
-                  {/* Department */}
+                  {/* Region */}
                   <div>
-                    <input type="hidden" name="department_id" value={data.department_id} />
+                    <input type="hidden" name="region_id" value={data.region_id} />
                     <Combobox
                       label={
                         <>
-                          Department
-                          {requiredFields.includes('department') && (
+                          Region
+                          {requiredFields.includes('region') && (
                             <span className="text-danger">*</span>
                           )}
                         </>
                       }
-                      options={departmentOptions}
+                      options={regionOptions}
                       value={
-                        departmentOptions.find(
-                          (opt) => String(opt.value) === data.department_id
+                        regionOptions.find(
+                          (opt) => String(opt.value) === data.region_id
                         ) || null
                       }
                       onChange={(option) =>
-                        setData('department_id', option?.value?.toString() || '')
+                        setData('region_id', option?.value?.toString() || '')
                       }
-                      placeholder="Select department"
+                      placeholder="Select region"
                       disabled={processing}
                       isClearable
                       isSearchable
-                      error={errors.department_id}
+                      error={errors.region_id}
                     />
                   </div>
 

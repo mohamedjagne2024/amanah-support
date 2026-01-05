@@ -1,11 +1,11 @@
 <!doctype html>
 <html>
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Ticket mail</title>
     <style>
-
         .mail-body img {
             border: none;
             -ms-interpolation-mode: bicubic;
@@ -20,24 +20,31 @@
             border-collapse: separate;
             mso-table-lspace: 0pt;
             mso-table-rspace: 0pt;
-            width: 100%; }
-        .mail-body table.bordered_table{
+            width: 100%;
+        }
+
+        .mail-body table.bordered_table {
             border-collapse: collapse;
             width: 100%;
             margin-bottom: 10px;
         }
-        .mail-body table.bordered_table th, .mail-body table.bordered_table td{
+
+        .mail-body table.bordered_table th,
+        .mail-body table.bordered_table td {
             border: 1px solid #ddd;
             padding: 8px;
         }
-        .mail-body table td b{
+
+        .mail-body table td b {
             font-weight: 600;
         }
+
         .mail-body table td {
             font-family: sans-serif;
             font-size: 14px;
             vertical-align: top;
         }
+
         .mail-body {
             background-color: #f6f6f6;
             width: 100%;
@@ -90,6 +97,7 @@
             text-align: center;
             width: 100%;
         }
+
         .mail-body .footer td,
         .mail-body .footer p,
         .mail-body .footer span,
@@ -128,6 +136,7 @@
             margin-bottom: 15px;
             line-height: 1.4;
         }
+
         .mail-body p li,
         .mail-body ul li,
         .mail-body ol li {
@@ -137,17 +146,23 @@
 
         .mail-body .btn {
             box-sizing: border-box;
-            width: 100%; }
-        .mail-body .btn > tbody > tr > td {
-            padding-bottom: 15px; }
+            width: 100%;
+        }
+
+        .mail-body .btn>tbody>tr>td {
+            padding-bottom: 15px;
+        }
+
         .mail-body .btn table {
             width: auto;
         }
+
         .mail-body .btn table td {
             background-color: #ffffff;
             border-radius: 5px;
             text-align: center;
         }
+
         .mail-body .btn a {
             background-color: #ffffff;
             border: solid 1px #7366ff;
@@ -230,16 +245,18 @@
             margin: 20px 0;
         }
 
-        .mail-body .main{
+        .mail-body .main {
             background-image: url('https://res.cloudinary.com/robinbd/image/upload/v1663394450/mail-template/background-bottom.png');
             background-repeat: no-repeat;
             background-size: 100%;
             background-position: 50% 100%;
         }
-        .gap-bottom{
+
+        .gap-bottom {
             padding-bottom: 10px;
         }
-        .gap-top{
+
+        .gap-top {
             padding-top: 10px;
         }
 
@@ -248,6 +265,7 @@
                 font-size: 28px !important;
                 margin-bottom: 10px !important;
             }
+
             table.mail-body p,
             table.mail-body ul,
             table.mail-body ol,
@@ -256,28 +274,35 @@
             table.mail-body a {
                 font-size: 16px !important;
             }
+
             table.mail-body .wrapper,
             table.mail-body .article {
                 padding: 10px !important;
             }
+
             table.mail-body .content {
                 padding: 0 !important;
             }
+
             table.mail-body .container {
                 padding: 0 !important;
                 width: 100% !important;
             }
+
             table.mail-body .main {
                 border-left-width: 0 !important;
                 border-radius: 0 !important;
                 border-right-width: 0 !important;
             }
+
             table.mail-body .btn table {
                 width: 100% !important;
             }
+
             table.mail-body .btn a {
                 width: 100% !important;
             }
+
             table.mail-body .img-responsive {
                 height: auto !important;
                 max-width: 100% !important;
@@ -289,6 +314,7 @@
             .mail-body .ExternalClass {
                 width: 100%;
             }
+
             .mail-body .ExternalClass,
             .mail-body .ExternalClass p,
             .mail-body .ExternalClass span,
@@ -297,6 +323,7 @@
             .mail-body .ExternalClass div {
                 line-height: 100%;
             }
+
             .mail-body .apple-link a {
                 color: inherit !important;
                 font-family: inherit !important;
@@ -305,6 +332,7 @@
                 line-height: inherit !important;
                 text-decoration: none !important;
             }
+
             #MessageViewBody a {
                 color: inherit;
                 text-decoration: none;
@@ -313,128 +341,131 @@
                 font-weight: inherit;
                 line-height: inherit;
             }
+
             .mail-body .btn-primary table td:hover {
                 background-color: #34495e !important;
             }
+
             .mail-body .btn-primary a:hover {
                 background-color: #34495e !important;
                 border-color: #34495e !important;
             }
         }
-
     </style>
 </head>
+
 <body>
-<span class="preheader">Helpdesk ticket update</span>
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" class="mail-body">
-    <tr>
-        <td></td>
-        <td class="container">
-            <div class="content">
+    <span class="preheader">Helpdesk ticket update</span>
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="mail-body">
+        <tr>
+            <td></td>
+            <td class="container">
+                <div class="content">
 
-                <!-- START CENTERED WHITE CONTAINER -->
-                <table role="presentation" class="main">
+                    <!-- START CENTERED WHITE CONTAINER -->
+                    <table role="presentation" class="main">
 
-                    <!-- START MAIN CONTENT AREA -->
-                    <tr>
-                        <td class="header">
-                            <a href="#">
-                                <img style="height: 60px; width: auto; margin: 15px auto;display: block" src="https://res.cloudinary.com/robinbd/image/upload/v1663394454/mail-template/help-desk-logo.png" alt="help desk" />
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="wrapper">
-
-                            <table role="presentation" class="main-table" border="0" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td>
-                                        <p>Hi {name},</p>
-                                        <p>{update_message} The following is the ticket info, you would be able to see in details with visiting the ticket link.</p>
-                                        <table class="bordered_table">
-                                            <tbody>
-                                            <tr>
-                                                <td><b>Ticket number:</b></td>
-                                                <td>{uid}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><b>Subject:</b></td>
-                                                <td>{subject}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><b>Priority:</b></td>
-                                                <td>{priority}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><b>Status:</b></td>
-                                                <td>{status}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><b>Ticket type:</b></td>
-                                                <td>{type}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><b>Department:</b></td>
-                                                <td>{department}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><b>Category:</b></td>
-                                                <td>{category}</td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                            <tbody>
-                                            <tr>
-                                                <td class="gap-bottom"> You would be able view the ticket from the following link.</td>
-                                            </tr>
-                                            <tr>
-                                                <td align="left">
-                                                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                                        <tbody>
-                                                        <tr>
-                                                            <td class="btn btn-primary"><a href="{url}" target="_blank">View Ticket</a> </td>
-                                                        </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                        <p class="gap-top">We will send you also different email regarding the ticket update but if you login on the system you would be able to discuss continue with users who are associate with the ticket.</p>
-                                        <p>Thank you!</p>
-                                        <p>Best regards, <br/>{sender_name}</p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- END MAIN CONTENT AREA -->
-                </table>
-                <!-- END CENTERED WHITE CONTAINER -->
-
-                <!-- START FOOTER -->
-                <div class="footer">
-                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                        <!-- START MAIN CONTENT AREA -->
                         <tr>
-                            <td class="content-block">
-                                <span class="apple-link">HelpDesk - A online ticket support system</span>
+                            <td class="header">
+                                <a href="#">
+                                    <img style="height: 60px; width: auto; margin: 15px auto;display: block" src="https://res.cloudinary.com/robinbd/image/upload/v1663394454/mail-template/help-desk-logo.png" alt="help desk" />
+                                </a>
                             </td>
                         </tr>
                         <tr>
-                            <td class="content-block powered-by">
-                                © 2022 <a href="http://w3bd.com">W3BD</a> - All rights reserved.
+                            <td class="wrapper">
+
+                                <table role="presentation" class="main-table" border="0" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td>
+                                            <p>Hi {name},</p>
+                                            <p>{update_message} The following is the ticket info, you would be able to see in details with visiting the ticket link.</p>
+                                            <table class="bordered_table">
+                                                <tbody>
+                                                    <tr>
+                                                        <td><b>Ticket number:</b></td>
+                                                        <td>{uid}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><b>Subject:</b></td>
+                                                        <td>{subject}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><b>Priority:</b></td>
+                                                        <td>{priority}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><b>Status:</b></td>
+                                                        <td>{status}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><b>Ticket type:</b></td>
+                                                        <td>{type}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><b>Region:</b></td>
+                                                        <td>{region}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><b>Category:</b></td>
+                                                        <td>{category}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="gap-bottom"> You would be able view the ticket from the following link.</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td align="left">
+                                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td class="btn btn-primary"><a href="{url}" target="_blank">View Ticket</a> </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <p class="gap-top">We will send you also different email regarding the ticket update but if you login on the system you would be able to discuss continue with users who are associate with the ticket.</p>
+                                            <p>Thank you!</p>
+                                            <p>Best regards, <br />{sender_name}</p>
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
+
+                        <!-- END MAIN CONTENT AREA -->
                     </table>
-                </div>
-                <!-- END FOOTER -->
+                    <!-- END CENTERED WHITE CONTAINER -->
 
-            </div>
-        </td>
-        <td></td>
-    </tr>
-</table>
+                    <!-- START FOOTER -->
+                    <div class="footer">
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td class="content-block">
+                                    <span class="apple-link">HelpDesk - A online ticket support system</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="content-block powered-by">
+                                    © 2022 <a href="http://w3bd.com">W3BD</a> - All rights reserved.
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <!-- END FOOTER -->
+
+                </div>
+            </td>
+            <td></td>
+        </tr>
+    </table>
 </body>
+
 </html>

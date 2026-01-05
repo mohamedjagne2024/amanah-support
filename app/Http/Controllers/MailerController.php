@@ -27,8 +27,8 @@ class MailerController extends Controller
             'Status' => $ticket->status_label,
             'Type' => $ticket->ticketType ? $ticket->ticketType->name : null,
             'Category' => $ticket->category ? $ticket->category->name : null,
-            'Client' => $ticket->client ? $ticket->client->first_name . ' ' . $ticket->client->last_name : null,
-            'Department' => $ticket->department ? $ticket->department->name : null,
+            'Contact' => $ticket->contact ? $ticket->contact->name : null,
+            'Region' => $ticket->region ? $ticket->region->name : null,
             'Assigned' => $ticket->assignedTo ? $ticket->assignedTo->first_name . ' ' . $ticket->assignedTo->last_name : null,
             'Details' => $ticket->details,
         ];
@@ -58,7 +58,7 @@ class MailerController extends Controller
                     }
                     </style></head><body style='background-color: #f6f6f6; font-family: sans-serif; -webkit-font-smoothing: antialiased; font-size: 14px; line-height: 1.4; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%;'>
                     <span class='preheader' style='color: transparent; display: none; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all; visibility: hidden; width: 0;'>" . $messageData['subject'] . "</span>
-                    <p>親愛的 " . $ticketObject['Client'] . "</p>
+                    <p>親愛的 " . $ticketObject['Contact'] . "</p>
                     <p>以下為你所輸入之支援內容:</p>";
 
         if ($messageData['type'] == 'change_status') {

@@ -28,9 +28,10 @@ final class EmailService
         $emailFrom = $settings['email_from'] ?? null;
         $emailFromName = $settings['email_from_name'] ?? null;
 
-        // Only configure if we have the minimum required settings
-        if (!$emailHost || !$emailPort || !$emailUsername || !$emailPassword) {
-            Log::warning('EmailService: Email settings are not fully configured');
+        // Only configure if we have the minimum required settings (host and port)
+        // Username, password, and encryption are optional for testing servers like Mailhog/Mailtrap
+        if (!$emailHost || !$emailPort) {
+            Log::warning('EmailService: Email settings are not fully configured (host and port required)');
             return;
         }
 
@@ -38,9 +39,14 @@ final class EmailService
         Config::set('mail.default', $emailType);
         Config::set('mail.mailers.smtp.host', $emailHost);
         Config::set('mail.mailers.smtp.port', (int) $emailPort);
-        Config::set('mail.mailers.smtp.username', $emailUsername);
-        Config::set('mail.mailers.smtp.password', $emailPassword);
-        Config::set('mail.mailers.smtp.encryption', $emailSecurity);
+
+        // Credentials are optional (for testing servers like Mailhog that don't require auth)
+        Config::set('mail.mailers.smtp.username', $emailUsername ?: null);
+        Config::set('mail.mailers.smtp.password', $emailPassword ?: null);
+
+        // Encryption is optional - set to null if empty or 'none' for testing servers
+        $encryption = (!$emailSecurity || strtolower($emailSecurity) === 'none') ? null : $emailSecurity;
+        Config::set('mail.mailers.smtp.encryption', $encryption);
 
         if ($emailFrom) {
             Config::set('mail.from.address', $emailFrom);
@@ -52,17 +58,16 @@ final class EmailService
 
     /**
      * Check if email is configured.
+     * Only requires host and port - credentials are optional for testing servers.
      */
     public function isConfigured(): bool
     {
         $settings = Settings::all()->pluck('value', 'name')->toArray();
-        
+
         $emailHost = $settings['email_host'] ?? null;
         $emailPort = $settings['email_port'] ?? null;
-        $emailUsername = $settings['email_username'] ?? null;
-        $emailPassword = $settings['email_password'] ?? null;
 
-        return !empty($emailHost) && !empty($emailPort) && !empty($emailUsername) && !empty($emailPassword);
+        return !empty($emailHost) && !empty($emailPort);
     }
 
     /**
@@ -209,4 +214,3 @@ final class EmailService
         $this->sendToUsers($userIds, $mailableClass, $data);
     }
 }
-

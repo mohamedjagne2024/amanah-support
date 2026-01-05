@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 
-class KnowledgeBaseController extends Controller {
+class KnowledgeBaseController extends Controller
+{
 
-    public function index() {
+    public function index()
+    {
         return Inertia::render('kb/index', [
             'title' => 'Knowledge base',
             'filters' => Request::all('search'),
@@ -27,7 +29,7 @@ class KnowledgeBaseController extends Controller {
                         'type_id' => $knowledge_base->type_id,
                         'details' => $knowledge_base->details
                     ];
-                } ),
+                }),
         ]);
     }
 

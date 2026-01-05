@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\TicketCreated;
 use App\Models\Attachment;
 use App\Models\Category;
-use App\Models\Department;
+use App\Models\Region;
 use App\Models\FrontPage;
 use App\Models\Settings;
 use App\Models\Ticket;
@@ -16,7 +16,6 @@ use App\Traits\HasGoogleCloudStorage;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class HomeController extends Controller
@@ -55,7 +54,7 @@ class HomeController extends Controller
             'footer' => FrontPage::where('slug', 'footer')->first(),
             'title' => 'Open Ticket - Amanah Support',
             'hide_ticket_fields' => $hide_ticket_fields,
-            'departments' => Department::orderBy('name')
+            'regions' => Region::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),

@@ -385,17 +385,17 @@ export default function General({ settings, currencies, users }: GeneralSettings
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    id="field_department"
-                    checked={data.required_ticket_fields?.includes('department') || false}
-                    onChange={() => handleTicketFieldToggle('department')}
+                    id="field_region"
+                    checked={data.required_ticket_fields?.includes('region') || false}
+                    onChange={() => handleTicketFieldToggle('region')}
                     disabled={processing}
                     className="size-4 rounded border-default-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed"
                   />
                   <label
-                    htmlFor="field_department"
+                    htmlFor="field_region"
                     className="ml-3 block text-sm font-medium text-default-900"
                   >
-                    Department
+                    Region
                   </label>
                 </div>
 

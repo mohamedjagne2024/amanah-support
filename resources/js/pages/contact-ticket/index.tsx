@@ -4,15 +4,16 @@ import { useCallback, useMemo, useState } from "react";
 import { DataTable, Badge, type DataTableRowAction } from "@/components/DataTable";
 import PublicLayout from "@/layouts/public-layout";
 import PageMeta from "@/components/PageMeta";
-import { Ticket, Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
+import { regions } from "@/routes";
 
 type Status = {
   id: number;
   name: string;
 };
 
-type Department = {
+type Region = {
   id: number;
   name: string;
 };
@@ -21,7 +22,7 @@ type TicketRecord = {
   id: number;
   uid: string;
   subject: string;
-  department: string | null;
+  region: string | null;
   priority: string | null;
   status: string | null;
   status_slug: string | null;
@@ -44,7 +45,7 @@ type TicketPaginator = {
 type TicketFilters = {
   search?: string | null;
   status_id?: string | null;
-  department_id?: string | null;
+  region_id?: string | null;
   type?: string | null;
 };
 
@@ -52,7 +53,7 @@ type PageProps = {
   title: string;
   tickets: TicketPaginator;
   statuses: Status[];
-  departments: Department[];
+  regions: Region[];
   filters: TicketFilters;
   footer?: any;
 };
@@ -61,7 +62,7 @@ export default function ContactTicketIndex({
   title,
   tickets,
   statuses,
-  departments,
+  regions,
   filters,
   footer,
 }: PageProps) {
@@ -78,7 +79,7 @@ export default function ContactTicketIndex({
   const safeFilters: TicketFilters = {
     search: filters?.search ?? "",
     status_id: filters?.status_id ?? "",
-    department_id: filters?.department_id ?? "",
+    region_id: filters?.region_id ?? "",
     type: filters?.type ?? "open",
   };
 
@@ -119,14 +120,14 @@ export default function ContactTicketIndex({
     (partial: Partial<{ 
       search: string; 
       status_id: string; 
-      department_id: string; 
+      region_id: string; 
       page: number; 
       perPage: number; 
     }>) => {
       const query = {
         search: partial.search ?? safeFilters.search ?? "",
         status_id: partial.status_id ?? safeFilters.status_id ?? "",
-        department_id: partial.department_id ?? safeFilters.department_id ?? "",
+        region_id: partial.region_id ?? safeFilters.region_id ?? "",
         type: activeTab,
         page: partial.page ?? safeTickets.current_page,
         limit: partial.perPage ?? safeTickets.per_page,
@@ -135,7 +136,7 @@ export default function ContactTicketIndex({
       const sanitized = Object.fromEntries(
         Object.entries(query).filter(([key, value]) => {
           if (value == null) return false;
-          if ((key === "search" || key === "status_id" || key === "department_id") && value === "") {
+          if ((key === "search" || key === "status_id" || key === "region_id") && value === "") {
             return false;
           }
           if (key === "page" && value === 1) {
@@ -156,7 +157,7 @@ export default function ContactTicketIndex({
         onFinish: () => setIsLoading(false)
       });
     },
-    [safeTickets.current_page, safeTickets.per_page, safeFilters.search, safeFilters.status_id, safeFilters.department_id, activeTab]
+    [safeTickets.current_page, safeTickets.per_page, safeFilters.search, safeFilters.status_id, safeFilters.region_id, activeTab]
   );
 
   const columns = useMemo<ColumnDef<TicketRecord, unknown>[]>(
@@ -184,12 +185,12 @@ export default function ContactTicketIndex({
         enableSorting: true
       },
       {
-        accessorKey: "department",
-        header: "Department",
+        accessorKey: "region",
+        header: "Region",
         cell: ({ getValue }) => {
-          const department = getValue<string | null>();
-          return department ? (
-            <span className="text-sm text-default-700">{department}</span>
+          const region = getValue<string | null>();
+          return region ? (
+            <span className="text-sm text-default-700">{region}</span>
           ) : (
             <span className="text-sm text-default-400 italic">-</span>
           );
@@ -345,10 +346,10 @@ export default function ContactTicketIndex({
               searchPlaceholder="Search by ticket ID, subject..."
               filters={[
                 {
-                  id: "department_id",
-                  label: "Department",
-                  placeholder: "All departments",
-                  options: (departments ?? []).map(d => ({
+                  id: "region_id",
+                  label: "Region",
+                  placeholder: "All regions",
+                  options: (regions ?? []).map(d => ({
                     label: d.name,
                     value: String(d.id)
                   }))
@@ -364,14 +365,14 @@ export default function ContactTicketIndex({
                 }
               ]}
               filterValues={{
-                department_id: safeFilters.department_id ?? "",
+                region_id: safeFilters.region_id ?? "",
                 status_id: safeFilters.status_id ?? ""
               }}
               onFilterChange={(filterId, value) => {
                 // Only submit if value actually changed
-                if (filterId === "department_id") {
-                  if (value === (safeFilters.department_id ?? "")) return;
-                  submitQuery({ department_id: value, page: 1 });
+                if (filterId === "region_id") {
+                  if (value === (safeFilters.region_id ?? "")) return;
+                  submitQuery({ region_id: value, page: 1 });
                 } else if (filterId === "status_id") {
                   if (value === (safeFilters.status_id ?? "")) return;
                   submitQuery({ status_id: value, page: 1 });

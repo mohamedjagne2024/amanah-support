@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Department;
+use App\Models\Region;
 use App\Models\FrontPage;
 use App\Models\Settings;
 use App\Models\Ticket;
@@ -58,12 +58,12 @@ class ContactsTicketController extends Controller
             'statuses' => collect(Ticket::STATUSES)->map(function ($label, $value) {
                 return ['value' => $value, 'name' => $label];
             })->values(),
-            'departments' => Department::orderBy('name')
+            'regions' => Region::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
             'tickets' => $ticketQuery
-                ->filter(Request::only(['search', 'status', 'department_id']))
+                ->filter(Request::only(['search', 'status', 'region_id']))
                 ->paginate($limit)
                 ->withQueryString()
                 ->through(function ($ticket) {
@@ -71,7 +71,7 @@ class ContactsTicketController extends Controller
                         'id' => $ticket->id,
                         'uid' => $ticket->uid,
                         'subject' => $ticket->subject,
-                        'department' => $ticket->department ? $ticket->department->name : null,
+                        'region' => $ticket->region ? $ticket->region->name : null,
                         'priority' => $ticket->priority_label,
                         'status' => $ticket->status_label,
                         'status_slug' => $ticket->status,
@@ -164,8 +164,8 @@ class ContactsTicketController extends Controller
                 'status' => $ticket->status,
                 'status_label' => $ticket->status_label,
                 'closed' => $ticket->is_closed,
-                'department_id' => $ticket->department_id,
-                'department' => $ticket->department ? $ticket->department->name : 'N/A',
+                'region_id' => $ticket->region_id,
+                'region' => $ticket->region ? $ticket->region->name : 'N/A',
                 'category_id' => $ticket->category_id,
                 'category' => $ticket->category ? $ticket->category->name : 'N/A',
                 'assigned_to' => $ticket->assigned_to,
@@ -255,7 +255,7 @@ class ContactsTicketController extends Controller
         return Inertia::render('contact-ticket/edit', [
             'title' => 'Edit Ticket',
             'footer' => $this->getFooter(),
-            'departments' => Department::orderBy('name')
+            'regions' => Region::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
@@ -264,7 +264,7 @@ class ContactsTicketController extends Controller
                 'uid' => $ticket->uid,
                 'subject' => $ticket->subject,
                 'details' => $ticket->details,
-                'department_id' => $ticket->department_id,
+                'region_id' => $ticket->region_id,
             ],
         ]);
     }
@@ -286,7 +286,7 @@ class ContactsTicketController extends Controller
         $request_data = Request::validate([
             'subject' => ['required', 'string', 'max:255'],
             'details' => ['required', 'string'],
-            'department_id' => ['nullable', 'exists:departments,id'],
+            'region_id' => ['nullable', 'exists:regions,id'],
         ]);
 
         $ticket->update($request_data);

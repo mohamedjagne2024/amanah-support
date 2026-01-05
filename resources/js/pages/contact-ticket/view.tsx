@@ -69,8 +69,8 @@ type TicketData = {
     slug: string;
   } | null;
   closed: boolean;
-  department_id: number | null;
-  department: string;
+  region_id: number | null;
+  region: string;
   category_id: number | null;
   sub_category_id: number | null;
   category: string;
@@ -673,8 +673,8 @@ export default function ContactTicketView({
                         <span className="text-sm font-medium text-default-900">{ticket.assigned_user || 'Unassigned'}</span>
                       </div>
                       <div className="flex items-center justify-between py-2 border-b border-default-100">
-                        <span className="text-sm text-default-500">Department</span>
-                        <span className="text-sm font-medium text-default-900">{ticket.department || 'N/A'}</span>
+                        <span className="text-sm text-default-500">Region</span>
+                        <span className="text-sm font-medium text-default-900">{ticket.region || 'N/A'}</span>
                       </div>
                       <div className="flex items-center justify-between py-2 border-b border-default-100">
                         <span className="text-sm text-default-500">Category</span>

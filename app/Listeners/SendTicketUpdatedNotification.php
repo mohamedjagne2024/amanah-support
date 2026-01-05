@@ -37,7 +37,7 @@ class SendTicketUpdatedNotification
 
         // Get ticket with relationships
         $ticket = Ticket::where('id', $ticketInfo['ticket_id'] ?? null)
-            ->with(['user', 'ticketType', 'assignedTo', 'department', 'category'])
+            ->with(['user', 'ticketType', 'assignedTo', 'contact', 'region', 'category'])
             ->first();
 
         if (!$ticket) {
@@ -86,7 +86,8 @@ class SendTicketUpdatedNotification
             'ticket_id' => (string) $ticket->id,
             'priority' => $ticket->priority_label,
             'status' => $ticket->status_label,
-            'department' => $ticket->department?->name ?? '',
+            'contact' => $ticket->contact?->name ?? '',
+            'region' => $ticket->region?->name ?? '',
             'category' => $ticket->category?->name ?? '',
             'uid' => $ticket->uid ?? '',
             'subject' => $ticket->subject ?? '',

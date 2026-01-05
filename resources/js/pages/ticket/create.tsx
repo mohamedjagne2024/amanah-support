@@ -15,7 +15,7 @@ type ContactOption = {
   name: string;
 };
 
-type DepartmentOption = {
+type RegionOption = {
   id: number;
   name: string;
 };
@@ -39,7 +39,7 @@ type CategoryOption = {
 type CreateTicketPageProps = {
   contacts: ContactOption[];
   usersExceptContacts: ContactOption[];
-  departments: DepartmentOption[];
+  regions: RegionOption[];
   priorities: PriorityOption[];
   types: TypeOption[];
   all_categories: CategoryOption[];
@@ -49,7 +49,7 @@ type CreateTicketPageProps = {
 export default function Create({
   contacts,
   usersExceptContacts,
-  departments,
+  regions,
   priorities,
   types,
   all_categories,
@@ -62,7 +62,7 @@ export default function Create({
     contact_id: '',
     priority: '',
     type_id: '',
-    department_id: '',
+    region_id: '',
     assigned_to: '',
     category_id: '',
     subject: '',
@@ -88,13 +88,13 @@ export default function Create({
     [usersExceptContacts]
   );
 
-  const departmentOptions = useMemo<SelectOption[]>(
+  const regionOptions = useMemo<SelectOption[]>(
     () =>
-      departments.map((dept) => ({
-        label: dept.name,
-        value: dept.id,
+      regions.map((region) => ({
+        label: region.name,
+        value: region.id,
       })),
-    [departments]
+    [regions]
   );
 
   const priorityOptions = useMemo<SelectOption[]>(
@@ -264,27 +264,27 @@ export default function Create({
                 {/* Second 2-Column Grid: Department, Assigned to */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <input type="hidden" name="department_id" value={data.department_id} />
+                    <input type="hidden" name="region_id" value={data.region_id} />
                     <Combobox
                       label={
                         <>
-                          Department{requiredFields.includes('department') && <span className="text-danger">*</span>}
+                          Region{requiredFields.includes('region') && <span className="text-danger">*</span>}
                         </>
                       }
-                      options={departmentOptions}
+                      options={regionOptions}
                       value={
-                        departmentOptions.find(
-                          (opt) => String(opt.value) === data.department_id
+                        regionOptions.find(
+                          (opt) => String(opt.value) === data.region_id
                         ) || null
                       }
                       onChange={(option) =>
-                        setData('department_id', option?.value?.toString() || '')
+                        setData('region_id', option?.value?.toString() || '')
                       }
-                      placeholder="Select a department"
+                      placeholder="Select a region"
                       disabled={processing}
                       isClearable
                       isSearchable
-                      error={errors.department_id}
+                      error={errors.region_id}
                     />
                   </div>
 

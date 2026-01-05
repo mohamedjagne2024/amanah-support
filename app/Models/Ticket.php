@@ -26,7 +26,8 @@ class Ticket extends Model
         'created_user_id',
         'location',
         'priority',
-        'department_id',
+        'contact_id',
+        'region_id',
         'category_id',
         'sub_category_id',
         'assigned_to',
@@ -39,6 +40,9 @@ class Ticket extends Model
         'urgency_level',
         'estimated_hours',
         'actual_hours',
+        'message_id',
+        'in_reply_to',
+        'parent_id',
     ];
 
     /**
@@ -147,9 +151,9 @@ class Ticket extends Model
 
 
 
-    public function department()
+    public function region()
     {
-        return $this->belongsTo(Department::class, 'department_id');
+        return $this->belongsTo(Region::class, 'region_id');
     }
 
     public function ticketType()
@@ -238,12 +242,10 @@ class Ticket extends Model
             $query->where('priority', $priority);
         })->when($filters['status'] ?? null, function ($query, $status) {
             $query->where('status', $status);
-        })->when($filters['type_id'] ?? null, function ($query, $status) {
-            $query->where('type_id', $status);
         })->when($filters['category_id'] ?? null, function ($query, $status) {
             $query->where('category_id', $status);
-        })->when($filters['department_id'] ?? null, function ($query, $status) {
-            $query->where('department_id', $status);
+        })->when($filters['region_id'] ?? null, function ($query, $status) {
+            $query->where('region_id', $status);
         });
     }
 }

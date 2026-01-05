@@ -72,12 +72,12 @@ final class RolesAndPermissionsSeeder extends Seeder
             'knowledge_base.update',
             'knowledge_base.delete',
 
-            // Departments
-            'departments.view',
-            'departments.create',
-            'departments.update',
-            'departments.delete',
-            'departments.restore',
+            // Regions
+            'regions.view',
+            'regions.create',
+            'regions.update',
+            'regions.delete',
+            'regions.restore',
 
             // Types
             'types.view',
@@ -199,12 +199,12 @@ final class RolesAndPermissionsSeeder extends Seeder
             'knowledge_base.update',
             'knowledge_base.delete',
 
-            // Departments - Full access
-            'departments.view',
-            'departments.create',
-            'departments.update',
-            'departments.delete',
-            'departments.restore',
+            // Regions - Full access
+            'regions.view',
+            'regions.create',
+            'regions.update',
+            'regions.delete',
+            'regions.restore',
 
             // Types - Full access
             'types.view',
@@ -295,8 +295,8 @@ final class RolesAndPermissionsSeeder extends Seeder
             'knowledge_base.view',
             'knowledge_base.update',
 
-            // Departments - View only
-            'departments.view',
+            // Regions - View only
+            'regions.view',
 
             // Types - View only
             'types.view',

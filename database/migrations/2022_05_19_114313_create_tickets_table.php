@@ -30,11 +30,9 @@ class CreateTicketsTable extends Migration
             $table->integer('client_type')->nullable();
             $table->string('email')->nullable();
             $table->string('created_user_id', 50)->nullable()->index();
-            $table->string('location', 200)->nullable();
             $table->string('priority')->nullable()->index();
-            $table->integer('department_id')->nullable()->index();
+            $table->integer('region_id')->nullable()->index();
             $table->integer('category_id')->nullable()->index();
-            $table->integer('sub_category_id')->nullable()->index();
             $table->integer('assigned_to')->nullable()->index();
             $table->integer('type_id')->nullable()->index();
             $table->text('details');

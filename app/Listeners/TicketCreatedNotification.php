@@ -80,6 +80,11 @@ class TicketCreatedNotification
 
             // Send the notification email to admin with contact user info
             $this->sendMailWithTemplate($template, $ticket, $adminUser, $data['password'] ?? '', $contactUser);
+
+            // Also send confirmation to the contact user
+            if ($contactUser) {
+                $this->sendMailWithTemplate($template, $ticket, $contactUser, $data['password'] ?? '');
+            }
         } else {
             // Get the recipient user (standard logic)
             $user = $this->getRecipientUser($ticket, $data);
@@ -105,9 +110,14 @@ class TicketCreatedNotification
     /**
      * Get the recipient user for the notification.
      */
-    private function getRecipientUser(Ticket $ticket, array $data): ?User
+    private function getRecipientUser(Ticket $ticket): ?User
     {
-        // First, try to use the ticket's user
+        // First, try to use the ticket's contact
+        if ($ticket->contact) {
+            return $ticket->contact;
+        }
+
+        // Then, try to use the ticket's user
         if ($ticket->user) {
             return $ticket->user;
         }

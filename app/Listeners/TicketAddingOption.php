@@ -30,7 +30,7 @@ class TicketAddingOption
      */
     public function handle(TicketAdded $event)
     {
-        $ticket = Ticket::with(['user', 'contact', 'department', 'category', 'assignedTo', 'ticketType', 'review'])->findOrFail($event->ticketId);
+        $ticket = Ticket::with(['user', 'contact', 'region', 'category', 'assignedTo', 'ticketType', 'review'])->findOrFail($event->ticketId);
         if (config('queue.enable')) {
             Mail::to($ticket->email)->queue(new TicketAddedMessage());
         } else {

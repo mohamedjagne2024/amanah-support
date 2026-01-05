@@ -30,7 +30,7 @@ type Category = {
   name: string;
 };
 
-type Department = {
+type Region = {
   id: number;
   name: string;
 };
@@ -69,7 +69,7 @@ type TicketFilters = {
   status?: string | null;
   type_id?: string | null;
   category_id?: string | null;
-  department_id?: string | null;
+  region_id?: string | null;
   type?: string | null;
   sort_by?: string | null;
   sort_direction?: 'asc' | 'desc' | null;
@@ -81,7 +81,7 @@ type TicketPageProps = {
   priorities: Priority[];
   types: Type[];
   categories: Category[];
-  departments: Department[];
+  regions: Region[];
   statuses: Status[];
   filters: TicketFilters;
 };
@@ -92,7 +92,7 @@ export default function Index({
   priorities, 
   types, 
   categories, 
-  departments, 
+  regions, 
   statuses, 
   filters 
 }: TicketPageProps) {
@@ -112,7 +112,7 @@ export default function Index({
     status: filters?.status ?? "",
     type_id: filters?.type_id ?? "",
     category_id: filters?.category_id ?? "",
-    department_id: filters?.department_id ?? "",
+    region_id: filters?.region_id ?? "",
     sort_by: filters?.sort_by ?? null,
     sort_direction: filters?.sort_direction ?? null
   };
@@ -258,7 +258,7 @@ export default function Index({
     if (safeFilters.status) params.append('status', safeFilters.status);
     if (safeFilters.type_id) params.append('type_id', safeFilters.type_id);
     if (safeFilters.category_id) params.append('category_id', safeFilters.category_id);
-    if (safeFilters.department_id) params.append('department_id', safeFilters.department_id);
+    if (safeFilters.region_id) params.append('region_id', safeFilters.region_id);
 
     window.location.href = `/tickets/export?${params.toString()}`;
   }, [safeFilters]);
@@ -275,7 +275,7 @@ export default function Index({
       status: string; 
       type_id: string; 
       category_id: string; 
-      department_id: string; 
+      region_id: string; 
       page: number; 
       perPage: number; 
       sort_by: string | null; 
@@ -287,7 +287,7 @@ export default function Index({
         status: partial.status ?? safeFilters.status ?? "",
         type_id: partial.type_id ?? safeFilters.type_id ?? "",
         category_id: partial.category_id ?? safeFilters.category_id ?? "",
-        department_id: partial.department_id ?? safeFilters.department_id ?? "",
+        region_id: partial.region_id ?? safeFilters.region_id ?? "",
         page: partial.page ?? safeTickets.current_page,
         perPage: partial.perPage ?? safeTickets.per_page,
         sort_by: partial.sort_by !== undefined ? partial.sort_by : safeFilters.sort_by,
@@ -300,7 +300,7 @@ export default function Index({
         query.status !== (safeFilters.status ?? "") ||
         query.type_id !== (safeFilters.type_id ?? "") ||
         query.category_id !== (safeFilters.category_id ?? "") ||
-        query.department_id !== (safeFilters.department_id ?? "") ||
+        query.region_id !== (safeFilters.region_id ?? "") ||
         query.page !== safeTickets.current_page ||
         query.perPage !== safeTickets.per_page ||
         query.sort_by !== safeFilters.sort_by ||
@@ -313,7 +313,7 @@ export default function Index({
       const sanitized = Object.fromEntries(
         Object.entries(query).filter(([key, value]) => {
           if (value == null) return false;
-          if ((key === "search" || key === "priority" || key === "status" || key === "type_id" || key === "category_id" || key === "department_id") && value === "") {
+          if ((key === "search" || key === "priority" || key === "status" || key === "type_id" || key === "category_id" || key === "region_id") && value === "") {
             return false;
           }
           if (key === "page" && value === 1) {
@@ -334,7 +334,7 @@ export default function Index({
         onFinish: () => setIsLoading(false)
       });
     },
-    [safeTickets.current_page, safeTickets.per_page, safeFilters.search, safeFilters.priority, safeFilters.status, safeFilters.type_id, safeFilters.category_id, safeFilters.department_id, safeFilters.sort_by, safeFilters.sort_direction]
+    [safeTickets.current_page, safeTickets.per_page, safeFilters.search, safeFilters.priority, safeFilters.status, safeFilters.type_id, safeFilters.category_id, safeFilters.region_id, safeFilters.sort_by, safeFilters.sort_direction]
   );
 
   const columns = useMemo<ColumnDef<TicketRecord, unknown>[]>(
@@ -519,16 +519,16 @@ export default function Index({
         }))
       },
       {
-        id: "department_id",
-        label: "Department",
-        placeholder: "All departments",
-        options: (departments ?? []).map(d => ({
+        id: "region_id",
+        label: "Region",
+        placeholder: "All regions",
+        options: (regions ?? []).map(d => ({
           label: d.name,
           value: String(d.id)
         }))
       }
     ],
-    [priorities, statuses, types, categories, departments]
+    [priorities, statuses, types, categories, regions]
   );
 
   const rowActions = useMemo<DataTableRowAction<TicketRecord>[]>(
@@ -713,7 +713,7 @@ export default function Index({
               status: safeFilters.status ?? "",
               type_id: safeFilters.type_id ?? "",
               category_id: safeFilters.category_id ?? "",
-              department_id: safeFilters.department_id ?? ""
+              region_id: safeFilters.region_id ?? ""
             }}
             onFilterChange={(filterId, value) => {
               if (filterId === "priority") {
@@ -724,8 +724,8 @@ export default function Index({
                 submitQuery({ type_id: value, page: 1 });
               } else if (filterId === "category_id") {
                 submitQuery({ category_id: value, page: 1 });
-              } else if (filterId === "department_id") {
-                submitQuery({ department_id: value, page: 1 });
+              } else if (filterId === "region_id") {
+                submitQuery({ region_id: value, page: 1 });
               }
             }}
             sorting={{

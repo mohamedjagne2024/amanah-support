@@ -9,7 +9,7 @@ use App\Events\TicketUpdated;
 use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Comment;
-use App\Models\Department;
+use App\Models\Region;
 use App\Models\PendingEmail;
 use App\Models\Review;
 use App\Models\Settings;
@@ -95,7 +95,7 @@ class TicketsController extends Controller
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'departments' => Department::orderBy('name')
+            'regions' => Region::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
@@ -173,7 +173,7 @@ class TicketsController extends Controller
                     }
 
                     $category = Category::firstOrCreate(['name' => $data['Category']]);
-                    $department = Department::firstOrCreate(['name' => $data['Department']]);
+                    $region = Region::firstOrCreate(['name' => $data['Region']]);
                     $assignTo = User::where(['email' => $data['Assigned To Email']])->first();
                     if (empty($assignTo) && !empty($data['Assigned To Email']) && !empty($data['Assigned To Name'])) {
                         $aName = $data['Assigned To Name'];
@@ -185,7 +185,7 @@ class TicketsController extends Controller
                         'subject' => $data['Subject'],
                         'priority' => $priority,
                         'category_id' => $category->id,
-                        'department_id' => $department->id,
+                        'region_id' => $region->id,
                         'status' => $status,
                         'assigned_to' => $assignTo ? $assignTo->id : null
                     ]);
@@ -209,7 +209,7 @@ class TicketsController extends Controller
         ];
 
         $handle = fopen('php://output', 'w');
-        fputcsv($handle, ['UID', 'Subject', 'Priority', 'Category', 'Department', 'Status', 'Assigned To Email', 'Assigned To Name', 'Created']);
+        fputcsv($handle, ['UID', 'Subject', 'Priority', 'Category', 'Region', 'Status', 'Assigned To Email', 'Assigned To Name', 'Created']);
 
         foreach ($tickets as $ticket) {
             fputcsv($handle, [
@@ -217,7 +217,7 @@ class TicketsController extends Controller
                 $ticket->subject,
                 $ticket->priority_label,
                 $ticket->category ? $ticket->category->name : null,
-                $ticket->department ? $ticket->department->name : null,
+                $ticket->region ? $ticket->region->name : null,
                 $ticket->status_label,
                 $ticket->assignedTo ? $ticket->assignedTo->email : null,
                 $ticket->assignedTo ? $ticket->assignedTo->first_name . ' ' . $ticket->assignedTo->last_name : null,
@@ -265,7 +265,7 @@ class TicketsController extends Controller
             'priorities' => collect(Ticket::PRIORITIES)->map(function ($label, $value) {
                 return ['value' => $value, 'name' => $label];
             })->values(),
-            'departments' => Department::orderBy('name')
+            'regions' => Region::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
@@ -296,7 +296,7 @@ class TicketsController extends Controller
             'contact_id' => ['nullable', Rule::exists('users', 'id')],
             'priority' => ['nullable', 'string', Rule::in(array_keys(Ticket::PRIORITIES))],
             'status' => ['nullable', 'string', Rule::in(array_keys(Ticket::STATUSES))],
-            'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
+            'region_id' => [in_array('region', $required_fields) ? 'required' : 'nullable', Rule::exists('regions', 'id')],
             'assigned_to' => [in_array('assigned_to', $required_fields) ? 'required' : 'nullable', Rule::exists('users', 'id')],
             'category_id' => [in_array('category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
             'type_id' => [in_array('ticket_type', $required_fields) ? 'required' : 'nullable', Rule::exists('types', 'id')],
@@ -422,8 +422,8 @@ class TicketsController extends Controller
                         ] : null,
                     ];
                 })(),
-                'department_id' => $ticket->department_id,
-                'department' => $ticket->department ? $ticket->department->name : 'N/A',
+                'region_id' => $ticket->region_id,
+                'region' => $ticket->region ? $ticket->region->name : 'N/A',
                 'category_id' => $ticket->category_id,
                 'category' => $ticket->category ? $ticket->category->name : 'N/A',
                 'assigned_to' => $ticket->assigned_to,
@@ -506,7 +506,7 @@ class TicketsController extends Controller
             'priorities' => collect(Ticket::PRIORITIES)->map(function ($label, $value) {
                 return ['value' => $value, 'name' => $label];
             })->values(),
-            'departments' => Department::orderBy('name')
+            'regions' => Region::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
@@ -551,8 +551,8 @@ class TicketsController extends Controller
                 'status_label' => $ticket->status_label,
                 'closed' => $ticket->is_closed,
                 'review' => $ticket->review,
-                'department_id' => $ticket->department_id,
-                'department' => $ticket->department ? $ticket->department->name : 'N/A',
+                'region_id' => $ticket->region_id,
+                'region' => $ticket->region ? $ticket->region->name : 'N/A',
                 'category_id' => $ticket->category_id,
                 'category' => $ticket->category ? $ticket->category->name : 'N/A',
                 'assigned_to' => $ticket->assigned_to,
@@ -585,7 +585,7 @@ class TicketsController extends Controller
             'contact_id' => ['nullable', Rule::exists('users', 'id')],
             'priority' => ['nullable', 'string', Rule::in(array_keys(Ticket::PRIORITIES))],
             'status' => ['nullable', 'string', Rule::in(array_keys(Ticket::STATUSES))],
-            'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
+            'region_id' => [in_array('region', $required_fields) ? 'required' : 'nullable', Rule::exists('regions', 'id')],
             'assigned_to' => [in_array('assigned_to', $required_fields) ? 'required' : 'nullable', Rule::exists('users', 'id')],
             'category_id' => [in_array('category', $required_fields) ? 'required' : 'nullable', Rule::exists('categories', 'id')],
             'type_id' => [in_array('ticket_type', $required_fields) ? 'required' : 'nullable', Rule::exists('types', 'id')],

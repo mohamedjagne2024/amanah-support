@@ -17,7 +17,7 @@ use App\Http\Controllers\FaqsController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\PendingUsersController;
 use App\Http\Controllers\CategoriesController;
-use App\Http\Controllers\DepartmentsController;
+use App\Http\Controllers\RegionsController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\TypesController;
 use App\Http\Controllers\EmailTemplatesController;
@@ -243,25 +243,25 @@ $router->prefix('/')->group(static function (Router $router): void {
 
 
 
-        // Departments
-        $router->get('settings/departments', [DepartmentsController::class, 'index'])
-            ->name('departments')
+        // Regions
+        $router->get('settings/regions', [RegionsController::class, 'index'])
+            ->name('regions')
             ->middleware('auth');
 
-        $router->get('settings/departments/create', [DepartmentsController::class, 'create'])
-            ->name('departments.create')
+        $router->get('settings/regions/create', [RegionsController::class, 'create'])
+            ->name('regions.create')
             ->middleware('auth');
 
-        $router->post('settings/departments', [DepartmentsController::class, 'store'])
-            ->name('departments.store')
+        $router->post('settings/regions', [RegionsController::class, 'store'])
+            ->name('regions.store')
             ->middleware('auth');
 
-        $router->get('settings/departments/{department}/edit', [DepartmentsController::class, 'edit'])
-            ->name('departments.edit')
+        $router->get('settings/regions/{region}/edit', [RegionsController::class, 'edit'])
+            ->name('regions.edit')
             ->middleware('auth');
 
-        $router->put('settings/departments/{department}/restore', [DepartmentsController::class, 'restore'])
-            ->name('departments.restore')
+        $router->put('settings/regions/{region}/restore', [RegionsController::class, 'restore'])
+            ->name('regions.restore')
             ->middleware('auth');
 
         $router->get('settings/filter/contacts', [FilterController::class, 'contacts'])
@@ -276,16 +276,16 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('filter.users_except_contact')
             ->middleware('auth');
 
-        $router->put('settings/departments/{department}', [DepartmentsController::class, 'update'])
-            ->name('departments.update')
+        $router->put('settings/regions/{region}', [RegionsController::class, 'update'])
+            ->name('regions.update')
             ->middleware('auth');
 
-        $router->post('settings/departments/bulk-delete', [DepartmentsController::class, 'bulkDelete'])
-            ->name('departments.bulk-delete')
+        $router->post('settings/regions/bulk-delete', [RegionsController::class, 'bulkDelete'])
+            ->name('regions.bulk-delete')
             ->middleware('auth');
 
-        $router->delete('settings/departments/{department}', [DepartmentsController::class, 'destroy'])
-            ->name('departments.destroy')
+        $router->delete('settings/regions/{region}', [RegionsController::class, 'destroy'])
+            ->name('regions.destroy')
             ->middleware('auth');
         // End - Departments
 
