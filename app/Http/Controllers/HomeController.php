@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ContactCreated;
 use App\Events\TicketCreated;
 use App\Models\Attachment;
 use App\Models\Category;
@@ -13,6 +14,7 @@ use App\Models\TicketEntry;
 use App\Models\Type;
 use App\Models\User;
 use App\Traits\HasGoogleCloudStorage;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
@@ -28,7 +30,14 @@ class HomeController extends Controller
             'title' => 'Home - Amanah Support',
             'page' => FrontPage::where('slug', 'home')->first(),
             'footer' => FrontPage::where('slug', 'footer')->first(),
-
+            'regions' => Region::orderBy('name')
+                ->get()
+                ->map
+                ->only('id', 'name'),
+            'types' => Type::orderBy('name')
+                ->get()
+                ->map
+                ->only('id', 'name'),
             'require_login' => collect(json_decode(Settings::where('name', 'enable_options')->value('value') ?? '[]', true))
                 ->first(fn($option) => $option['slug'] === 'require_login_submit_ticket' && ($option['value'] ?? false)),
         ]);
@@ -70,53 +79,63 @@ class HomeController extends Controller
     public function ticketPublicStore()
     {
         $ticket_data = Request::validate([
-            'name' => ['required', 'max:40'],
-            'subject' => ['required'],
+            'name' => ['required', 'max:100'],
             'email' => ['required', 'max:60', 'email'],
+            'phone' => ['nullable', 'max:25'],
+            'member_number' => ['nullable', 'max:50'],
+            'type_id' => ['nullable', 'exists:types,id'],
+            'region_id' => ['nullable', 'exists:regions,id'],
+            'subject' => ['required', 'max:255'],
             'details' => ['required'],
-            'custom_field' => ['nullable'],
+            'files.*' => ['nullable', 'file', 'max:5120'],
         ]);
 
+        // Check if contact exists by email
         $contact = User::where('email', $ticket_data['email'])->first();
         $plain_password = null;
 
         if (empty($contact)) {
+            // Create new contact if doesn't exist
             $plain_password = $this->genRendomPassword();
             $contact = User::create([
                 'name' => $ticket_data['name'],
                 'email' => $ticket_data['email'],
-                'password' => $plain_password,
+                'phone' => $ticket_data['phone'] ?? null,
+                'password' => Hash::make($plain_password),
             ]);
 
             $contact->assignRole('contact');
+
+            // Fire event to send email notification with login credentials
+            event(new ContactCreated(['id' => $contact->id, 'password' => $plain_password]));
         }
 
+        // Create ticket with all provided data
         $ticketObject = [
             'subject' => $ticket_data['subject'],
             'details' => $ticket_data['details'],
             'contact_id' => $contact->id,
+            'type_id' => $ticket_data['type_id'] ?? null,
+            'region_id' => $ticket_data['region_id'] ?? null,
             'status' => 'pending', // default status for new tickets
             'priority' => 'low', // default priority for new tickets
+            'source' => 'public_form',
         ];
 
         $ticket = Ticket::create($ticketObject);
 
-        if (!empty($ticket_data['custom_field'])) {
-            foreach ($ticket_data['custom_field'] as $cfk => $cfv) {
-                if (!empty($ticket_field)) {
-                    TicketEntry::create(['ticket_id' => $ticket->id, 'field_id' => $ticket_field->id, 'name' => $cfk, 'label' => $ticket_field->label, 'value' => $cfv]);
-                }
-            }
-        }
-
+        // Handle file attachments if provided
         if (Request::hasFile('files')) {
             $files = Request::file('files');
             $this->handleAttachmentUploads($ticket, $files);
         }
 
+        // Send notification email
         $variables = [
             'name' => $contact->name,
             'email' => $contact->email,
+            'phone' => $ticket_data['phone'] ?? null,
+            'member_number' => $ticket_data['member_number'] ?? null,
             'password' => $plain_password,
             'login_url' => URL::to('login'),
             'sender_name' => config('mail.from.name', 'support@amanahsupport.com'),

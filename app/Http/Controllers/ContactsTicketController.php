@@ -7,6 +7,7 @@ use App\Models\FrontPage;
 use App\Models\Settings;
 use App\Models\Ticket;
 use App\Models\Comment;
+use App\Models\Type;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
@@ -190,6 +191,14 @@ class ContactsTicketController extends Controller
         return Inertia::render('contact-ticket/create', [
             'title' => 'Create New Ticket',
             'footer' => $this->getFooter(),
+            'regions' => Region::orderBy('name')
+                ->get()
+                ->map
+                ->only('id', 'name'),
+            'types' => Type::orderBy('name')
+                ->get()
+                ->map
+                ->only('id', 'name'),
         ]);
     }
 
@@ -198,24 +207,37 @@ class ContactsTicketController extends Controller
         $user = Auth()->user();
 
         $request_data = Request::validate([
+            'name' => ['required', 'max:100'],
+            'email' => ['required', 'max:60', 'email'],
+            'phone' => ['nullable', 'max:25'],
+            'member_number' => ['nullable', 'max:50'],
+            'type_id' => ['nullable', 'exists:types,id'],
+            'region_id' => ['nullable', 'exists:regions,id'],
             'subject' => ['required', 'string', 'max:255'],
             'details' => ['required', 'string'],
             'files.*' => ['nullable', 'file', 'max:5120'],
         ]);
 
-        // Set the contact_id to the logged-in user
-        $request_data['contact_id'] = $user['id'];
+        // Update the logged-in user's contact information if provided
+        $user->update([
+            'name' => $request_data['name'],
+            'email' => $request_data['email'],
+            'phone' => $request_data['phone'] ?? $user->phone,
+        ]);
 
-        // Set default priority to low if not provided
-        $request_data['priority'] = 'low';
+        // Create ticket with all provided data
+        $ticketData = [
+            'subject' => $request_data['subject'],
+            'details' => $request_data['details'],
+            'contact_id' => $user['id'],
+            'type_id' => $request_data['type_id'] ?? null,
+            'region_id' => $request_data['region_id'] ?? null,
+            'priority' => 'low', // default priority
+            'status' => 'pending', // default status
+            'source' => 'contact_portal',
+        ];
 
-        // Set default status to pending for new tickets
-        $request_data['status'] = 'pending';
-
-        // Remove files from request_data as it's handled separately
-        unset($request_data['files']);
-
-        $ticket = Ticket::create($request_data);
+        $ticket = Ticket::create($ticketData);
 
         // Handle file attachments
         if (Request::hasFile('files')) {

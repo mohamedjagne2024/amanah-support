@@ -10,17 +10,27 @@ import Breadcrumb from "@/components/Breadcrumb";
 type PageProps = {
   title: string;
   footer?: any;
+  regions: Array<{ id: number; name: string }>;
+  types: Array<{ id: number; name: string }>;
 };
 
 export default function CreateContactTicket({ 
   title, 
-  footer 
+  footer,
+  regions = [],
+  types = [],
 }: PageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data, setData, post, processing, errors, reset } = useForm({
+    name: '',
+    email: '',
+    phone: '',
+    member_number: '',
+    type_id: '',
+    region_id: '',
     subject: '',
     details: '',
     files: [] as File[],
@@ -88,6 +98,136 @@ export default function CreateContactTicket({
               </div>
               <div className="card-body">
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Name & Email Fields */}
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Full Name <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
+                        placeholder="John Doe"
+                        className={`form-input ${
+                          errors.name ? 'border-danger focus:border-danger focus:ring-danger' : ''
+                        }`}
+                        disabled={processing}
+                      />
+                      {errors.name && (
+                        <p className="mt-1 text-sm text-danger">{errors.name}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Email Address <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={data.email}
+                        onChange={(e) => setData('email', e.target.value)}
+                        placeholder="john@example.com"
+                        className={`form-input ${
+                          errors.email ? 'border-danger focus:border-danger focus:ring-danger' : ''
+                        }`}
+                        disabled={processing}
+                      />
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-danger">{errors.email}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Phone & Member Number Fields */}
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={data.phone}
+                        onChange={(e) => setData('phone', e.target.value)}
+                        placeholder="+1 (555) 123-4567"
+                        className={`form-input ${
+                          errors.phone ? 'border-danger focus:border-danger focus:ring-danger' : ''
+                        }`}
+                        disabled={processing}
+                      />
+                      {errors.phone && (
+                        <p className="mt-1 text-sm text-danger">{errors.phone}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Member Number
+                      </label>
+                      <input
+                        type="text"
+                        value={data.member_number}
+                        onChange={(e) => setData('member_number', e.target.value)}
+                        placeholder="MEM-12345"
+                        className={`form-input ${
+                          errors.member_number ? 'border-danger focus:border-danger focus:ring-danger' : ''
+                        }`}
+                        disabled={processing}
+                      />
+                      {errors.member_number && (
+                        <p className="mt-1 text-sm text-danger">{errors.member_number}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Type & Region Fields */}
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Ticket Type
+                      </label>
+                      <select
+                        value={data.type_id}
+                        onChange={(e) => setData('type_id', e.target.value)}
+                        className={`form-input ${
+                          errors.type_id ? 'border-danger focus:border-danger focus:ring-danger' : ''
+                        }`}
+                        disabled={processing}
+                      >
+                        <option value="">Select ticket type...</option>
+                        {types.map((type) => (
+                          <option key={type.id} value={type.id}>
+                            {type.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.type_id && (
+                        <p className="mt-1 text-sm text-danger">{errors.type_id}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Region
+                      </label>
+                      <select
+                        value={data.region_id}
+                        onChange={(e) => setData('region_id', e.target.value)}
+                        className={`form-input ${
+                          errors.region_id ? 'border-danger focus:border-danger focus:ring-danger' : ''
+                        }`}
+                        disabled={processing}
+                      >
+                        <option value="">Select region...</option>
+                        {regions.map((region) => (
+                          <option key={region.id} value={region.id}>
+                            {region.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.region_id && (
+                        <p className="mt-1 text-sm text-danger">{errors.region_id}</p>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Subject Field */}
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
@@ -112,7 +252,7 @@ export default function CreateContactTicket({
                   {/* Details Field */}
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Details <span className="text-danger">*</span>
+                      Description <span className="text-danger">*</span>
                     </label>
                     <TextEditor
                       placeholder="Please describe your issue in detail..."
@@ -129,7 +269,7 @@ export default function CreateContactTicket({
                   {/* File Attachments */}
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Attach Files
+                      Attach Files (Optional)
                     </label>
                     <p className="text-xs text-default-500 mb-3">
                       Upload up to 5 files (PDF, DOC, DOCX, JPG, PNG, XLS, XLSX). Max 5MB per file.

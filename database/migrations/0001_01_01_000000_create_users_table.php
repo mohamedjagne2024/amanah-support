@@ -24,6 +24,7 @@ return new class extends Migration
             $table->boolean('is_super_admin')->default(false);
             $table->string('profile_picture', 100)->nullable();
             $table->bigInteger('organization_id')->default(null)->nullable()->index();
+            $table->string('member_number', 50)->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

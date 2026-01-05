@@ -109,6 +109,8 @@ type HomePageProps = {
     is_active: boolean;
     html: PageData | null;
   } | null;
+  regions: Array<{ id: number; name: string }>;
+  types: Array<{ id: number; name: string }>;
   custom_fields: CustomField[];
 };
 
@@ -132,6 +134,8 @@ const getIcon = (iconName: string) => {
 export default function Home({ 
   title, 
   page, 
+  regions = [],
+  types = [],
   custom_fields = [],
   footer,
 }: HomePageProps & { footer?: any }) {
@@ -151,10 +155,13 @@ export default function Home({
   const { data, setData, post, processing, errors, reset } = useForm({
     name: '',
     email: '',
+    phone: '',
+    member_number: '',
+    type_id: '',
+    region_id: '',
     subject: '',
     details: '',
     files: [] as File[],
-    custom_field: {} as Record<string, string>,
   });
 
 
@@ -453,212 +460,216 @@ export default function Home({
                 )}
               </div>
 
-              <div className="card relative">
-                {/* Login Required Overlay */}
-                {!isLoggedIn && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-white/70 dark:bg-default-900/70 backdrop-blur-md">
-                    <div className="text-center p-8">
-                      <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                        <Shield className="size-8 text-primary" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-default-900 mb-2">
-                        Login Required
-                      </h3>
-                      <p className="text-default-600 mb-6 max-w-sm">
-                        Please sign in to your account to submit a support ticket.
-                      </p>
-                      <a
-                        href="/login"
-                        className="btn bg-primary text-white px-8 py-2.5 text-base font-medium hover:bg-primary/90 transition-colors"
-                      >
-                        Sign In to Continue
-                      </a>
-                      <p className="text-sm text-default-500 mt-4">
-                        Don't have an account?{' '}
-                        <a href="/register" className="text-primary hover:underline font-medium">
-                          Register here
-                        </a>
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                <div className={!isLoggedIn ? 'pointer-events-none select-none' : ''}>
-                  <div className="card-header">
-                    <h6 className="card-title">Amanah Support Ticket Information</h6>
-                  </div>
-                  <div className="card-body">
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                      {/* Name & Email Fields */}
-                      <div className="grid sm:grid-cols-2 gap-5">
-                        <div>
-                          <label className="block font-medium text-default-900 text-sm mb-2">
-                            Name <span className="text-danger">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            className="form-input"
-                            placeholder="John Doe"
-                            disabled={processing || !isLoggedIn}
-                          />
-                          {errors.name && <p className="text-danger text-sm mt-1">{errors.name}</p>}
-                        </div>
-                        <div>
-                          <label className="block font-medium text-default-900 text-sm mb-2">
-                            Email Address <span className="text-danger">*</span>
-                          </label>
-                          <input
-                            type="email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            className="form-input"
-                            placeholder="john@example.com"
-                            disabled={processing || !isLoggedIn}
-                          />
-                          {errors.email && <p className="text-danger text-sm mt-1">{errors.email}</p>}
-                        </div>
-                      </div>
-
-                      {/* Subject */}
+              <div className="card">
+                <div className="card-header">
+                  <h6 className="card-title">Amanah Support Ticket Information</h6>
+                  <p className="text-sm text-default-500 mt-1">
+                    Fill in the details below to submit your support ticket. We'll get back to you as soon as possible.
+                  </p>
+                </div>
+                <div className="card-body">
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Name & Email Fields */}
+                    <div className="grid sm:grid-cols-2 gap-5">
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Subject <span className="text-danger">*</span>
+                          Full Name <span className="text-danger">*</span>
                         </label>
                         <input
                           type="text"
-                          value={data.subject}
-                          onChange={(e) => setData('subject', e.target.value)}
-                          className="form-input"
-                          placeholder="Brief description of your issue"
-                          disabled={processing || !isLoggedIn}
+                          value={data.name}
+                          onChange={(e) => setData('name', e.target.value)}
+                          className={`form-input ${errors.name ? 'border-danger' : ''}`}
+                          placeholder="Mohamed Ahmed"
+                          disabled={processing}
                         />
-                        {errors.subject && <p className="text-danger text-sm mt-1">{errors.subject}</p>}
+                        {errors.name && <p className="text-danger text-sm mt-1">{errors.name}</p>}
                       </div>
-
-
-                      {/* Details */}
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Details <span className="text-danger">*</span>
+                          Email Address <span className="text-danger">*</span>
                         </label>
-                        <TextEditor
-                          placeholder="Please describe your issue in detail..."
-                          onChange={(content) => setData('details', content)}
-                          showToolbar={true}
-                          className="min-h-[200px]"
-                          initialValue={data.details}
+                        <input
+                          type="email"
+                          value={data.email}
+                          onChange={(e) => setData('email', e.target.value)}
+                          className={`form-input ${errors.email ? 'border-danger' : ''}`}
+                          placeholder="mohamed@example.com"
+                          disabled={processing}
                         />
-                        {errors.details && <p className="text-danger text-sm mt-1">{errors.details}</p>}
+                        {errors.email && <p className="text-danger text-sm mt-1">{errors.email}</p>}
                       </div>
+                    </div>
 
-                      {/* Custom Fields */}
-                      {custom_fields.length > 0 && (
-                        <div className="space-y-4">
-                          {custom_fields.map((field) => (
-                            <div key={field.id}>
-                              <label className="block font-medium text-default-900 text-sm mb-2">
-                                {field.label} {field.required && <span className="text-danger">*</span>}
-                              </label>
-                              {field.type === 'textarea' ? (
-                                <textarea
-                                  value={data.custom_field[field.name] || ''}
-                                  onChange={(e) => setData('custom_field', { ...data.custom_field, [field.name]: e.target.value })}
-                                  className="form-input min-h-[100px]"
-                                  disabled={processing || !isLoggedIn}
-                                />
-                              ) : field.type === 'select' && field.options ? (
-                                <select
-                                  value={data.custom_field[field.name] || ''}
-                                  onChange={(e) => setData('custom_field', { ...data.custom_field, [field.name]: e.target.value })}
-                                  className="form-input"
-                                  disabled={processing || !isLoggedIn}
-                                >
-                                  <option value="">Select...</option>
-                                  {field.options.split(',').map((opt, i) => (
-                                    <option key={i} value={opt.trim()}>{opt.trim()}</option>
-                                  ))}
-                                </select>
-                              ) : (
-                                <input
-                                  type={field.type || 'text'}
-                                  value={data.custom_field[field.name] || ''}
-                                  onChange={(e) => setData('custom_field', { ...data.custom_field, [field.name]: e.target.value })}
-                                  className="form-input"
-                                  disabled={processing || !isLoggedIn}
-                                />
-                              )}
+                    {/* Phone & Member Number Fields */}
+                    <div className="grid sm:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block font-medium text-default-900 text-sm mb-2">
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          value={data.phone}
+                          onChange={(e) => setData('phone', e.target.value)}
+                          className={`form-input ${errors.phone ? 'border-danger' : ''}`}
+                          placeholder="+252 612345678"
+                          disabled={processing}
+                        />
+                        {errors.phone && <p className="text-danger text-sm mt-1">{errors.phone}</p>}
+                      </div>
+                      <div>
+                        <label className="block font-medium text-default-900 text-sm mb-2">
+                          Member Number
+                        </label>
+                        <input
+                          type="text"
+                          value={data.member_number}
+                          onChange={(e) => setData('member_number', e.target.value)}
+                          className={`form-input ${errors.member_number ? 'border-danger' : ''}`}
+                          placeholder="AMI-12345"
+                          disabled={processing}
+                        />
+                        {errors.member_number && <p className="text-danger text-sm mt-1">{errors.member_number}</p>}
+                      </div>
+                    </div>
+
+                    {/* Type & Region Fields */}
+                    <div className="grid sm:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block font-medium text-default-900 text-sm mb-2">
+                          Ticket Type
+                        </label>
+                        <select
+                          value={data.type_id}
+                          onChange={(e) => setData('type_id', e.target.value)}
+                          className={`form-input ${errors.type_id ? 'border-danger' : ''}`}
+                          disabled={processing}
+                        >
+                          <option value="">Select ticket type...</option>
+                          {types.map((type) => (
+                            <option key={type.id} value={type.id}>
+                              {type.name}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.type_id && <p className="text-danger text-sm mt-1">{errors.type_id}</p>}
+                      </div>
+                      <div>
+                        <label className="block font-medium text-default-900 text-sm mb-2">
+                          Region
+                        </label>
+                        <select
+                          value={data.region_id}
+                          onChange={(e) => setData('region_id', e.target.value)}
+                          className={`form-input ${errors.region_id ? 'border-danger' : ''}`}
+                          disabled={processing}
+                        >
+                          <option value="">Select region...</option>
+                          {regions.map((region) => (
+                            <option key={region.id} value={region.id}>
+                              {region.name}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.region_id && <p className="text-danger text-sm mt-1">{errors.region_id}</p>}
+                      </div>
+                    </div>
+
+                    {/* Subject */}
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Subject <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={data.subject}
+                        onChange={(e) => setData('subject', e.target.value)}
+                        className={`form-input ${errors.subject ? 'border-danger' : ''}`}
+                        placeholder="Brief description of your issue"
+                        disabled={processing}
+                      />
+                      {errors.subject && <p className="text-danger text-sm mt-1">{errors.subject}</p>}
+                    </div>
+
+                    {/* Details */}
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Description <span className="text-danger">*</span>
+                      </label>
+                      <TextEditor
+                        placeholder="Please describe your issue in detail..."
+                        onChange={(content) => setData('details', content)}
+                        showToolbar={true}
+                        className="min-h-[200px]"
+                        initialValue={data.details}
+                      />
+                      {errors.details && <p className="text-danger text-sm mt-1">{errors.details}</p>}
+                    </div>
+
+                    {/* File Attachments */}
+                    <div>
+                      <label className="block font-medium text-default-900 text-sm mb-2">
+                        Attach Files (Optional)
+                      </label>
+                      <p className="text-xs text-default-500 mb-3">
+                        Upload up to 5 files (PDF, DOC, DOCX, JPG, PNG, XLS, XLSX). Max 5MB per file.
+                      </p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        multiple
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="btn btn-sm border-default-200 text-default-700 hover:bg-default-50"
+                        disabled={processing || attachments.length >= 5}
+                      >
+                        <Upload className="size-4 mr-2" />
+                        Attach Files
+                      </button>
+                      {attachments.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {attachments.map((file, index) => (
+                            <div key={index} className="flex items-center gap-3 p-2 rounded-lg border border-default-200 bg-default-50">
+                              <div className="flex-shrink-0 text-default-500">
+                                <FileText className="size-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-default-900 truncate">{file.name}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveFile(index)}
+                                className="flex-shrink-0 size-6 bg-danger text-white rounded flex items-center justify-center hover:bg-danger/80 transition-colors"
+                              >
+                                <X className="size-4" />
+                              </button>
                             </div>
                           ))}
                         </div>
                       )}
+                    </div>
 
-                      {/* File Attachments */}
-                      <div>
-                        <label className="block font-medium text-default-900 text-sm mb-2">
-                          Attach Files
-                        </label>
-                        <p className="text-xs text-default-500 mb-3">
-                          Upload up to 5 files (PDF, DOC, DOCX, JPG, PNG, XLS, XLSX). Max 5MB per file.
-                        </p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          onChange={handleFileChange}
-                          className="hidden"
-                          multiple
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="btn btn-sm border-default-200 text-default-700 hover:bg-default-50"
-                          disabled={processing || attachments.length >= 5 || !isLoggedIn}
-                        >
-                          <Upload className="size-4 mr-2" />
-                          Attach Files
-                        </button>
-                        {attachments.length > 0 && (
-                          <div className="mt-3 space-y-2">
-                            {attachments.map((file, index) => (
-                              <div key={index} className="flex items-center gap-3 p-2 rounded-lg border border-default-200 bg-default-50">
-                                <div className="flex-shrink-0 text-default-500">
-                                  <FileText className="size-5" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-default-900 truncate">{file.name}</p>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveFile(index)}
-                                  className="flex-shrink-0 size-6 bg-danger text-white rounded flex items-center justify-center hover:bg-danger/80 transition-colors"
-                                >
-                                  <X className="size-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Submit Button */}
-                      <button
-                        type="submit"
-                        disabled={processing || !isLoggedIn}
-                        className="btn bg-primary text-white w-full"
-                      >
-                        {processing ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                            Submitting...
-                          </span>
-                        ) : (
-                          settings.submit_button_label || 'Submit Ticket'
-                        )}
-                      </button>
-                    </form>
-                  </div>
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={processing}
+                      className="btn bg-primary text-white w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {processing ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
+                          Submitting...
+                        </span>
+                      ) : (
+                        settings.submit_button_label || 'Submit Ticket'
+                      )}
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>

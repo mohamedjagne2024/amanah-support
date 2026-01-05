@@ -82,6 +82,16 @@ class EmailTemplateSeeder extends Seeder
             'language' => 'en',
             'html' => str_replace('https://res.cloudinary.com/robinbd/image/upload/v1663394454/mail-template/help-desk-logo.png', $logo, $html)
         ]);
+
+        // Contact created template
+        $html = File::get(public_path('html/email_templates/user_created.html'));
+        EmailTemplate::factory()->create([
+            'name' => 'Contact created',
+            'slug' => 'created_new_contact',
+            'details' => 'When a new contact is created from ticket submission.',
+            'language' => 'en',
+            'html' => str_replace('https://res.cloudinary.com/robinbd/image/upload/v1663394454/mail-template/help-desk-logo.png', $logo, $html)
+        ]);
         //
     }
 }
