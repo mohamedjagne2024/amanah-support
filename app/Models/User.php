@@ -18,6 +18,21 @@ final class User extends Auth\User
 {
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'phone',
+        'region_id',
+        'country_id',
+        'title',
+        'address',
+        'city',
+        'profile_picture',
+        'organization_id',
+        'member_number',
+    ];
+
     protected $hidden = [
         'password',
         'remember_token',
@@ -80,6 +95,11 @@ final class User extends Auth\User
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function region(): BelongsTo
+    {
+        return $this->belongsTo(Region::class);
     }
 
     public function organization(): BelongsTo

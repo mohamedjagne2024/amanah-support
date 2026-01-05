@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Attachment;
 use App\Models\Review;
 use App\Events\TicketCreated;
+use App\Events\AssignedUser;
 
 class ContactsTicketController extends Controller
 {
@@ -225,6 +226,12 @@ class ContactsTicketController extends Controller
             'phone' => $request_data['phone'] ?? $user->phone,
         ]);
 
+        // Auto-assign to user in the selected region with fewest open tickets
+        $assignedTo = null;
+        if (!empty($request_data['region_id'])) {
+            $assignedTo = $this->findLeastBusyUser($request_data['region_id']);
+        }
+
         // Create ticket with all provided data
         $ticketData = [
             'subject' => $request_data['subject'],
@@ -232,6 +239,7 @@ class ContactsTicketController extends Controller
             'contact_id' => $user['id'],
             'type_id' => $request_data['type_id'] ?? null,
             'region_id' => $request_data['region_id'] ?? null,
+            'assigned_to' => $assignedTo,
             'priority' => 'low', // default priority
             'status' => 'pending', // default status
             'source' => 'contact_portal',
@@ -257,7 +265,45 @@ class ContactsTicketController extends Controller
 
         event(new TicketCreated(['ticket_id' => $ticket->id, 'source' => 'contact']));
 
+        // Notify assigned user if ticket was auto-assigned
+        if (!empty($assignedTo)) {
+            event(new AssignedUser(['ticket_id' => $ticket->id]));
+        }
+
         return redirect()->route('contact.tickets')->with('success', 'Ticket created successfully.');
+    }
+
+    /**
+     * Find the user in the specified region with the fewest open tickets.
+     */
+    private function findLeastBusyUser($regionId)
+    {
+        // Get all users with 'User' role in the specified region
+        $users = \App\Models\User::role('User')
+            ->where('region_id', $regionId)
+            ->get();
+
+        if ($users->isEmpty()) {
+            return null; // No users in this region
+        }
+
+        // Find user with fewest open tickets
+        $leastBusyUser = null;
+        $minOpenTickets = PHP_INT_MAX;
+
+        foreach ($users as $user) {
+            // Count open tickets (not closed)
+            $openTicketsCount = Ticket::where('assigned_to', $user->id)
+                ->where('status', '!=', 'closed')
+                ->count();
+
+            if ($openTicketsCount < $minOpenTickets) {
+                $minOpenTickets = $openTicketsCount;
+                $leastBusyUser = $user;
+            }
+        }
+
+        return $leastBusyUser ? $leastBusyUser->id : null;
     }
 
     public function edit($uid)

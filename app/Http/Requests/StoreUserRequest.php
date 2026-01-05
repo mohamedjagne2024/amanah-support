@@ -25,6 +25,9 @@ final class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class)],
             'password' => ['nullable', 'string', Password::defaults(), 'confirmed'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'region_id' => ['nullable', 'integer', 'exists:regions,id'],
+            'country_id' => ['nullable', 'integer', 'exists:countries,id'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['string', 'exists:roles,name'],
         ];

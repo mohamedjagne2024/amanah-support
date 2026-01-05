@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('profile_picture', 100)->nullable();
             $table->bigInteger('organization_id')->default(null)->nullable()->index();
             $table->string('member_number', 50)->nullable();
+            $table->integer('region_id')->default(null)->nullable()->index();
             $table->rememberToken();
             $table->timestamps();
         });

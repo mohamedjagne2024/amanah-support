@@ -41,6 +41,9 @@ class TicketsController extends Controller
             $byContact = $user['id'];
         } elseif ($user->hasRole('Manager')) {
             $byAssign = $user['id'];
+        } elseif ($user->hasRole('User')) {
+            // Users with 'user' role can only see tickets assigned to them
+            $byAssign = $user['id'];
         } else {
             $byAssign = Request::input('assigned_to');
         }
@@ -355,6 +358,9 @@ class TicketsController extends Controller
             $byContact = $user['id'];
         } elseif ($user->hasRole('Manager')) {
             $byAssign = $user['id'];
+        } elseif ($user->hasRole('User')) {
+            // Users with 'user' role can only see tickets assigned to them
+            $byAssign = $user['id'];
         } else {
             $byAssign = Request::input('assigned_to');
         }
@@ -455,6 +461,9 @@ class TicketsController extends Controller
         if ($user->hasRole('Contact')) {
             $byContact = $user['id'];
         } elseif ($user->hasRole('Manager')) {
+            $byAssign = $user['id'];
+        } elseif ($user->hasRole('User')) {
+            // Users with 'user' role can only edit tickets assigned to them
             $byAssign = $user['id'];
         } else {
             $byAssign = Request::input('assigned_to');
@@ -700,6 +709,9 @@ class TicketsController extends Controller
         if ($user->hasRole('Contact')) {
             $byContact = $user['id'];
         } elseif ($user->hasRole('Manager')) {
+            $byAssign = $user['id'];
+        } elseif ($user->hasRole('User')) {
+            // Users with 'user' role can only delete tickets assigned to them
             $byAssign = $user['id'];
         } else {
             $byAssign = Request::input('assigned_to');

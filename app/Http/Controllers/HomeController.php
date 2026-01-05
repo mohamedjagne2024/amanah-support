@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\ContactCreated;
 use App\Events\TicketCreated;
+use App\Events\AssignedUser;
 use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Region;
@@ -110,6 +111,12 @@ class HomeController extends Controller
             event(new ContactCreated(['id' => $contact->id, 'password' => $plain_password]));
         }
 
+        // Auto-assign to user in the selected region with fewest open tickets
+        $assignedTo = null;
+        if (!empty($ticket_data['region_id'])) {
+            $assignedTo = $this->findLeastBusyUser($ticket_data['region_id']);
+        }
+
         // Create ticket with all provided data
         $ticketObject = [
             'subject' => $ticket_data['subject'],
@@ -117,6 +124,7 @@ class HomeController extends Controller
             'contact_id' => $contact->id,
             'type_id' => $ticket_data['type_id'] ?? null,
             'region_id' => $ticket_data['region_id'] ?? null,
+            'assigned_to' => $assignedTo,
             'status' => 'pending', // default status for new tickets
             'priority' => 'low', // default priority for new tickets
             'source' => 'public_form',
@@ -146,7 +154,45 @@ class HomeController extends Controller
         ];
         event(new TicketCreated($variables));
 
+        // Notify assigned user if ticket was auto-assigned
+        if (!empty($assignedTo)) {
+            event(new AssignedUser(['ticket_id' => $ticket->id]));
+        }
+
         return Redirect::route('home')->with('success', 'The ticket has been submitted. We will send you a message to follow up on the ticket update. Please check your spam folder.');
+    }
+
+    /**
+     * Find the user in the specified region with the fewest open tickets.
+     */
+    private function findLeastBusyUser($regionId)
+    {
+        // Get all users with 'User' role in the specified region
+        $users = User::role('User')
+            ->where('region_id', $regionId)
+            ->get();
+
+        if ($users->isEmpty()) {
+            return null; // No users in this region
+        }
+
+        // Find user with fewest open tickets
+        $leastBusyUser = null;
+        $minOpenTickets = PHP_INT_MAX;
+
+        foreach ($users as $user) {
+            // Count open tickets (not closed)
+            $openTicketsCount = Ticket::where('assigned_to', $user->id)
+                ->where('status', '!=', 'closed')
+                ->count();
+
+            if ($openTicketsCount < $minOpenTickets) {
+                $minOpenTickets = $openTicketsCount;
+                $leastBusyUser = $user;
+            }
+        }
+
+        return $leastBusyUser ? $leastBusyUser->id : null;
     }
 
     private function genRendomPassword()

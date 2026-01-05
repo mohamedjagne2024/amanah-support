@@ -8,6 +8,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\User;
 use App\Models\Settings;
+use App\Models\Region;
+use App\Models\Country;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
@@ -22,6 +24,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Pusher\Pusher;
 use App\Events\UserCreated;
+use Spatie\Permission\PermissionRegistrar;
 
 final class SettingsController extends Controller
 {
@@ -125,7 +128,7 @@ final class SettingsController extends Controller
         $validSortBy = in_array($sortBy, $allowedSortColumns, true) ? $sortBy : null;
         $validSortDirection = in_array($sortDirection, $allowedSortDirections, true) ? $sortDirection : 'asc';
 
-        $users = User::with('roles', 'permissions')
+        $users = User::with('roles', 'permissions', 'region', 'country')
             ->withoutRole('contact')
             ->when($search, static function ($query, string $term): void {
                 $query->where(static function ($subQuery) use ($term): void {
@@ -143,6 +146,12 @@ final class SettingsController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'phone' => $user->phone,
+                    'region' => $user->region?->name,
+                    'region_id' => $user->region_id,
+                    'country' => $user->country?->name,
+                    'country_id' => $user->country_id,
+                    'profile_picture_url' => $user->profile_picture_url,
                     'is_super_admin' => $user->is_super_admin,
                     'roles' => $user->roles->pluck('name')->toArray(),
                     'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
@@ -173,10 +182,26 @@ final class SettingsController extends Controller
             })
             ->toArray();
 
+        $regions = Region::all()->map(static function (Region $region): array {
+            return [
+                'id' => $region->id,
+                'name' => $region->name,
+            ];
+        });
+
+        $countries = Country::all()->map(static function (Country $country): array {
+            return [
+                'id' => $country->id,
+                'name' => $country->name,
+            ];
+        });
+
         return Inertia::render('settings/user-management', [
             'users' => $users,
             'roles' => $roles,
             'permissions' => $permissions,
+            'regions' => $regions,
+            'countries' => $countries,
             'filters' => [
                 'search' => $search,
                 'sort_by' => $sortBy ?: null,
@@ -198,7 +223,7 @@ final class SettingsController extends Controller
 
         // Clear permission cache for this user and globally
         $user->forgetCachedPermissions();
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         return redirect()
             ->route('settings.user-management')
@@ -219,7 +244,7 @@ final class SettingsController extends Controller
 
         // Clear permission cache for this user and globally
         $user->forgetCachedPermissions();
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         return redirect()
             ->route('settings.user-management')
@@ -242,7 +267,7 @@ final class SettingsController extends Controller
 
         // Clear permission cache for this user and globally
         $user->forgetCachedPermissions();
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         return redirect()
             ->route('settings.user-management')
@@ -268,6 +293,9 @@ final class SettingsController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($plainPassword),
+            'phone' => $validated['phone'] ?? null,
+            'region_id' => $validated['region_id'] ?? null,
+            'country_id' => $validated['country_id'] ?? null,
         ]);
 
         // Assign roles if provided
@@ -276,7 +304,7 @@ final class SettingsController extends Controller
 
             // Clear permission cache
             $user->forgetCachedPermissions();
-            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
         }
 
         // Fire event to send email notification with login credentials
@@ -298,11 +326,17 @@ final class SettingsController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'max:255', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable', 'string'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'region_id' => ['nullable', 'integer', 'exists:regions,id'],
+            'country_id' => ['nullable', 'integer', 'exists:countries,id'],
         ]);
 
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'region_id' => $validated['region_id'] ?? null,
+            'country_id' => $validated['country_id'] ?? null,
         ]);
 
         if (!empty($validated['password'])) {

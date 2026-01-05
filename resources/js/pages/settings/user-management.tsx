@@ -11,6 +11,12 @@ type User = {
   id: number;
   name: string;
   email: string;
+  phone: string | null;
+  region: string | null;
+  region_id: number | null;
+  country: string | null;
+  country_id: number | null;
+  profile_picture_url: string | null;
   is_super_admin: boolean;
   roles: string[];
   permissions: string[];
@@ -31,10 +37,22 @@ type PermissionGroup = {
   [key: string]: PermissionItem[];
 };
 
+type Region = {
+  id: number;
+  name: string;
+};
+
+type Country = {
+  id: number;
+  name: string;
+};
+
 type UserManagementPageProps = {
   users: User[];
   roles: Role[];
   permissions: PermissionGroup;
+  regions: Region[];
+  countries: Country[];
   filters?: {
     search?: string | null;
     sort_by?: string | null;
@@ -42,7 +60,7 @@ type UserManagementPageProps = {
   };
 };
 
-export default function UserManagement({ users, roles, permissions, filters }: UserManagementPageProps) {
+export default function UserManagement({ users, roles, permissions, regions, countries, filters }: UserManagementPageProps) {
   const safeFilters = {
     search: filters?.search ?? "",
     sort_by: filters?.sort_by ?? null,
@@ -65,6 +83,9 @@ export default function UserManagement({ users, roles, permissions, filters }: U
     name: "",
     email: "",
     password: "",
+    phone: "",
+    region_id: "",
+    country_id: "",
   });
   const [editFormErrors, setEditFormErrors] = useState<Record<string, string>>({});
   const [isUpdating, setIsUpdating] = useState(false);
@@ -76,7 +97,10 @@ export default function UserManagement({ users, roles, permissions, filters }: U
     name: "",
     email: "",
     password: "",
-    password_confirmation: ""
+    password_confirmation: "",
+    phone: "",
+    region_id: "",
+    country_id: "",
   });
   const [createFormErrors, setCreateFormErrors] = useState<Record<string, string>>({});
   const [selectedCreateRoles, setSelectedCreateRoles] = useState<string[]>([]);
@@ -128,6 +152,9 @@ export default function UserManagement({ users, roles, permissions, filters }: U
       name: user.name || "",
       email: user.email || "",
       password: "",
+      phone: user.phone || "",
+      region_id: user.region_id?.toString() || "",
+      country_id: user.country_id?.toString() || "",
     });
     setEditFormErrors({});
     setIsEditUserDrawerOpen(true);
@@ -141,6 +168,9 @@ export default function UserManagement({ users, roles, permissions, filters }: U
         name: "",
         email: "",
         password: "",
+        phone: "",
+        region_id: "",
+        country_id: "",
       });
       setEditFormErrors({});
     }, 300);
@@ -198,7 +228,10 @@ export default function UserManagement({ users, roles, permissions, filters }: U
         name: "",
         email: "",
         password: "",
-        password_confirmation: ""
+        password_confirmation: "",
+        phone: "",
+        region_id: "",
+        country_id: "",
       });
       setCreateFormErrors({});
       setSelectedCreateRoles([]);
@@ -294,18 +327,67 @@ export default function UserManagement({ users, roles, permissions, filters }: U
     [safeFilters.search, safeFilters.sort_by, safeFilters.sort_direction]
   );
 
+  // Helper function to get initials from name
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const columns = useMemo<ColumnDef<User, unknown>[]>(
     () => [
       {
         accessorKey: "name",
         header: "Name",
         cell: ({ getValue, row }) => (
-          <div className="space-y-1">
-            <div className="font-medium text-default-800">{getValue<string>()}</div>
-            <div className="text-sm text-default-600">{row.original.email}</div>
+          <div className="flex items-center gap-3">
+            {row.original.profile_picture_url ? (
+              <img 
+                src={row.original.profile_picture_url} 
+                alt={getValue<string>()} 
+                className="size-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-primary font-medium text-sm">
+                  {getInitials(getValue<string>())}
+                </span>
+              </div>
+            )}
+            <div className="space-y-0.5">
+              <div className="font-medium text-default-800">{getValue<string>()}</div>
+              <div className="text-sm text-default-600">{row.original.email}</div>
+            </div>
           </div>
         ),
         enableSorting: true,
+      },
+      {
+        accessorKey: "phone",
+        header: "Phone",
+        cell: ({ getValue }) => (
+          <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
+        ),
+        enableSorting: false,
+      },
+      {
+        accessorKey: "region",
+        header: "Region",
+        cell: ({ getValue }) => (
+          <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
+        ),
+        enableSorting: false,
+      },
+      {
+        accessorKey: "country",
+        header: "Country",
+        cell: ({ getValue }) => (
+          <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
+        ),
+        enableSorting: false,
       },
       {
         accessorKey: "roles",
@@ -650,6 +732,66 @@ export default function UserManagement({ users, roles, permissions, filters }: U
             )}
           </div>
 
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              Phone
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              placeholder="Enter phone number (optional)"
+              value={createFormData.phone}
+              onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
+              disabled={isCreating}
+              className={`form-input w-full ${createFormErrors.phone ? 'border-danger focus:ring-danger' : ''}`}
+            />
+            {createFormErrors.phone && (
+              <p className="text-danger text-sm mt-1">{createFormErrors.phone}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              Region
+            </label>
+            <select
+              name="region_id"
+              value={createFormData.region_id}
+              onChange={(e) => setCreateFormData({ ...createFormData, region_id: e.target.value })}
+              disabled={isCreating}
+              className={`form-input w-full ${createFormErrors.region_id ? 'border-danger focus:ring-danger' : ''}`}
+            >
+              <option value="">Select region (optional)</option>
+              {regions.map((region) => (
+                <option key={region.id} value={region.id}>{region.name}</option>
+              ))}
+            </select>
+            {createFormErrors.region_id && (
+              <p className="text-danger text-sm mt-1">{createFormErrors.region_id}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              Country
+            </label>
+            <select
+              name="country_id"
+              value={createFormData.country_id}
+              onChange={(e) => setCreateFormData({ ...createFormData, country_id: e.target.value })}
+              disabled={isCreating}
+              className={`form-input w-full ${createFormErrors.country_id ? 'border-danger focus:ring-danger' : ''}`}
+            >
+              <option value="">Select country (optional)</option>
+              {countries.map((country) => (
+                <option key={country.id} value={country.id}>{country.name}</option>
+              ))}
+            </select>
+            {createFormErrors.country_id && (
+              <p className="text-danger text-sm mt-1">{createFormErrors.country_id}</p>
+            )}
+          </div>
+
           {/* Roles Section */}
           <div>
             <label className="block font-medium text-default-900 text-sm mb-3">
@@ -772,6 +914,66 @@ export default function UserManagement({ users, roles, permissions, filters }: U
             />
             {editFormErrors.password && (
               <p className="text-danger text-sm mt-1">{editFormErrors.password}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              Phone
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              placeholder="Enter phone number (optional)"
+              value={editFormData.phone}
+              onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+              disabled={isUpdating}
+              className={`form-input w-full ${editFormErrors.phone ? 'border-danger focus:ring-danger' : ''}`}
+            />
+            {editFormErrors.phone && (
+              <p className="text-danger text-sm mt-1">{editFormErrors.phone}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              Region
+            </label>
+            <select
+              name="region_id"
+              value={editFormData.region_id}
+              onChange={(e) => setEditFormData({ ...editFormData, region_id: e.target.value })}
+              disabled={isUpdating}
+              className={`form-input w-full ${editFormErrors.region_id ? 'border-danger focus:ring-danger' : ''}`}
+            >
+              <option value="">Select region (optional)</option>
+              {regions.map((region) => (
+                <option key={region.id} value={region.id}>{region.name}</option>
+              ))}
+            </select>
+            {editFormErrors.region_id && (
+              <p className="text-danger text-sm mt-1">{editFormErrors.region_id}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-medium text-default-900 text-sm mb-2">
+              Country
+            </label>
+            <select
+              name="country_id"
+              value={editFormData.country_id}
+              onChange={(e) => setEditFormData({ ...editFormData, country_id: e.target.value })}
+              disabled={isUpdating}
+              className={`form-input w-full ${editFormErrors.country_id ? 'border-danger focus:ring-danger' : ''}`}
+            >
+              <option value="">Select country (optional)</option>
+              {countries.map((country) => (
+                <option key={country.id} value={country.id}>{country.name}</option>
+              ))}
+            </select>
+            {editFormErrors.country_id && (
+              <p className="text-danger text-sm mt-1">{editFormErrors.country_id}</p>
             )}
           </div>
         </form>
