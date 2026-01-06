@@ -1,11 +1,11 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import axios from 'axios';
-import { 
-  FileText, 
-  Calendar, 
-  Mail, 
-  Clock, 
+import {
+  FileText,
+  Calendar,
+  Mail,
+  Clock,
   Ticket,
   Copy,
   Check,
@@ -83,6 +83,7 @@ type TicketData = {
   details: string;
   due: string | null;
   source: string;
+  response: string | null;
   created_by: {
     id: number;
     name: string;
@@ -115,7 +116,7 @@ export default function ContactTicketView({
   const [editorKey, setEditorKey] = useState(0);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  
+
   // Review state
   const [localReview, setLocalReview] = useState<ReviewType | null>(initialReview);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -176,13 +177,13 @@ export default function ContactTicketView({
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim() || isSubmitting) return;
-    
+
     setIsSubmitting(true);
     try {
       const response = await axios.post(`/contact/tickets/${ticket.id}/comment`, {
         comment: commentText,
       });
-      
+
       // Add the comment to local state immediately
       if (response.data.comment) {
         setLocalComments((prev) => {
@@ -191,7 +192,7 @@ export default function ContactTicketView({
           return [...prev, response.data.comment];
         });
       }
-      
+
       setCommentText('');
       setEditorKey((prev) => prev + 1);
       setShowNewComment(false);
@@ -237,14 +238,14 @@ export default function ContactTicketView({
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (reviewRating === 0 || isSubmittingReview) return;
-    
+
     setIsSubmittingReview(true);
     try {
       const response = await axios.post(`/contact/tickets/${ticket.id}/review`, {
         rating: reviewRating,
         review: reviewText.trim() || null,
       });
-      
+
       if (response.data.review) {
         setLocalReview(response.data.review);
         setShowReviewForm(false);
@@ -259,7 +260,7 @@ export default function ContactTicketView({
   return (
     <>
       <PageMeta title={title} />
-      
+
       <PublicLayout currentPage="/contact/tickets" footer={footer} showToast>
 
         {/* Page Content */}
@@ -269,10 +270,10 @@ export default function ContactTicketView({
             <div className="mb-8">
               <div className="mb-3">
                 <Breadcrumb
-                    items={[
+                  items={[
                     { label: 'Tickets', href: '/contact/tickets' },
                     { label: ticket.uid, href: `/contact/tickets/${ticket.id}` },
-                    ]}
+                  ]}
                 />
               </div>
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -286,7 +287,7 @@ export default function ContactTicketView({
                       <span className="absolute -top-1 -right-1 size-4 bg-success rounded-full border-2 border-white" />
                     )}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     {/* Ticket ID with copy button */}
                     <div className="flex items-center gap-2 flex-wrap">
@@ -310,10 +311,10 @@ export default function ContactTicketView({
                         </span>
                       )}
                     </div>
-                    
+
                     {/* Subject */}
                     <p className="text-default-600 text-sm mt-1 line-clamp-2">{ticket.subject}</p>
-                    
+
                     {/* Metadata Row */}
                     <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-default-500">
                       <div className="flex items-center gap-1.5">
@@ -357,7 +358,7 @@ export default function ContactTicketView({
                       Close Ticket
                     </button>
                   )}
-                  {!ticket.closed && (
+                  {!ticket.closed && ticket.response && (
                     <button
                       type="button"
                       onClick={() => setShowNewComment(true)}
@@ -386,10 +387,10 @@ export default function ContactTicketView({
                         <FileText className="size-4 text-primary" />
                         Description
                       </h6>
-                      <div 
+                      <div
                         className="prose prose-sm max-w-none text-default-600 p-4 bg-default-50 rounded-lg border border-default-200"
-                        dangerouslySetInnerHTML={{ 
-                          __html: ticket.details || '<p class="text-default-400 italic">No description provided</p>' 
+                        dangerouslySetInnerHTML={{
+                          __html: ticket.details || '<p class="text-default-400 italic">No description provided</p>'
                         }}
                       />
                     </div>
@@ -400,7 +401,7 @@ export default function ContactTicketView({
                 <div className="card">
                   <div className="card-header flex items-center justify-between">
                     <h6 className="card-title">Conversations</h6>
-                    {!ticket.closed && (
+                    {!ticket.closed && ticket.response && (
                       <button
                         onClick={() => setShowNewComment(true)}
                         className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
@@ -418,9 +419,13 @@ export default function ContactTicketView({
                         </div>
                         <h6 className="text-default-900 font-medium mb-1">No conversations yet</h6>
                         <p className="text-default-500 text-sm mb-4">
-                          {ticket.closed ? 'No conversations were made for this ticket' : 'Start a conversation to discuss this ticket'}
+                          {ticket.closed
+                            ? 'No conversations were made for this ticket'
+                            : !ticket.response
+                              ? 'Waiting for staff response...'
+                              : 'Start a conversation to discuss this ticket'}
                         </p>
-                        {!ticket.closed && (
+                        {!ticket.closed && ticket.response && (
                           <button
                             onClick={() => setShowNewComment(true)}
                             className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
@@ -436,9 +441,9 @@ export default function ContactTicketView({
                         {localComments.map((comment: CommentType) => (
                           <div key={comment.id} className="flex gap-3 p-4 bg-default-50 rounded-lg">
                             {comment.user?.profile_picture_url ? (
-                              <img 
-                                src={comment.user.profile_picture_url} 
-                                alt={comment.user.name || 'User'} 
+                              <img
+                                src={comment.user.profile_picture_url}
+                                alt={comment.user.name || 'User'}
                                 className="size-10 rounded-full object-cover shrink-0"
                               />
                             ) : (
@@ -455,16 +460,16 @@ export default function ContactTicketView({
                                   {formatDateTime(comment.created_at)}
                                 </span>
                               </div>
-                              <div 
+                              <div
                                 className="text-sm text-default-600 prose prose-sm max-w-none"
                                 dangerouslySetInnerHTML={{ __html: comment.details }}
                               />
                             </div>
                           </div>
                         ))}
-                        
-                        {/* Show reply form or add reply button - only when ticket is open */}
-                        {!ticket.closed && (
+
+                        {/* Show reply form or add reply button - only when ticket is open AND staff has responded */}
+                        {!ticket.closed && ticket.response && (
                           <>
                             {showNewComment ? (
                               <form onSubmit={handleSubmitComment} className="space-y-4 pt-4 border-t border-default-200">
@@ -510,152 +515,150 @@ export default function ContactTicketView({
 
                 {/* Review Section - Only show when ticket is closed */}
                 {ticket.closed && (
-                <div className="card">
-                  <div className="card-header">
-                    <h6 className="card-title flex items-center gap-2">
-                      <Star className="size-5 text-warning" />
-                      Rate Your Experience
-                    </h6>
-                  </div>
-                  <div className="card-body">
-                    {localReview ? (
-                      <div className="space-y-4">
-                        {/* Existing Review Display */}
-                        <div className="p-4 bg-gradient-to-r from-warning/5 to-primary/5 rounded-xl border border-warning/20">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm font-medium text-default-700">Your Rating:</span>
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star 
-                                  key={star} 
-                                  className={`size-5 ${
-                                    star <= localReview.rating 
-                                      ? 'text-warning fill-warning' 
-                                      : 'text-default-300'
-                                  }`}
-                                />
-                              ))}
+                  <div className="card">
+                    <div className="card-header">
+                      <h6 className="card-title flex items-center gap-2">
+                        <Star className="size-5 text-warning" />
+                        Rate Your Experience
+                      </h6>
+                    </div>
+                    <div className="card-body">
+                      {localReview ? (
+                        <div className="space-y-4">
+                          {/* Existing Review Display */}
+                          <div className="p-4 bg-gradient-to-r from-warning/5 to-primary/5 rounded-xl border border-warning/20">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-sm font-medium text-default-700">Your Rating:</span>
+                              <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`size-5 ${star <= localReview.rating
+                                        ? 'text-warning fill-warning'
+                                        : 'text-default-300'
+                                      }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-sm font-semibold text-warning">{localReview.rating}/5</span>
                             </div>
-                            <span className="text-sm font-semibold text-warning">{localReview.rating}/5</span>
-                          </div>
-                          {localReview.review && (
-                            <div className="text-sm text-default-600 italic">
-                              "{localReview.review}"
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Edit Review Button */}
-                        <button
-                          type="button"
-                          onClick={() => setShowReviewForm(true)}
-                          className="w-full btn btn-sm bg-transparent text-default-600 border border-dashed border-default-300 hover:bg-warning/10 hover:text-warning hover:border-warning"
-                        >
-                          <Star className="size-4 me-1" />
-                          Update Your Review
-                        </button>
-                      </div>
-                    ) : !showReviewForm ? (
-                      <div className="text-center py-8">
-                        <div className="size-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-warning/20 to-primary/20 flex items-center justify-center">
-                          <Star className="size-8 text-warning" />
-                        </div>
-                        <h6 className="text-default-900 font-medium mb-1">How was your experience?</h6>
-                        <p className="text-default-500 text-sm mb-4">Your feedback helps us improve our service</p>
-                        <button
-                          onClick={() => setShowReviewForm(true)}
-                          className="btn btn-sm bg-gradient-to-r from-warning to-amber-500 text-white hover:from-warning/90 hover:to-amber-500/90 shadow-lg shadow-warning/20"
-                        >
-                          <Star className="size-4 me-1" />
-                          Leave a Review
-                        </button>
-                      </div>
-                    ) : null}
-                    
-                    {/* Review Form */}
-                    {showReviewForm && (
-                      <form onSubmit={handleSubmitReview} className="space-y-5">
-                        {/* Star Rating */}
-                        <div>
-                          <label className="block text-sm font-medium text-default-700 mb-3">
-                            How would you rate our support?
-                          </label>
-                          <div className="flex items-center gap-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                type="button"
-                                onClick={() => setReviewRating(star)}
-                                onMouseEnter={() => setHoverRating(star)}
-                                onMouseLeave={() => setHoverRating(0)}
-                                className="p-1 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-warning/50 rounded"
-                              >
-                                <Star 
-                                  className={`size-8 transition-colors ${
-                                    star <= (hoverRating || reviewRating)
-                                      ? 'text-warning fill-warning' 
-                                      : 'text-default-300 hover:text-default-400'
-                                  }`}
-                                />
-                              </button>
-                            ))}
-                            {reviewRating > 0 && (
-                              <span className="ml-2 text-sm font-medium text-default-600">
-                                {reviewRating === 1 && 'Poor'}
-                                {reviewRating === 2 && 'Fair'}
-                                {reviewRating === 3 && 'Good'}
-                                {reviewRating === 4 && 'Very Good'}
-                                {reviewRating === 5 && 'Excellent!'}
-                              </span>
+                            {localReview.review && (
+                              <div className="text-sm text-default-600 italic">
+                                "{localReview.review}"
+                              </div>
                             )}
                           </div>
-                        </div>
-                        
-                        {/* Review Text */}
-                        <div>
-                          <label className="block text-sm font-medium text-default-700 mb-2">
-                            Tell us more (optional)
-                          </label>
-                          <textarea
-                            value={reviewText}
-                            onChange={(e) => setReviewText(e.target.value)}
-                            placeholder="Share your thoughts about the support you received..."
-                            rows={4}
-                            maxLength={1000}
-                            className="w-full px-4 py-3 rounded-lg border border-default-200 bg-white text-default-900 placeholder-default-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none"
-                          />
-                          <div className="text-xs text-default-400 mt-1 text-right">
-                            {reviewText.length}/1000 characters
-                          </div>
-                        </div>
-                        
-                        {/* Submit Buttons */}
-                        <div className="flex items-center justify-end gap-2 pt-2">
+
+                          {/* Edit Review Button */}
                           <button
                             type="button"
-                            onClick={() => {
-                              setShowReviewForm(false);
-                              if (!localReview) {
-                                setReviewRating(0);
-                                setReviewText('');
-                              }
-                            }}
-                            className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-default-100"
+                            onClick={() => setShowReviewForm(true)}
+                            className="w-full btn btn-sm bg-transparent text-default-600 border border-dashed border-default-300 hover:bg-warning/10 hover:text-warning hover:border-warning"
                           >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={isSubmittingReview || reviewRating === 0}
-                            className="btn btn-sm bg-gradient-to-r from-warning to-amber-500 text-white hover:from-warning/90 hover:to-amber-500/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-warning/20"
-                          >
-                            {isSubmittingReview ? 'Submitting...' : localReview ? 'Update Review' : 'Submit Review'}
+                            <Star className="size-4 me-1" />
+                            Update Your Review
                           </button>
                         </div>
-                      </form>
-                    )}
+                      ) : !showReviewForm ? (
+                        <div className="text-center py-8">
+                          <div className="size-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-warning/20 to-primary/20 flex items-center justify-center">
+                            <Star className="size-8 text-warning" />
+                          </div>
+                          <h6 className="text-default-900 font-medium mb-1">How was your experience?</h6>
+                          <p className="text-default-500 text-sm mb-4">Your feedback helps us improve our service</p>
+                          <button
+                            onClick={() => setShowReviewForm(true)}
+                            className="btn btn-sm bg-gradient-to-r from-warning to-amber-500 text-white hover:from-warning/90 hover:to-amber-500/90 shadow-lg shadow-warning/20"
+                          >
+                            <Star className="size-4 me-1" />
+                            Leave a Review
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {/* Review Form */}
+                      {showReviewForm && (
+                        <form onSubmit={handleSubmitReview} className="space-y-5">
+                          {/* Star Rating */}
+                          <div>
+                            <label className="block text-sm font-medium text-default-700 mb-3">
+                              How would you rate our support?
+                            </label>
+                            <div className="flex items-center gap-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  onClick={() => setReviewRating(star)}
+                                  onMouseEnter={() => setHoverRating(star)}
+                                  onMouseLeave={() => setHoverRating(0)}
+                                  className="p-1 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-warning/50 rounded"
+                                >
+                                  <Star
+                                    className={`size-8 transition-colors ${star <= (hoverRating || reviewRating)
+                                        ? 'text-warning fill-warning'
+                                        : 'text-default-300 hover:text-default-400'
+                                      }`}
+                                  />
+                                </button>
+                              ))}
+                              {reviewRating > 0 && (
+                                <span className="ml-2 text-sm font-medium text-default-600">
+                                  {reviewRating === 1 && 'Poor'}
+                                  {reviewRating === 2 && 'Fair'}
+                                  {reviewRating === 3 && 'Good'}
+                                  {reviewRating === 4 && 'Very Good'}
+                                  {reviewRating === 5 && 'Excellent!'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Review Text */}
+                          <div>
+                            <label className="block text-sm font-medium text-default-700 mb-2">
+                              Tell us more (optional)
+                            </label>
+                            <textarea
+                              value={reviewText}
+                              onChange={(e) => setReviewText(e.target.value)}
+                              placeholder="Share your thoughts about the support you received..."
+                              rows={4}
+                              maxLength={1000}
+                              className="w-full px-4 py-3 rounded-lg border border-default-200 bg-white text-default-900 placeholder-default-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none"
+                            />
+                            <div className="text-xs text-default-400 mt-1 text-right">
+                              {reviewText.length}/1000 characters
+                            </div>
+                          </div>
+
+                          {/* Submit Buttons */}
+                          <div className="flex items-center justify-end gap-2 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowReviewForm(false);
+                                if (!localReview) {
+                                  setReviewRating(0);
+                                  setReviewText('');
+                                }
+                              }}
+                              className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-default-100"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={isSubmittingReview || reviewRating === 0}
+                              className="btn btn-sm bg-gradient-to-r from-warning to-amber-500 text-white hover:from-warning/90 hover:to-amber-500/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-warning/20"
+                            >
+                              {isSubmittingReview ? 'Submitting...' : localReview ? 'Update Review' : 'Submit Review'}
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
                   </div>
-                </div>
                 )}
               </div>
 

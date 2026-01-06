@@ -82,6 +82,10 @@ final class SettingsController extends Controller
                 'gcs_bucket' => $settings['gcs_bucket'] ?? null,
                 'gcs_path_prefix' => $settings['gcs_path_prefix'] ?? null,
                 'gcs_api_uri' => $settings['gcs_api_uri'] ?? null,
+                'escalate_value' => $settings['escalate_value'] ?? null,
+                'escalate_unit' => $settings['escalate_unit'] ?? null,
+                'autoclose_value' => $settings['autoclose_value'] ?? null,
+                'autoclose_unit' => $settings['autoclose_unit'] ?? null,
             ],
             'currencies' => $currencies,
         ]);

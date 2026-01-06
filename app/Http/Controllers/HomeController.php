@@ -130,6 +130,16 @@ class HomeController extends Controller
             'source' => 'public_form',
         ];
 
+        // Get ticket automation settings from general settings
+        $automationSettings = Settings::whereIn('name', ['escalate_value', 'escalate_unit', 'autoclose_value', 'autoclose_unit'])
+            ->pluck('value', 'name')
+            ->toArray();
+
+        $ticketObject['escalate_value'] = $automationSettings['escalate_value'] ?? null;
+        $ticketObject['escalate_unit'] = $automationSettings['escalate_unit'] ?? null;
+        $ticketObject['autoclose_value'] = $automationSettings['autoclose_value'] ?? null;
+        $ticketObject['autoclose_unit'] = $automationSettings['autoclose_unit'] ?? null;
+
         $ticket = Ticket::create($ticketObject);
 
         // Handle file attachments if provided

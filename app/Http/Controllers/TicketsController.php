@@ -125,8 +125,11 @@ class TicketsController extends Controller
                         'due' => Carbon::parse($ticket->due)->format(Settings::get('date_format')),
                         'assigned_to' => $ticket->assignedTo ? $ticket->assignedTo->name : null,
                         'assigned_to_photo' => $ticket->assignedTo ? $ticket->assignedTo->profile_picture_url : null,
-                        'created_at' => Carbon::parse($ticket->created_at)->format(Settings::get('date_format')),
+                        'created_at' => $ticket->created_at->toIso8601String(),
                         'updated_at' => Carbon::parse($ticket->updated_at)->format(Settings::get('date_format')),
+                        'escalate_value' => $ticket->escalate_value,
+                        'escalate_unit' => $ticket->escalate_unit,
+                        'response' => $ticket->response,
                     ];
                 }),
         ]);
@@ -318,6 +321,16 @@ class TicketsController extends Controller
 
         // Set default status to 'pending' for new tickets
         $request_data['status'] = 'pending';
+
+        // Get ticket automation settings from general settings
+        $automationSettings = Settings::whereIn('name', ['escalate_value', 'escalate_unit', 'autoclose_value', 'autoclose_unit'])
+            ->pluck('value', 'name')
+            ->toArray();
+
+        $request_data['escalate_value'] = $automationSettings['escalate_value'] ?? null;
+        $request_data['escalate_unit'] = $automationSettings['escalate_unit'] ?? null;
+        $request_data['autoclose_value'] = $automationSettings['autoclose_value'] ?? null;
+        $request_data['autoclose_unit'] = $automationSettings['autoclose_unit'] ?? null;
 
         $ticket = Ticket::create($request_data);
 
@@ -822,6 +835,19 @@ class TicketsController extends Controller
                 'name' => $user->name,
             ],
         ];
+
+        // update the ticket reponse time ( this is the latest response time)
+        $ticket->update([
+            'response' => now(),
+        ]);
+
+        // change the ticket status to open if it is closed
+        if ($ticket->status == 'closed' || $ticket->status == 'pending') {
+            $ticket->update([
+                'status' => 'open',
+                'close' => null,
+            ]);
+        }
 
         // Dispatch Pusher event for real-time updates
         event(new TicketNewComment(

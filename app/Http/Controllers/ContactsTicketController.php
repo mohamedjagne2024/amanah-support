@@ -178,6 +178,7 @@ class ContactsTicketController extends Controller
                 'details' => $ticket->details,
                 'due' => $ticket->due,
                 'source' => $ticket->source ?? 'Portal',
+                'response' => $ticket->response,
                 'created_by' => $ticket->createdBy ? [
                     'id' => $ticket->createdBy->id,
                     'name' => $ticket->createdBy->name,
@@ -244,6 +245,16 @@ class ContactsTicketController extends Controller
             'status' => 'pending', // default status
             'source' => 'contact_portal',
         ];
+
+        // Get ticket automation settings from general settings
+        $automationSettings = Settings::whereIn('name', ['escalate_value', 'escalate_unit', 'autoclose_value', 'autoclose_unit'])
+            ->pluck('value', 'name')
+            ->toArray();
+
+        $ticketData['escalate_value'] = $automationSettings['escalate_value'] ?? null;
+        $ticketData['escalate_unit'] = $automationSettings['escalate_unit'] ?? null;
+        $ticketData['autoclose_value'] = $automationSettings['autoclose_value'] ?? null;
+        $ticketData['autoclose_unit'] = $automationSettings['autoclose_unit'] ?? null;
 
         $ticket = Ticket::create($ticketData);
 

@@ -1,6 +1,6 @@
 import { Link, router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable, Badge, type DataTableBulkAction, type DataTableFilter, type DataTableRowAction } from "@/components/DataTable";
 import { ConfirmDialog } from "@/components/Dialog";
 import AppLayout from "@/layouts/app-layout";
@@ -51,6 +51,9 @@ type TicketRecord = {
   assigned_to_photo: string | null;
   created_at: string;
   updated_at: string;
+  escalate_value: number | null;
+  escalate_unit: string | null;
+  response: string | null;
 };
 
 type TicketPaginator = {
@@ -86,15 +89,15 @@ type TicketPageProps = {
   filters: TicketFilters;
 };
 
-export default function Index({ 
+export default function Index({
   title,
-  tickets, 
-  priorities, 
-  types, 
-  categories, 
-  regions, 
-  statuses, 
-  filters 
+  tickets,
+  priorities,
+  types,
+  categories,
+  regions,
+  statuses,
+  filters
 }: TicketPageProps) {
   const safeTickets: TicketPaginator = {
     data: tickets?.data ?? [],
@@ -118,12 +121,12 @@ export default function Index({
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingTicket, setDeletingTicket] = useState<TicketRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Bulk delete dialog state
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [bulkDeleteIds, setBulkDeleteIds] = useState<number[]>([]);
@@ -240,19 +243,166 @@ export default function Index({
   // Format date helper
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
+  // Escalation Timer Component
+  const EscalationTimer = ({ ticket }: { ticket: TicketRecord }) => {
+    const [timeRemaining, setTimeRemaining] = useState('');
+    const [percentage, setPercentage] = useState(0);
+    const [isOverdue, setIsOverdue] = useState(false);
+
+    useEffect(() => {
+      const calculateTime = () => {
+        if (!ticket.escalate_value || !ticket.escalate_unit) {
+          setTimeRemaining('-');
+          setPercentage(0);
+          return;
+        }
+
+        // If ticket has been responded to, stop the timer
+        if (ticket.response) {
+          setTimeRemaining('Responded');
+          setPercentage(0);
+          setIsOverdue(false);
+          return;
+        }
+
+        const createdAt = new Date(ticket.created_at);
+        const now = new Date();
+        const elapsedMs = now.getTime() - createdAt.getTime();
+
+        // Convert escalate time to milliseconds
+        let escalateMs = 0;
+        const escalateValue = ticket.escalate_value;
+
+        switch (ticket.escalate_unit) {
+          case 'minutes':
+            escalateMs = escalateValue * 60 * 1000;
+            break;
+          case 'hours':
+            escalateMs = escalateValue * 60 * 60 * 1000;
+            break;
+          case 'days':
+            escalateMs = escalateValue * 24 * 60 * 60 * 1000;
+            break;
+        }
+
+        // Calculate percentage
+        const pct = Math.min((elapsedMs / escalateMs) * 100, 100);
+        setPercentage(pct);
+
+        // Calculate remaining time
+        const remainingMs = escalateMs - elapsedMs;
+        setIsOverdue(remainingMs <= 0);
+
+        if (remainingMs <= 0) {
+          // Show how much overdue
+          const overdueMs = Math.abs(remainingMs);
+          const totalSeconds = Math.floor(overdueMs / 1000);
+          const days = Math.floor(totalSeconds / 86400);
+          const hours = Math.floor((totalSeconds % 86400) / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+          let formatted = 'Overdue ';
+          if (days > 0) {
+            formatted += `${days}d ${hours}h`;
+          } else if (hours > 0) {
+            formatted += `${hours}h ${minutes}m`;
+          } else {
+            formatted += `${minutes}m`;
+          }
+
+          setTimeRemaining(formatted);
+        } else {
+          // Format remaining time
+          const totalSeconds = Math.floor(remainingMs / 1000);
+          const days = Math.floor(totalSeconds / 86400);
+          const hours = Math.floor((totalSeconds % 86400) / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+
+          let formatted = '';
+          if (days > 0) {
+            formatted = `${days}d ${hours}h ${minutes}m`;
+          } else if (hours > 0) {
+            formatted = `${hours}h ${minutes}m ${seconds}s`;
+          } else if (minutes > 0) {
+            formatted = `${minutes}m ${seconds}s`;
+          } else {
+            formatted = `${seconds}s`;
+          }
+
+          setTimeRemaining(formatted);
+        }
+      };
+
+      calculateTime();
+      const interval = setInterval(calculateTime, 1000);
+
+      return () => clearInterval(interval);
+    }, [ticket.created_at, ticket.escalate_value, ticket.escalate_unit, ticket.response]);
+
+    if (!ticket.escalate_value || !ticket.escalate_unit) {
+      return <span className="text-sm text-default-400">-</span>;
+    }
+
+    // If ticket has been responded to, show success status
+    if (ticket.response) {
+      return (
+        <div className="min-w-[150px]">
+          <div className="flex items-center gap-2">
+            <Clock className="size-4 text-success" />
+            <span className="text-sm font-medium text-success">Responded</span>
+          </div>
+        </div>
+      );
+    }
+
+    const getColorClass = () => {
+      if (isOverdue) return 'text-danger';
+      if (percentage >= 80) return 'text-warning';
+      if (percentage >= 60) return 'text-info';
+      return 'text-success';
+    };
+
+    return (
+      <div className="min-w-[150px]">
+        <div className="flex items-center gap-2">
+          <Clock className={`size-4 ${getColorClass()}`} />
+          <div className="flex flex-col gap-1">
+            <span className={`text-sm font-medium ${getColorClass()}`}>
+              {timeRemaining}
+            </span>
+            <div className="w-full bg-default-200 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${isOverdue
+                  ? 'bg-danger'
+                  : percentage >= 80
+                    ? 'bg-warning'
+                    : percentage >= 60
+                      ? 'bg-info'
+                      : 'bg-success'
+                  }`}
+                style={{ width: `${Math.min(percentage, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Export handler
   const handleExport = useCallback(() => {
     const params = new URLSearchParams();
-    
+
     if (safeFilters.search) params.append('search', safeFilters.search);
     if (safeFilters.priority) params.append('priority', safeFilters.priority);
     if (safeFilters.status) params.append('status', safeFilters.status);
@@ -269,17 +419,17 @@ export default function Index({
   }, []);
 
   const submitQuery = useCallback(
-    (partial: Partial<{ 
-      search: string; 
-      priority: string; 
-      status: string; 
-      type_id: string; 
-      category_id: string; 
-      region_id: string; 
-      page: number; 
-      perPage: number; 
-      sort_by: string | null; 
-      sort_direction: 'asc' | 'desc' | null 
+    (partial: Partial<{
+      search: string;
+      priority: string;
+      status: string;
+      type_id: string;
+      category_id: string;
+      region_id: string;
+      page: number;
+      perPage: number;
+      sort_by: string | null;
+      sort_direction: 'asc' | 'desc' | null
     }>) => {
       const query = {
         search: partial.search ?? safeFilters.search ?? "",
@@ -294,7 +444,7 @@ export default function Index({
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.priority !== (safeFilters.priority ?? "") ||
         query.status !== (safeFilters.status ?? "") ||
@@ -467,6 +617,12 @@ export default function Index({
         enableSorting: false
       },
       {
+        accessorKey: "escalate_timer",
+        header: "Time to Escalate",
+        cell: ({ row }) => <EscalationTimer ticket={row.original} />,
+        enableSorting: false
+      },
+      {
         accessorKey: "updated_at",
         header: "Updated",
         cell: ({ getValue }) => (
@@ -572,7 +728,7 @@ export default function Index({
     <AppLayout>
       <PageMeta title={title} />
       <main>
-        <Breadcrumb 
+        <Breadcrumb
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Tickets', href: '/tickets' },
@@ -592,17 +748,15 @@ export default function Index({
                   onFinish: () => setIsLoading(false)
                 });
               }}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeQuickFilter === 'open'
-                  ? 'bg-info text-white shadow-md'
-                  : 'bg-default-100 text-default-700 hover:bg-default-200'
-              }`}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${activeQuickFilter === 'open'
+                ? 'bg-info text-white shadow-md'
+                : 'bg-default-100 text-default-700 hover:bg-default-200'
+                }`}
             >
               <CircleCheck className="size-4" />
               Open
-              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
-                activeQuickFilter === 'open' ? 'bg-white/20' : 'bg-default-200'
-              }`}>
+              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${activeQuickFilter === 'open' ? 'bg-white/20' : 'bg-default-200'
+                }`}>
                 {quickFilterCounts.open}
               </span>
             </button>
@@ -616,17 +770,15 @@ export default function Index({
                   onFinish: () => setIsLoading(false)
                 });
               }}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeQuickFilter === 'highPriority'
-                  ? 'bg-warning text-white shadow-md'
-                  : 'bg-default-100 text-default-700 hover:bg-default-200'
-              }`}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${activeQuickFilter === 'highPriority'
+                ? 'bg-warning text-white shadow-md'
+                : 'bg-default-100 text-default-700 hover:bg-default-200'
+                }`}
             >
               <AlertTriangle className="size-4" />
               High Priority
-              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
-                activeQuickFilter === 'highPriority' ? 'bg-white/20' : 'bg-default-200'
-              }`}>
+              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${activeQuickFilter === 'highPriority' ? 'bg-white/20' : 'bg-default-200'
+                }`}>
                 {quickFilterCounts.highPriority}
               </span>
             </button>
@@ -640,17 +792,15 @@ export default function Index({
                   onFinish: () => setIsLoading(false)
                 });
               }}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeQuickFilter === 'unassigned'
-                  ? 'bg-danger text-white shadow-md'
-                  : 'bg-default-100 text-default-700 hover:bg-default-200'
-              }`}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${activeQuickFilter === 'unassigned'
+                ? 'bg-danger text-white shadow-md'
+                : 'bg-default-100 text-default-700 hover:bg-default-200'
+                }`}
             >
               <UserX className="size-4" />
               Unassigned
-              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
-                activeQuickFilter === 'unassigned' ? 'bg-white/20' : 'bg-default-200'
-              }`}>
+              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${activeQuickFilter === 'unassigned' ? 'bg-white/20' : 'bg-default-200'
+                }`}>
                 {quickFilterCounts.unassigned}
               </span>
             </button>
@@ -664,17 +814,15 @@ export default function Index({
                   onFinish: () => setIsLoading(false)
                 });
               }}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeQuickFilter === 'recent'
-                  ? 'bg-primary text-white shadow-md'
-                  : 'bg-default-100 text-default-700 hover:bg-default-200'
-              }`}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${activeQuickFilter === 'recent'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-default-100 text-default-700 hover:bg-default-200'
+                }`}
             >
               <Clock className="size-4" />
               Recent
-              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
-                activeQuickFilter === 'recent' ? 'bg-white/20' : 'bg-default-200'
-              }`}>
+              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${activeQuickFilter === 'recent' ? 'bg-white/20' : 'bg-default-200'
+                }`}>
                 {quickFilterCounts.recent}
               </span>
             </button>
@@ -756,9 +904,8 @@ export default function Index({
                     <MenuItem>
                       {({ focus }) => (
                         <button
-                          className={`w-full text-left flex items-center gap-2 py-1.5 px-3 text-sm font-medium text-default-500 rounded cursor-pointer ${
-                            focus ? 'bg-default-150' : ''
-                          }`}
+                          className={`w-full text-left flex items-center gap-2 py-1.5 px-3 text-sm font-medium text-default-500 rounded cursor-pointer ${focus ? 'bg-default-150' : ''
+                            }`}
                           onClick={handleExport}
                         >
                           <Download className="size-4" />
@@ -769,9 +916,8 @@ export default function Index({
                     <MenuItem>
                       {({ focus }) => (
                         <button
-                          className={`w-full text-left flex items-center gap-2 py-1.5 px-3 text-sm font-medium text-default-500 rounded cursor-pointer ${
-                            focus ? 'bg-default-150' : ''
-                          }`}
+                          className={`w-full text-left flex items-center gap-2 py-1.5 px-3 text-sm font-medium text-default-500 rounded cursor-pointer ${focus ? 'bg-default-150' : ''
+                            }`}
                           onClick={handleImportClick}
                         >
                           <Upload className="size-4" />

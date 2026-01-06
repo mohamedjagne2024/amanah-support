@@ -17,6 +17,18 @@ final class UpdateGeneralSettingsRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'decimal_places' => $this->input('decimal_places') === '' ? null : $this->input('decimal_places'),
+            'escalate_value' => $this->input('escalate_value') === '' ? null : $this->input('escalate_value'),
+            'autoclose_value' => $this->input('autoclose_value') === '' ? null : $this->input('autoclose_value'),
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -34,7 +46,7 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'decimal_places' => ['nullable', 'integer', 'min:0', 'max:10'],
             'currency' => ['nullable', 'string', 'max:10'],
             'required_ticket_fields' => ['nullable', 'array'],
-            'required_ticket_fields.*' => ['string', 'in:contact,region,category,sub_category,ticket_type,assigned_to'],
+            'required_ticket_fields.*' => ['string'],
             'email_notifications' => ['nullable', 'array'],
             'email_notifications.ticket_by_contact' => ['nullable', 'boolean'],
             'email_notifications.ticket_from_dashboard' => ['nullable', 'boolean'],
@@ -47,6 +59,10 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'gcs_bucket' => ['nullable', 'string', 'max:255'],
             'gcs_path_prefix' => ['nullable', 'string', 'max:255'],
             'gcs_api_uri' => ['nullable', 'string', 'max:255', 'url'],
+            'escalate_value' => ['nullable', 'numeric', 'min:0'],
+            'escalate_unit' => ['nullable', 'string', 'in:minutes,hours,days'],
+            'autoclose_value' => ['nullable', 'numeric', 'min:0'],
+            'autoclose_unit' => ['nullable', 'string', 'in:minutes,hours,days'],
         ];
     }
 

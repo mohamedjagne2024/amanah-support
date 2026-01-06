@@ -1,4 +1,4 @@
-import { useForm, router } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
@@ -37,6 +37,10 @@ type GeneralSettingsPageProps = {
     gcs_bucket: string | null;
     gcs_path_prefix: string | null;
     gcs_api_uri: string | null;
+    escalate_value: string | null;
+    escalate_unit: string | null;
+    autoclose_value: string | null;
+    autoclose_unit: string | null;
   };
   currencies: CurrencyOption[];
   users: Array<{
@@ -47,7 +51,7 @@ type GeneralSettingsPageProps = {
 };
 
 export default function General({ settings, currencies, users }: GeneralSettingsPageProps) {
-  const { data, setData, processing, errors } = useForm<{
+  const { data, setData, put, processing, errors } = useForm<{
     timezone: string;
     date_format: string;
     time_format: string;
@@ -63,6 +67,10 @@ export default function General({ settings, currencies, users }: GeneralSettings
     gcs_bucket: string;
     gcs_path_prefix: string;
     gcs_api_uri: string;
+    escalate_value: string;
+    escalate_unit: string;
+    autoclose_value: string;
+    autoclose_unit: string;
   }>({
     timezone: settings.timezone ?? '',
     date_format: settings.date_format ?? '',
@@ -86,6 +94,10 @@ export default function General({ settings, currencies, users }: GeneralSettings
     gcs_bucket: settings.gcs_bucket ?? '',
     gcs_path_prefix: settings.gcs_path_prefix ?? '',
     gcs_api_uri: settings.gcs_api_uri ?? '',
+    escalate_value: settings.escalate_value ?? '',
+    escalate_unit: settings.escalate_unit ?? 'hours',
+    autoclose_value: settings.autoclose_value ?? '',
+    autoclose_unit: settings.autoclose_unit ?? 'hours',
   });
 
   const handleEmailNotificationToggle = (key: keyof EmailNotificationsType) => {
@@ -191,7 +203,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
   const handleTicketFieldToggle = (fieldName: string) => {
     const currentFields = data.required_ticket_fields || [];
     const isCurrentlyRequired = currentFields.includes(fieldName);
-    
+
     if (isCurrentlyRequired) {
       // Remove the field from required fields
       setData('required_ticket_fields', currentFields.filter(f => f !== fieldName));
@@ -203,10 +215,9 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Use router.put to send serialized approval users
-    router.put('/settings/general', {
-      ...data,
+
+    put('/settings/general', {
+      preserveScroll: true,
     });
   };
 
@@ -495,18 +506,16 @@ export default function General({ settings, currencies, users }: GeneralSettings
                         type="button"
                         onClick={() => handleEmailNotificationToggle(item.key)}
                         disabled={processing}
-                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                          data.email_notifications[item.key]
-                            ? 'bg-primary'
-                            : 'bg-default-200'
-                        }`}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${data.email_notifications[item.key]
+                          ? 'bg-primary'
+                          : 'bg-default-200'
+                          }`}
                       >
                         <span
-                          className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            data.email_notifications[item.key]
-                              ? 'translate-x-5'
-                              : 'translate-x-0'
-                          }`}
+                          className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${data.email_notifications[item.key]
+                            ? 'translate-x-5'
+                            : 'translate-x-0'
+                            }`}
                         />
                       </button>
                       <div>
@@ -521,24 +530,97 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     {/* Status Indicator */}
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`size-2 rounded-full ${
-                          data.email_notifications[item.key]
-                            ? 'bg-green-500'
-                            : 'bg-default-300'
-                        }`}
+                        className={`size-2 rounded-full ${data.email_notifications[item.key]
+                          ? 'bg-green-500'
+                          : 'bg-default-300'
+                          }`}
                       />
                       <span
-                        className={`text-xs font-medium ${
-                          data.email_notifications[item.key]
-                            ? 'text-green-600'
-                            : 'text-default-500'
-                        }`}
+                        className={`text-xs font-medium ${data.email_notifications[item.key]
+                          ? 'text-green-600'
+                          : 'text-default-500'
+                          }`}
                       >
                         {data.email_notifications[item.key] ? 'Enabled' : 'Disabled'}
                       </span>
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Ticket Automation Settings */}
+          <div className="card">
+            <div className="card-header">
+              <h6 className="card-title">Ticket Automation Settings</h6>
+              <p className="text-sm text-default-600 mt-1">
+                Configure automatic ticket escalation and closure settings
+              </p>
+            </div>
+            <div className="card-body">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Max Time to Escalate */}
+                <div>
+                  <label className="block font-medium text-default-900 text-sm mb-2">
+                    Max Time to Escalate the Ticket
+                  </label>
+                  <div className="flex items-center">
+                    <span className="inline-block">
+                      <select
+                        value={data.escalate_unit}
+                        onChange={(e) => setData('escalate_unit', e.target.value)}
+                        disabled={processing}
+                        className="form-input !rounded-s-none !border-s-0"
+                      >
+                        <option value="minutes">Minutes</option>
+                        <option value="hours">Hours</option>
+                        <option value="days">Days</option>
+                      </select>
+                    </span>
+                    <input
+                      type="number"
+                      value={data.escalate_value}
+                      onChange={(e) => setData('escalate_value', e.target.value)}
+                      placeholder="e.g., 24"
+                      disabled={processing}
+                      min={0}
+                      className="form-input !rounded-e-none flex-1"
+                    />
+                  </div>
+                  <InputError message={errors.escalate_value} />
+                </div>
+
+                {/* Max Time to Autoclose */}
+                <div>
+                  <label className="block font-medium text-default-900 text-sm mb-2">
+                    Max Time to Autoclose the Ticket
+                  </label>
+                  <div className="flex items-center">
+                    <span className="inline-block">
+                      <select
+                        value={data.autoclose_unit}
+                        onChange={(e) => setData('autoclose_unit', e.target.value)}
+                        disabled={processing}
+                        className="form-input !rounded-s-none !border-s-0"
+                      >
+                        <option value="minutes">Minutes</option>
+                        <option value="hours">Hours</option>
+                        <option value="days">Days</option>
+                      </select>
+                    </span>
+                    <input
+                      type="number"
+                      value={data.autoclose_value}
+                      onChange={(e) => setData('autoclose_value', e.target.value)}
+                      placeholder="e.g., 72"
+                      disabled={processing}
+                      min={0}
+                      className="form-input !rounded-e-none flex-1"
+                    />
+                  </div>
+                  <InputError message={errors.autoclose_value} />
+                </div>
               </div>
             </div>
           </div>

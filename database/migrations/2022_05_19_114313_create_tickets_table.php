@@ -36,9 +36,14 @@ class CreateTicketsTable extends Migration
             $table->integer('assigned_to')->nullable()->index();
             $table->integer('type_id')->nullable()->index();
             $table->text('details');
+            $table->integer('escalate_value')->nullable();
+            $table->string('escalate_unit')->nullable();
+            $table->integer('autoclose_value')->nullable();
+            $table->string('autoclose_unit')->nullable();
             $table->integer('review_id')->nullable();
             $table->string('source', 50)->nullable()->default('Email');
             $table->string('tags', 500)->nullable();
+            $table->timestamp('escalated_at')->nullable();
             $table->timestamps();
         });
     }
