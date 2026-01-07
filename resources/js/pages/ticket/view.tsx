@@ -25,7 +25,6 @@ import PageMeta from '@/components/PageMeta';
 import TextEditor from '@/components/TextEditor';
 import Breadcrumb from '@/components/Breadcrumb';
 import { useTicketCommentListener } from '@/hooks/usePusher';
-import { ConfirmDialog } from '@/components/Dialog';
 
 type AttachmentType = {
   id: number;
@@ -83,6 +82,8 @@ type TicketData = {
   actual_hours: string;
   files: File[];
   comment_access: string;
+  resolution_details: string | null;
+  resolve: string | null;
   created_by: {
     id: number;
     name: string;
@@ -243,7 +244,7 @@ export default function View({
   const getStatusBadgeClass = (status: string | null) => {
     if (!status) return 'bg-default-200 text-default-700';
     const s = status.toLowerCase();
-    if (s.includes('closed') || s.includes('resolved')) return 'bg-danger text-white';
+    if (s.includes('closed') || s.includes('resolved')) return 'bg-success text-white';
     if (s.includes('open') || s.includes('new')) return 'bg-info text-white';
     if (s.includes('pending')) return 'bg-warning text-white';
     if (s.includes('progress')) return 'bg-primary text-white';
@@ -404,6 +405,40 @@ export default function View({
                 </div>
               </div>
             </div>
+
+            {/* Resolution Details Card - Only show when ticket is resolved */}
+            {ticket.resolution_details && (ticket.status === 'resolved' || ticket.closed) && (
+              <div className="card">
+                <div className="card-header">
+                  <h6 className="card-title flex items-center gap-2">
+                    <CheckCircle className="size-5 text-success" />
+                    Resolution Details
+                  </h6>
+                </div>
+                <div className="card-body">
+                  <div className="p-4 bg-gradient-to-r from-success/5 to-primary/5 rounded-xl border border-success/20">
+                    <div className="flex items-start gap-4">
+                      <div className="size-10 rounded-full bg-success/10 flex items-center justify-center text-success shrink-0">
+                        <CheckCircle className="size-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-default-900">Ticket Resolved</span>
+                          {ticket.resolve && (
+                            <span className="text-xs text-default-400">
+                              {formatDateTime(ticket.resolve)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-default-600 whitespace-pre-wrap">
+                          {ticket.resolution_details}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Ticket Activity Log Card */}
             <div className="card">
@@ -620,8 +655,8 @@ export default function View({
                               <Star
                                 key={star}
                                 className={`size-5 ${star <= ticket.review.rating
-                                    ? 'text-warning fill-warning'
-                                    : 'text-default-300'
+                                  ? 'text-warning fill-warning'
+                                  : 'text-default-300'
                                   }`}
                               />
                             ))}

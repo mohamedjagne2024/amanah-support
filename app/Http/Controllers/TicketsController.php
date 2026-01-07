@@ -462,6 +462,8 @@ class TicketsController extends Controller
                     'name' => $ticket->createdBy->name,
                     'profile_picture_url' => $ticket->createdBy->profile_picture_url,
                 ] : null,
+                'resolution_details' => $ticket->resolution_details,
+                'resolve' => $ticket->resolve,
             ],
         ]);
     }
@@ -797,10 +799,11 @@ class TicketsController extends Controller
             'resolution_details' => ['required', 'string', 'min:10'],
         ]);
 
-        // Update ticket status to resolved
+        // Update ticket status to resolved and save resolution details
         $ticket->update([
             'status' => 'resolved',
-            'resolve' => now()
+            'resolve' => now(),
+            'resolution_details' => $request['resolution_details']
         ]);
 
         // Fire event to send email notification to contact user

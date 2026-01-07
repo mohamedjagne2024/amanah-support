@@ -1,4 +1,3 @@
-import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import axios from 'axios';
 import {
@@ -14,14 +13,13 @@ import {
   Star,
   Eye,
   Download,
-  XCircle,
+  CheckCircle,
 } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 import PageMeta from '@/components/PageMeta';
 import TextEditor from '@/components/TextEditor';
 import Breadcrumb from '@/components/Breadcrumb';
 import { useTicketCommentListener } from '@/hooks/usePusher';
-import { ConfirmDialog } from '@/components/Dialog';
 
 type AttachmentType = {
   id: number;
@@ -89,6 +87,8 @@ type TicketData = {
     name: string;
     profile_picture_url?: string | null;
   } | null;
+  resolution_details: string | null;
+  resolve: string | null;
 };
 
 type ViewTicketPageProps = {
@@ -114,8 +114,6 @@ export default function ContactTicketView({
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
-  const [showCloseModal, setShowCloseModal] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
 
   // Review state
   const [localReview, setLocalReview] = useState<ReviewType | null>(initialReview);
@@ -215,24 +213,11 @@ export default function ContactTicketView({
   const getStatusBadgeClass = (status: string | null) => {
     if (!status) return 'bg-default-200 text-default-700';
     const s = status.toLowerCase();
-    if (s.includes('closed') || s.includes('resolved')) return 'bg-danger text-white';
+    if (s.includes('closed') || s.includes('resolved')) return 'bg-success text-white';
     if (s.includes('open') || s.includes('new')) return 'bg-info text-white';
     if (s.includes('pending')) return 'bg-warning text-white';
     if (s.includes('progress')) return 'bg-primary text-white';
     return 'bg-default-200 text-default-700';
-  };
-
-  const handleCloseTicket = async () => {
-    setIsClosing(true);
-    try {
-      await axios.post(`/contact/tickets/${ticket.id}/close`);
-      setShowCloseModal(false);
-      router.reload();
-    } catch {
-      // Error handling - close failed
-    } finally {
-      setIsClosing(false);
-    }
   };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -348,16 +333,6 @@ export default function ContactTicketView({
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {!ticket.closed && (
-                    <button
-                      type="button"
-                      onClick={() => setShowCloseModal(true)}
-                      className="btn btn-sm bg-danger text-white"
-                    >
-                      <XCircle className="size-4 me-1" />
-                      Close Ticket
-                    </button>
-                  )}
                   {!ticket.closed && ticket.response && (
                     <button
                       type="button"
@@ -396,6 +371,40 @@ export default function ContactTicketView({
                     </div>
                   </div>
                 </div>
+
+                {/* Resolution Details Card - Only show when ticket is resolved */}
+                {ticket.resolution_details && (ticket.status?.slug === 'resolved' || ticket.closed) && (
+                  <div className="card">
+                    <div className="card-header">
+                      <h6 className="card-title flex items-center gap-2">
+                        <CheckCircle className="size-5 text-success" />
+                        Resolution Details
+                      </h6>
+                    </div>
+                    <div className="card-body">
+                      <div className="p-4 bg-gradient-to-r from-success/5 to-primary/5 rounded-xl border border-success/20">
+                        <div className="flex items-start gap-4">
+                          <div className="size-10 rounded-full bg-success/10 flex items-center justify-center text-success shrink-0">
+                            <CheckCircle className="size-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-default-900">Ticket Resolved</span>
+                              {ticket.resolve && (
+                                <span className="text-xs text-default-400">
+                                  {formatDateTime(ticket.resolve)}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-default-600 whitespace-pre-wrap">
+                              {ticket.resolution_details}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Conversations Card */}
                 <div className="card">
@@ -534,8 +543,8 @@ export default function ContactTicketView({
                                   <Star
                                     key={star}
                                     className={`size-5 ${star <= localReview.rating
-                                        ? 'text-warning fill-warning'
-                                        : 'text-default-300'
+                                      ? 'text-warning fill-warning'
+                                      : 'text-default-300'
                                       }`}
                                   />
                                 ))}
@@ -596,8 +605,8 @@ export default function ContactTicketView({
                                 >
                                   <Star
                                     className={`size-8 transition-colors ${star <= (hoverRating || reviewRating)
-                                        ? 'text-warning fill-warning'
-                                        : 'text-default-300 hover:text-default-400'
+                                      ? 'text-warning fill-warning'
+                                      : 'text-default-300 hover:text-default-400'
                                       }`}
                                   />
                                 </button>
@@ -780,18 +789,7 @@ export default function ContactTicketView({
             </div>
           </div>
 
-          {/* Close Ticket Confirmation Modal */}
-          <ConfirmDialog
-            open={showCloseModal}
-            onOpenChange={setShowCloseModal}
-            onConfirm={handleCloseTicket}
-            title="Close Ticket"
-            description="Are you sure you want to close this ticket? This action will mark the ticket as resolved."
-            confirmText="Close Ticket"
-            cancelText="Cancel"
-            confirmVariant="danger"
-            isLoading={isClosing}
-          />
+
         </section>
       </PublicLayout>
     </>

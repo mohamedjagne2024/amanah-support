@@ -406,10 +406,6 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('contact.tickets.comment')
             ->middleware('auth');
 
-        $router->post('contact/tickets/{ticket}/close', [ContactsTicketController::class, 'close'])
-            ->name('contact.tickets.close')
-            ->middleware('auth');
-
         $router->post('contact/tickets/{ticket}/review', [ContactsTicketController::class, 'submitReview'])
             ->name('contact.tickets.review')
             ->middleware('auth');

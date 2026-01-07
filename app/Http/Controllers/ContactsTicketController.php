@@ -185,6 +185,8 @@ class ContactsTicketController extends Controller
                     'name' => $ticket->createdBy->name,
                     'profile_picture_url' => $ticket->createdBy->profile_picture_url,
                 ] : null,
+                'resolution_details' => $ticket->resolution_details,
+                'resolve' => $ticket->resolve,
             ],
         ]);
     }
@@ -422,35 +424,6 @@ class ContactsTicketController extends Controller
             'success' => true,
             'message' => 'Comment added successfully.',
             'comment' => $commentData,
-        ]);
-    }
-
-    /**
-     * Close a ticket.
-     */
-    public function close($ticketId)
-    {
-        $user = Auth()->user();
-
-        // Only allow closing own tickets
-        $ticket = Ticket::where('contact_id', $user['id'])
-            ->where(function ($query) use ($ticketId) {
-                $query->where('uid', $ticketId);
-                $query->orWhere('id', $ticketId);
-            })->first();
-
-        if (empty($ticket)) {
-            abort(404);
-        }
-
-        $ticket->update([
-            'status' => 'closed',
-            'close' => now(),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Ticket closed successfully.',
         ]);
     }
 
