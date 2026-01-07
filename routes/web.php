@@ -142,6 +142,11 @@ $router->prefix('/')->group(static function (Router $router): void {
             ->name('tickets.close')
             ->middleware('auth');
 
+        $router->post('tickets/{ticket}/resolve', [TicketsController::class, 'resolve'])
+            ->name('tickets.resolve')
+            ->middleware('auth');
+
+
         /** Contact Functions */
         $router->get('notes', [NotesController::class, 'index'])
             ->name('notes')

@@ -53,6 +53,7 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'email_notifications.first_comment' => ['nullable', 'boolean'],
             'email_notifications.user_assigned' => ['nullable', 'boolean'],
             'email_notifications.status_priority_changes' => ['nullable', 'boolean'],
+            'email_notifications.ticket_resolved' => ['nullable', 'boolean'],
             'email_notifications.new_user' => ['nullable', 'boolean'],
             'gcs_project_id' => ['nullable', 'string', 'max:255'],
             'gcs_key_file_path' => ['nullable', 'string', 'max:500'],

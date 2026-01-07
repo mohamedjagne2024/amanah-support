@@ -7,7 +7,7 @@ import {
   getSortedRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, MoreHorizontal, Eye, Edit, Trash2, Search, Archive} from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, MoreHorizontal, Eye, Edit, Trash2, Search, Archive } from "lucide-react";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ComboboxComponent, { SelectOption } from "./Combobox";
 import { Link } from "@inertiajs/react";
@@ -100,7 +100,7 @@ export const Badge = ({ variant = 'default', children, icon }: BadgeProps) => {
     warning: 'bg-warning/15 text-warning',
     info: 'bg-info/15 text-info',
     primary: 'bg-primary/15 text-primary',
-    default: 'bg-default/15 text-default-800',
+    default: 'bg-default-500/15 text-default-800',
   };
 
   return (
@@ -158,16 +158,15 @@ const ActionsDropdown = <TData,>({
       >
         {filteredActions.map((action) => {
           const href = action.href ? action.href(row.original) : undefined;
-          
+
           if (href) {
             return (
               <MenuItem key={action.value}>
                 {({ focus }) => (
                   <Link
                     href={href}
-                    className={`flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 rounded cursor-pointer ${
-                      focus ? 'bg-default-150' : ''
-                    }`}
+                    className={`flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 rounded cursor-pointer ${focus ? 'bg-default-150' : ''
+                      }`}
                   >
                     {getIcon(action.label)}
                     {action.label}
@@ -176,14 +175,13 @@ const ActionsDropdown = <TData,>({
               </MenuItem>
             );
           }
-          
+
           return (
             <MenuItem key={action.value}>
               {({ focus }) => (
                 <button
-                  className={`w-full text-left flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 rounded cursor-pointer ${
-                    focus ? 'bg-default-150' : ''
-                  }`}
+                  className={`w-full text-left flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 rounded cursor-pointer ${focus ? 'bg-default-150' : ''
+                    }`}
                   onClick={() => {
                     if (action.onSelect) {
                       action.onSelect(row.original);
@@ -234,7 +232,7 @@ export const DataTable = <TData,>({
   const [isActionLoading, setIsActionLoading] = useState(false);
   const skipNextSearchEffect = useRef(true);
   const latestOnSearchChange = useRef(onSearchChange);
-  
+
   const sortingState: SortingState = useMemo(() => {
     if (!sorting?.sortBy) return [];
     return [{ id: sorting.sortBy, desc: sorting.sortDirection === 'desc' }];
@@ -315,20 +313,20 @@ export const DataTable = <TData,>({
     const actionsColumn: ColumnDef<TData, unknown> | null =
       rowActions && rowActions.length > 0
         ? {
-            id: "_actions",
-            header: () => <span className="sr-only">Actions</span>,
-            cell: ({ row }) => (
-              <ActionsDropdown
-                row={row}
-                rowActions={rowActions}
-                isLoading={isLoading}
-                isProcessingAction={isProcessingAction}
-              />
-            ),
-            size: 64,
-            enableSorting: false,
-            enableColumnFilter: false
-          }
+          id: "_actions",
+          header: () => <span className="sr-only">Actions</span>,
+          cell: ({ row }) => (
+            <ActionsDropdown
+              row={row}
+              rowActions={rowActions}
+              isLoading={isLoading}
+              isProcessingAction={isProcessingAction}
+            />
+          ),
+          size: 64,
+          enableSorting: false,
+          enableColumnFilter: false
+        }
         : null;
 
     const computed = [selectionColumn, ...columns];
@@ -350,9 +348,9 @@ export const DataTable = <TData,>({
     onRowSelectionChange: setRowSelection,
     onSortingChange: (updater) => {
       if (!onSortChange) return;
-      
+
       const newSorting = typeof updater === 'function' ? updater(sortingState) : updater;
-      
+
       if (newSorting.length === 0) {
         onSortChange(undefined, undefined);
       } else {
@@ -430,16 +428,16 @@ export const DataTable = <TData,>({
           {filters?.map((filter) => {
             const placeholder = filter.placeholder ?? `All ${filter.label.toLowerCase()}`;
             const selectedValue = filterValues?.[filter.id] || "";
-            
+
             // Convert filter options to Select component format
             const selectOptions: SelectOption[] = filter.options.map((option) => ({
               label: option.label,
               value: option.value,
               isDisabled: option.isDisabled
             }));
-            
+
             // Find the selected option object
-            const selectedOption = selectedValue 
+            const selectedOption = selectedValue
               ? selectOptions.find((opt) => opt.value === selectedValue) || null
               : null;
 
@@ -462,7 +460,7 @@ export const DataTable = <TData,>({
             );
           })}
         </div>
-        
+
         <div className="flex gap-3 items-center">
           {/* Bulk Actions */}
           {bulkActions && bulkActions.length > 0 && (
@@ -481,9 +479,8 @@ export const DataTable = <TData,>({
                   <MenuItem key={action.value}>
                     {({ focus }) => (
                       <button
-                        className={`w-full text-left block py-1.5 px-3 text-sm font-medium text-default-500 rounded cursor-pointer ${
-                          focus ? 'bg-default-150' : ''
-                        }`}
+                        className={`w-full text-left block py-1.5 px-3 text-sm font-medium text-default-500 rounded cursor-pointer ${focus ? 'bg-default-150' : ''
+                          }`}
                         onClick={() => handleBulkAction(action)}
                       >
                         {action.label}
@@ -514,22 +511,19 @@ export const DataTable = <TData,>({
                     {headerGroup.headers.map((header) => {
                       const canSort = header.column.getCanSort();
                       const sortDirection = header.column.getIsSorted();
-                      
+
                       return (
                         <th
                           key={header.id}
                           scope="col"
-                          className={`py-3 text-start text-sm font-medium ${
-                            header.id === "_select" ? "ps-4" : "px-3.5"
-                          } ${
-                            canSort ? "cursor-pointer hover:bg-default-200" : ""
-                          }`}
+                          className={`py-3 text-start text-sm font-medium ${header.id === "_select" ? "ps-4" : "px-3.5"
+                            } ${canSort ? "cursor-pointer hover:bg-default-200" : ""
+                            }`}
                           onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                         >
                           {header.isPlaceholder ? null : (
-                            <div className={`flex items-center gap-2 ${
-                              header.id === "_actions" ? "justify-end" : ""
-                            }`}>
+                            <div className={`flex items-center gap-2 ${header.id === "_actions" ? "justify-end" : ""
+                              }`}>
                               {flexRender(
                                 header.column.columnDef.header,
                                 header.getContext()
@@ -569,18 +563,15 @@ export const DataTable = <TData,>({
                   table.getRowModel().rows.map((row) => (
                     <tr
                       key={row.id}
-                      className={`text-default-800 ${
-                        row.getIsSelected() ? "bg-default-50" : ""
-                      }`}
+                      className={`text-default-800 ${row.getIsSelected() ? "bg-default-50" : ""
+                        }`}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <td
                           key={cell.id}
-                          className={`py-2.5 text-sm ${
-                            cell.column.id === "_select" ? "ps-4" : "px-3.5"
-                          } ${
-                            cell.column.id === "_actions" ? "text-right" : ""
-                          }`}
+                          className={`py-2.5 text-sm ${cell.column.id === "_select" ? "ps-4" : "px-3.5"
+                            } ${cell.column.id === "_actions" ? "text-right" : ""
+                            }`}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
@@ -607,7 +598,7 @@ export const DataTable = <TData,>({
         <p className="text-default-500 text-sm">
           Showing <b>{from.toLocaleString()}</b> to <b>{to.toLocaleString()}</b> of <b>{pagination.total.toLocaleString()}</b> Results
         </p>
-        
+
         <div className="flex items-center gap-3">
           {onPerPageChange && (
             <div className="flex items-center gap-2">
@@ -625,7 +616,7 @@ export const DataTable = <TData,>({
               </select>
             </div>
           )}
-          
+
           <nav className="flex items-center gap-2" aria-label="Pagination">
             <button
               type="button"
@@ -649,16 +640,15 @@ export const DataTable = <TData,>({
               } else {
                 pageNum = currentPage - 1 + i;
               }
-              
+
               return (
                 <button
                   key={pageNum}
                   type="button"
-                  className={`btn size-7.5 ${
-                    pageNum === currentPage
+                  className={`btn size-7.5 ${pageNum === currentPage
                       ? 'bg-primary/10 text-primary'
                       : 'bg-transparent border border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary hover:border-primary/10'
-                  }`}
+                    }`}
                   onClick={() => onPageChange?.(pageNum)}
                   disabled={isTableBusy}
                 >

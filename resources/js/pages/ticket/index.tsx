@@ -233,10 +233,11 @@ export default function Index({
   const getStatusVariant = (status: string | null): 'success' | 'danger' | 'warning' | 'info' | 'primary' | 'default' => {
     if (!status) return 'default';
     const s = status.toLowerCase();
-    if (s.includes('closed') || s.includes('resolved')) return 'danger';
-    if (s.includes('open') || s.includes('new')) return 'info';
-    if (s.includes('pending')) return 'warning';
-    if (s.includes('progress')) return 'primary';
+    if (s.includes('resolved')) return 'success';      // Green - positive outcome
+    if (s.includes('closed')) return 'default';        // Gray/neutral - ticket closed
+    if (s.includes('open') || s.includes('new')) return 'info';  // Blue - active/new
+    if (s.includes('pending')) return 'warning';       // Yellow/orange - waiting
+    if (s.includes('progress')) return 'primary';      // Primary color - in progress
     return 'default';
   };
 

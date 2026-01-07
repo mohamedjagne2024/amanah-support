@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Schedule ticket escalation check to run every minute
 Schedule::command('tickets:check-escalation')->everyMinute()->withoutOverlapping();
+
+// Schedule auto-close for resolved tickets to run every minute
+Schedule::command('tickets:auto-close')->everyMinute()->withoutOverlapping();

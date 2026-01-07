@@ -92,10 +92,11 @@ export default function ContactTicketIndex({
   const getStatusVariant = (status: string | null): 'success' | 'danger' | 'warning' | 'info' | 'primary' | 'default' => {
     if (!status) return 'default';
     const s = status.toLowerCase();
-    if (s.includes('closed') || s.includes('resolved')) return 'success';
-    if (s.includes('open') || s.includes('new') || s.includes('active')) return 'info';
-    if (s.includes('pending')) return 'warning';
-    if (s.includes('progress')) return 'primary';
+    if (s.includes('resolved')) return 'success';      // Green - positive outcome
+    if (s.includes('closed')) return 'default';        // Gray/neutral - ticket closed
+    if (s.includes('open') || s.includes('new') || s.includes('active')) return 'info';  // Blue - active/new
+    if (s.includes('pending')) return 'warning';       // Yellow/orange - waiting
+    if (s.includes('progress')) return 'primary';      // Primary color - in progress
     return 'default';
   };
 
@@ -117,12 +118,12 @@ export default function ContactTicketIndex({
   }, []);
 
   const submitQuery = useCallback(
-    (partial: Partial<{ 
-      search: string; 
-      status_id: string; 
-      region_id: string; 
-      page: number; 
-      perPage: number; 
+    (partial: Partial<{
+      search: string;
+      status_id: string;
+      region_id: string;
+      page: number;
+      perPage: number;
     }>) => {
       const query = {
         search: partial.search ?? safeFilters.search ?? "",
@@ -263,7 +264,7 @@ export default function ContactTicketIndex({
   return (
     <>
       <PageMeta title={title} />
-      
+
       <PublicLayout currentPage="/contact/tickets" footer={footer} showToast>
 
         {/* Page Content */}
@@ -273,10 +274,10 @@ export default function ContactTicketIndex({
             <div className="mb-8">
               <div className="mb-3">
                 <Breadcrumb
-                    items={[
+                  items={[
                     { label: 'Tickets', href: '/contact/tickets' },
                     { label: 'My Tickets', href: '/contact/tickets' },
-                    ]}
+                  ]}
                 />
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -297,11 +298,10 @@ export default function ContactTicketIndex({
               <nav className="flex gap-6" aria-label="Ticket status tabs">
                 <button
                   onClick={() => handleTabChange('open')}
-                  className={`py-3 px-1 relative font-medium text-sm transition-colors ${
-                    activeTab === 'open'
+                  className={`py-3 px-1 relative font-medium text-sm transition-colors ${activeTab === 'open'
                       ? 'text-primary border-b-2 border-primary -mb-px'
                       : 'text-default-500 hover:text-default-700'
-                  }`}
+                    }`}
                 >
                   OPENED TICKETS
                   {activeTab === 'open' && safeFilters.type === 'open' && safeTickets.total > 0 && !isLoading && (
@@ -312,11 +312,10 @@ export default function ContactTicketIndex({
                 </button>
                 <button
                   onClick={() => handleTabChange('closed')}
-                  className={`py-3 px-1 relative font-medium text-sm transition-colors ${
-                    activeTab === 'closed'
+                  className={`py-3 px-1 relative font-medium text-sm transition-colors ${activeTab === 'closed'
                       ? 'text-primary border-b-2 border-primary -mb-px'
                       : 'text-default-500 hover:text-default-700'
-                  }`}
+                    }`}
                 >
                   CLOSED TICKETS
                   {activeTab === 'closed' && safeFilters.type === 'closed' && safeTickets.total > 0 && !isLoading && (
@@ -396,7 +395,7 @@ export default function ContactTicketIndex({
               getRowId={(row) => String(row.id)}
               emptyState={{
                 title: "No tickets found",
-                description: activeTab === 'open' 
+                description: activeTab === 'open'
                   ? "You don't have any open tickets. Create one to get started!"
                   : "You don't have any closed tickets yet."
               }}

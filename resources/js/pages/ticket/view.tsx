@@ -1,12 +1,12 @@
 import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import axios from 'axios';
-import { 
-  FileText, 
-  Calendar, 
-  Mail, 
-  Clock, 
-  Edit3, 
+import {
+  FileText,
+  Calendar,
+  Mail,
+  Clock,
+  Edit3,
   Tag,
   Ticket,
   Copy,
@@ -18,6 +18,7 @@ import {
   Eye,
   Download,
   XCircle,
+  CheckCircle,
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
@@ -108,8 +109,9 @@ export default function View({
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
-  const [showCloseModal, setShowCloseModal] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
+  const [resolutionDetails, setResolutionDetails] = useState('');
 
   // Listen for real-time comment updates via Pusher
   useTicketCommentListener(ticket.id, (newComment) => {
@@ -135,7 +137,7 @@ export default function View({
       created_at: string;
       user?: { id: number; name: string; profile_picture_url?: string | null };
     }> = [];
-    
+
     // Add ticket created event with the user who created it
     activities.push({
       id: 0,
@@ -156,7 +158,7 @@ export default function View({
       });
     }
 
-    return activities.sort((a, b) => 
+    return activities.sort((a, b) =>
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
   }, [ticket]);
@@ -203,13 +205,13 @@ export default function View({
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim() || isSubmitting) return;
-    
+
     setIsSubmitting(true);
     try {
       const response = await axios.post(`/tickets/${ticket.id}/comment`, {
         comment: commentText,
       });
-      
+
       // Add the comment to local state immediately
       if (response.data.comment) {
         setLocalComments((prev) => {
@@ -218,7 +220,7 @@ export default function View({
           return [...prev, response.data.comment];
         });
       }
-      
+
       setCommentText('');
       setEditorKey((prev) => prev + 1);
       setShowNewComment(false);
@@ -248,16 +250,23 @@ export default function View({
     return 'bg-default-200 text-default-700';
   };
 
-  const handleCloseTicket = async () => {
-    setIsClosing(true);
+  const handleResolveTicket = async () => {
+    if (!resolutionDetails.trim() || resolutionDetails.trim().length < 10) {
+      return; // Validation - require at least 10 characters
+    }
+
+    setIsResolving(true);
     try {
-      await axios.post(`/tickets/${ticket.id}/close`);
-      setShowCloseModal(false);
+      await axios.post(`/tickets/${ticket.id}/resolve`, {
+        resolution_details: resolutionDetails,
+      });
+      setShowResolveModal(false);
+      setResolutionDetails('');
       router.reload();
     } catch {
-      // Error handling - close failed
+      // Error handling - resolve failed
     } finally {
-      setIsClosing(false);
+      setIsResolving(false);
     }
   };
 
@@ -265,7 +274,7 @@ export default function View({
     <AppLayout>
       <PageMeta title={`Ticket #${ticket.uid} - ${ticket.subject}`} />
       <main className="pb-8">
-        <Breadcrumb 
+        <Breadcrumb
           items={[
             { label: 'Tickets', href: '/tickets' },
             { label: `#${ticket.uid}` }
@@ -285,7 +294,7 @@ export default function View({
                 <span className="absolute -top-1 -right-1 size-4 bg-success rounded-full border-2 border-white" />
               )}
             </div>
-            
+
             <div className="flex-1 min-w-0">
               {/* Ticket ID with copy button */}
               <div className="flex items-center gap-2 flex-wrap">
@@ -309,10 +318,10 @@ export default function View({
                   </span>
                 )}
               </div>
-              
+
               {/* Subject */}
               <p className="text-default-600 text-sm mt-1 line-clamp-2">{ticket.subject}</p>
-              
+
               {/* Metadata Row */}
               <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-default-500">
                 <div className="flex items-center gap-1.5">
@@ -352,14 +361,14 @@ export default function View({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 shrink-0">
-            {!ticket.closed && (
+            {!ticket.closed && ticket.status !== 'resolved' && (
               <button
                 type="button"
-                onClick={() => setShowCloseModal(true)}
-                className="btn bg-danger text-white btn-sm"
+                onClick={() => setShowResolveModal(true)}
+                className="btn bg-success text-white btn-sm"
               >
-                <XCircle className="size-4 me-1" />
-                Close Ticket
+                <CheckCircle className="size-4 me-1" />
+                Resolve Ticket
               </button>
             )}
             <Link href={`/tickets/${ticket.uid}/edit`}>
@@ -386,10 +395,10 @@ export default function View({
                     <FileText className="size-4 text-primary" />
                     Description
                   </h6>
-                  <div 
+                  <div
                     className="max-w-none p-4 bg-default-50 rounded-lg border border-default-200 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-default-300 [&_blockquote]:pl-4 [&_blockquote]:italic"
-                    dangerouslySetInnerHTML={{ 
-                      __html: ticket.details || '<p class="text-default-400 italic">No description provided</p>' 
+                    dangerouslySetInnerHTML={{
+                      __html: ticket.details || '<p class="text-default-400 italic">No description provided</p>'
                     }}
                   />
                 </div>
@@ -407,9 +416,9 @@ export default function View({
                     <div key={`${activity.type}-${activity.id}-${index}`} className="flex gap-3">
                       {activity.type === 'created' && activity.user ? (
                         activity.user.profile_picture_url ? (
-                          <img 
-                            src={activity.user.profile_picture_url} 
-                            alt={activity.user.name} 
+                          <img
+                            src={activity.user.profile_picture_url}
+                            alt={activity.user.name}
                             className="size-8 rounded-full object-cover shrink-0"
                           />
                         ) : (
@@ -426,7 +435,7 @@ export default function View({
                           <Ticket className="size-4 text-white" />
                         </div>
                       )}
-                      
+
                       <div className="flex-1 min-w-0">
                         {activity.type === 'created' ? (
                           <div className="flex items-center justify-between py-1">
@@ -504,9 +513,9 @@ export default function View({
                     {localComments.map((comment: CommentType) => (
                       <div key={comment.id} className="flex gap-3 p-4 bg-default-50 rounded-lg">
                         {comment.user?.profile_picture_url ? (
-                          <img 
-                            src={comment.user.profile_picture_url} 
-                            alt={comment.user.name || 'User'} 
+                          <img
+                            src={comment.user.profile_picture_url}
+                            alt={comment.user.name || 'User'}
                             className="size-10 rounded-full object-cover shrink-0"
                           />
                         ) : (
@@ -523,14 +532,14 @@ export default function View({
                               {formatDateTime(comment.created_at)}
                             </span>
                           </div>
-                          <div 
+                          <div
                             className="text-sm text-default-600 prose prose-sm max-w-none"
                             dangerouslySetInnerHTML={{ __html: comment.details }}
                           />
                         </div>
                       </div>
                     ))}
-                    
+
                     {/* Show reply form or add reply button - only when ticket is open */}
                     {!ticket.closed && (
                       <>
@@ -592,7 +601,7 @@ export default function View({
                       <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg uppercase shrink-0">
                         {ticket.review.user?.name?.charAt(0) || 'U'}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         {/* User Name and Date */}
                         <div className="flex items-center justify-between mb-2">
@@ -603,18 +612,17 @@ export default function View({
                             {formatDateTime(ticket.review.created_at)}
                           </span>
                         </div>
-                        
+
                         {/* Star Rating */}
                         <div className="flex items-center gap-2 mb-3">
                           <div className="flex items-center gap-0.5">
                             {[1, 2, 3, 4, 5].map((star) => (
-                              <Star 
-                                key={star} 
-                                className={`size-5 ${
-                                  star <= ticket.review.rating 
-                                    ? 'text-warning fill-warning' 
+                              <Star
+                                key={star}
+                                className={`size-5 ${star <= ticket.review.rating
+                                    ? 'text-warning fill-warning'
                                     : 'text-default-300'
-                                }`}
+                                  }`}
                               />
                             ))}
                           </div>
@@ -627,7 +635,7 @@ export default function View({
                             {ticket.review.rating === 5 && '(Excellent)'}
                           </span>
                         </div>
-                        
+
                         {/* Review Text */}
                         {ticket.review.review && (
                           <div className="text-sm text-default-600 italic bg-white/50 p-3 rounded-lg border border-default-100">
@@ -786,18 +794,65 @@ export default function View({
           </div>
         </div>
 
-        {/* Close Ticket Confirmation Modal */}
-        <ConfirmDialog
-          open={showCloseModal}
-          onOpenChange={setShowCloseModal}
-          onConfirm={handleCloseTicket}
-          title="Close Ticket"
-          description="Are you sure you want to close this ticket? This action will mark the ticket as resolved."
-          confirmText="Close Ticket"
-          cancelText="Cancel"
-          confirmVariant="danger"
-          isLoading={isClosing}
-        />
+        {/* Resolve Ticket Modal */}
+        {showResolveModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 m-4">
+              < div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-default-900">Resolve Ticket</h3>
+                <button
+                  onClick={() => {
+                    setShowResolveModal(false);
+                    setResolutionDetails('');
+                  }}
+                  className="text-default-400 hover:text-default-600"
+                >
+                  <XCircle className="size-5" />
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-sm text-default-600 mb-3">
+                  Please provide details about how this ticket was resolved. This information will be sent to the contact user.
+                </p>
+                <textarea
+                  value={resolutionDetails}
+                  onChange={(e) => setResolutionDetails(e.target.value)}
+                  placeholder="Describe the resolution..."
+                  className="w-full px-3 py-2 border border-default-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[120px] resize-y"
+                  minLength={10}
+                />
+                {resolutionDetails.trim().length > 0 && resolutionDetails.trim().length < 10 && (
+                  <p className="text-xs text-danger mt-1">
+                    Please provide at least 10 characters
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResolveModal(false);
+                    setResolutionDetails('');
+                  }}
+                  className="btn btn-sm bg-transparent border border-default-200 text-default-600 hover:bg-default-50"
+                  disabled={isResolving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResolveTicket}
+                  className="btn btn-sm bg-success text-white hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isResolving || !resolutionDetails.trim() || resolutionDetails.trim().length < 10}
+                >
+                  {isResolving ? 'Resolving...' : 'Resolve Ticket'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </AppLayout>
   );

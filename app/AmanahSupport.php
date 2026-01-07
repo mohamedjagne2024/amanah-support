@@ -26,6 +26,7 @@ class AmanahSupport
                 'comment_reply' => false,
                 'user_assigned' => false,
                 'status_priority_changes' => false,
+                'ticket_resolved' => false,
                 'new_user' => false,
             ];
         }
@@ -41,6 +42,7 @@ class AmanahSupport
                 'comment_reply' => false,
                 'user_assigned' => false,
                 'status_priority_changes' => false,
+                'ticket_resolved' =>  false,
                 'new_user' => false,
             ];
         }

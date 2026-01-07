@@ -10,9 +10,9 @@ use App\Events\SendMail;
 use App\Events\TicketAdded;
 use App\Events\TicketCreated;
 use App\Events\TicketNewComment;
+use App\Events\TicketResolved;
 use App\Events\TicketUpdated;
 use App\Events\UserCreated;
-use App\Listeners\CommentAddedNotification;
 use App\Listeners\ContactCreatedNotification;
 use App\Listeners\SendAssignedUserNotification;
 use App\Listeners\SendForgotPasswordNotification;
@@ -20,12 +20,12 @@ use App\Listeners\SendMailNotification;
 use App\Listeners\SendTicketNewCommentNotification;
 use App\Listeners\SendTicketUpdatedNotification;
 use App\Listeners\TicketAddingOption;
+use App\Listeners\TicketResolvedNotification;
 use App\Listeners\TicketCreatedNotification;
 use App\Listeners\UserCreatedNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -52,6 +52,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         TicketUpdated::class => [
             SendTicketUpdatedNotification::class
+        ],
+        TicketResolved::class => [
+            TicketResolvedNotification::class
         ],
         TicketNewComment::class => [
             SendTicketNewCommentNotification::class

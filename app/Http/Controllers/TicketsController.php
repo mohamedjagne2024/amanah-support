@@ -26,6 +26,7 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Traits\HasGoogleCloudStorage;
 use Illuminate\Support\Facades\Gate;
+use App\Events\TicketResolved;
 
 class TicketsController extends Controller
 {
@@ -59,7 +60,7 @@ class TicketsController extends Controller
         if ($type == 'un_assigned') {
             $whereAll[] = ['assigned_to', '=', null];
         } elseif ($type == 'open') {
-            $whereAll[] = ['close', '=', null];
+            $whereAll[] = ['status', '=', 'open'];
         } elseif ($type == 'new') {
             $whereAll[] = ['created_at', '>=', date('Y-m-d') . ' 00:00:00'];
         }
@@ -80,7 +81,7 @@ class TicketsController extends Controller
                 $ticketQuery->orderBy(Request::input('field'), Request::input('direction'));
             }
         } else {
-            $ticketQuery->orderBy('updated_at', 'DESC');
+            $ticketQuery->orderBy('uid', 'DESC');
         }
 
         return Inertia::render('ticket/index', [
@@ -784,6 +785,42 @@ class TicketsController extends Controller
             'message' => 'Ticket closed successfully.',
         ]);
     }
+
+    /**
+     * Resolve a ticket and send notification to contact user.
+     */
+    public function resolve(Ticket $ticket)
+    {
+        Gate::authorize('tickets.update');
+
+        $request = Request::validate([
+            'resolution_details' => ['required', 'string', 'min:10'],
+        ]);
+
+        // Update ticket status to resolved
+        $ticket->update([
+            'status' => 'resolved',
+            'resolve' => now()
+        ]);
+
+        // Fire event to send email notification to contact user
+        event(new TicketResolved([
+            'ticket_id' => $ticket->id,
+            'resolution_details' => $request['resolution_details'],
+        ]));
+
+        // Also trigger regular ticket updated event
+        event(new TicketUpdated([
+            'ticket_id' => $ticket->id,
+            'update_message' => 'The ticket has been resolved.'
+        ]));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ticket resolved successfully.',
+        ]);
+    }
+
 
     private function sendMailCron($id, $type = null, $value = null)
     {

@@ -17,6 +17,7 @@ use App\Models\Attachment;
 use App\Models\Review;
 use App\Events\TicketCreated;
 use App\Events\AssignedUser;
+use App\Models\User;
 
 class ContactsTicketController extends Controller
 {
@@ -290,7 +291,7 @@ class ContactsTicketController extends Controller
     private function findLeastBusyUser($regionId)
     {
         // Get all users with 'User' role in the specified region
-        $users = \App\Models\User::role('User')
+        $users = User::role('User')
             ->where('region_id', $regionId)
             ->get();
 

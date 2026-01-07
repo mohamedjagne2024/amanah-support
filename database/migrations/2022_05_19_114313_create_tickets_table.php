@@ -25,6 +25,7 @@ class CreateTicketsTable extends Migration
             $table->timestamp('due')->nullable();
             $table->timestamp('close')->nullable();
             $table->timestamp('response')->nullable();
+            $table->timestamp('resolve')->nullable();
             $table->integer('user_id')->nullable()->index();
             $table->integer('contact_id')->nullable()->index();
             $table->integer('client_type')->nullable();
@@ -36,6 +37,7 @@ class CreateTicketsTable extends Migration
             $table->integer('assigned_to')->nullable()->index();
             $table->integer('type_id')->nullable()->index();
             $table->text('details');
+            $table->text('resolution_details')->nullable();
             $table->integer('escalate_value')->nullable();
             $table->string('escalate_unit')->nullable();
             $table->integer('autoclose_value')->nullable();

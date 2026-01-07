@@ -17,6 +17,7 @@ type EmailNotificationsType = {
   first_comment: boolean;
   user_assigned: boolean;
   status_priority_changes: boolean;
+  ticket_resolved: boolean;
   new_user: boolean;
 };
 
@@ -87,6 +88,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
       first_comment: false,
       user_assigned: false,
       status_priority_changes: false,
+      ticket_resolved: false,
       new_user: false,
     },
     gcs_project_id: settings.gcs_project_id ?? '',
@@ -132,6 +134,11 @@ export default function General({ settings, currencies, users }: GeneralSettings
       key: 'status_priority_changes' as keyof EmailNotificationsType,
       title: 'Status or priority changes',
       description: 'Configure email notification settings',
+    },
+    {
+      key: 'ticket_resolved' as keyof EmailNotificationsType,
+      title: 'Ticket marked as resolved',
+      description: 'Send email when a ticket is resolved',
     },
     {
       key: 'new_user' as keyof EmailNotificationsType,
