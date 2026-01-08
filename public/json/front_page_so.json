@@ -1,0 +1,302 @@
+[
+    {
+        "title": "Xeerka Ilaalinta Xogta",
+        "slug": "privacy",
+        "is_active": 1,
+        "html": {
+            "title": "Xeerka Ilaalinta Xogta",
+            "content": "<p>Waxaa liddi ku ah caqiidada caanka ah, Lorem Ipsum maaha qoraal aan kala sooc lahayn. Waxay xidid ku leedahay suugaan hore oo Latin ah laga soo bilaabo 45 BC, taas oo ka dhigaysa in ka badan 2000 oo sano. Richard McClintock, oo ah borofisar Latin ah oo wax ka dhiga Kulliyadda Hampden-Sydney ee Virginia, ayaa baadhay mid ka mid ah erayada Latin-ka daahsoon, consectetur, oo ka yimid tuduc Lorem Ipsum ah.</p>\n<p>&nbsp;</p>\n<h2><strong>Ururinta xogta shakhsiga</strong></h2>\n<p>Waxaan helnaa oo kaydinaa macluumaad kasta oo aad si badheedh ah na siiso markaad wax ku iibsanayso Mareegaha. Hadda tani waxay ku xaddidan tahay cinwaanka emailkaaga, kaas oo loo baahan yahay si aad u awooddo inaad gasho Mareegaha oo aad gasho wax kasta oo Tailwind UI ah oo aad iibsatay.</p>\n<h2><strong>Ururinta xogta aan shakhsiga ahayn</strong></h2>\n<p>Markaad booqato Mareegaha, server-yadayadu waxay si toos ah u duubaan macluumaadka uu soo diro browser-kaagu. Xogtan waxaa ku jiri kara macluumaad sida cinwaanka IP-ga qalabkaaga, nooca browser-ka iyo nooca, nooca nidaamka qalliinka iyo nooca, dookhyada luqadda ama bogga shabakadda aad booqanaysay ka hor inta aadan imaan Mareegahayaga, boggaga Mareegahayaga ee aad booqato, waqtiga lagu qaatay boggagaas, macluumaadka aad ka raadiso Mareegahayaga, waqtiyada gelitaanka iyo taariikhaha, iyo tirakoobyo kale.</p>\n<h2><strong>Iibsigyada</strong></h2>\n<p>Dhammaan iibsigyada lagu sameeyo Mareegaha waxaa baara dhinac saddexaad oo lacagaha qaada, Paddle (<a href=\"https://paddle.com/\"><strong>paddle.com</strong></a>). Paddle waxaa laga yaabaa inuu ku weydiiyo macluumaad shakhsi iyo/ama aan shakhsi ahayn, sida magacaaga, cinwaanka, cinwaanka emailka, macluumaadka kaarka deynta, ama Macluumaad kale oo Shakhsi ah.</p>\n<h2><strong>Maamulida xogta shakhsiga</strong></h2>\n<p>Waxaad awood u leedahay inaad cusbooneysiiso Macluumaadkaaga Shakhsiga ah ee ku jira \"Account Settings\" ee Mareegaha. Hadda tani waxay ku xaddidan tahay kaliya cinwaanka emailkaaga, sida kor ku xusan.</p>\n<h2><strong>Isticmaalka iyo habaynta xogta la ururiyey</strong></h2>\n<p>Macluumaad kasta oo aan kaa ururino waxaa loo isticmaali karaa in lagu shakhsiyeeyo khibradaada; hagaajinta Mareegahayaga; hagaajinta adeegga macaamiisha; socodsiinta macaamilada; dirida emailka ogeysiiska sida xasuusinta sirta, cusbooneysiinta, iwm; iyo socodsiinta Mareegahayaga.</p>"
+        }
+    },
+    {
+        "title": "Nala Soo Xiriir",
+        "slug": "contact",
+        "is_active": 1,
+        "html": {
+            "email": {
+                "0": "c",
+                "1": "o",
+                "2": "n",
+                "3": "t",
+                "4": "a",
+                "5": "c",
+                "6": "t",
+                "7": "@",
+                "8": "m",
+                "9": "a",
+                "10": "i",
+                "11": "l",
+                "12": ".",
+                "13": "c",
+                "14": "o",
+                "15": "m",
+                "address": "info@amanahinsurance.com",
+                "details": null
+            },
+            "phone": {
+                "0": "+",
+                "1": "9",
+                "2": "0",
+                "3": "2",
+                "4": "9",
+                "5": "3",
+                "6": "0",
+                "7": "2",
+                "8": "9",
+                "9": "0",
+                "10": "2",
+                "11": "3",
+                "12": "2",
+                "number": "+252631234567",
+                "details": null
+            },
+            "content": {
+                "text": "NALA SOO XIRIIR",
+                "details": "Waxaan halkaan u joognaa inaan kaa caawino su'aal kasta oo aad qabtid. Noogu soo dir email ama na soo wac."
+            },
+            "location": {
+                "0": "8",
+                "1": "0",
+                "2": "1",
+                "3": "3",
+                "4": null,
+                "5": "A",
+                "6": "l",
+                "7": "d",
+                "8": "e",
+                "9": "r",
+                "10": "w",
+                "11": "o",
+                "12": "o",
+                "13": "d",
+                "14": null,
+                "15": "S",
+                "16": "t",
+                "17": ".",
+                "18": null,
+                "19": "S",
+                "20": "o",
+                "21": "u",
+                "22": "t",
+                "23": "h",
+                "24": null,
+                "25": "S",
+                "26": "a",
+                "27": "n",
+                "28": null,
+                "29": "F",
+                "30": "r",
+                "31": "a",
+                "32": "n",
+                "33": "c",
+                "34": "i",
+                "35": "s",
+                "36": "c",
+                "37": "o",
+                "38": ",",
+                "39": null,
+                "40": "C",
+                "41": "A",
+                "42": null,
+                "43": "9",
+                "44": "4",
+                "45": "0",
+                "46": "8",
+                "47": "0",
+                "address": "Burj Omar, Dabaqa 4aad, Wadada 1aad, Hargeysa, Somaliland",
+                "map_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4666.95948365793!2d44.0575687756945!3d9.562027580416258!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1628bf0027837ff5%3A0x819da637deadfc3!2sBurj%20Oomaar!5e1!3m2!1sen!2sso!4v1765967215290!5m2!1sen!2sso\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade"
+            },
+            "contact_form": {
+                "recipient_email": "support@amanahinsurance.com"
+            }
+        }
+    },
+    {
+        "title": "Adeegyada",
+        "slug": "services",
+        "is_active": 1,
+        "html": {
+            "content": {
+                "title": "Waxaan Bixino",
+                "tagline": "Adeegyadayada",
+                "description": "Sahami adeegyadayada kala duwan ee loogu talagalay in lagu daboolo baahiyahaaga."
+            },
+            "services": [
+                {
+                    "icon": "airplay",
+                    "name": "Naqshadaynta UX / UI",
+                    "details": "Naqshadaynta khibrada isticmaalaha iyo isdhexgalka ee casriga ah."
+                },
+                {
+                    "icon": "compass",
+                    "name": "Naqshadaynta App-ka iOS",
+                    "details": "Horumarinta codsiyada mobilada ee tayo sare leh."
+                },
+                {
+                    "icon": "camera",
+                    "name": "Sawir qaadis",
+                    "details": "Adeegyada sawir qaadista xirfadeed ee ganacsigaaga."
+                },
+                {
+                    "icon": "aperture",
+                    "name": "Naqshadeeye Garaafyada",
+                    "details": "Abuuritaanka muuqaalo soo jiidasho leh oo sumaddaada kor u qaadaya."
+                },
+                {
+                    "icon": "security",
+                    "name": "Amniga Mareegaha",
+                    "details": "Xaqiijinta amniga iyo ilaalinta xogta mareegahaaga."
+                },
+                {
+                    "icon": "palette",
+                    "name": "Taageero 24/7",
+                    "details": "Koox taageero oo heegan ah mar kasta oo aad u baahato."
+                }
+            ]
+        }
+    },
+    {
+        "title": "Shuruudaha Adeegga",
+        "slug": "terms",
+        "is_active": 1,
+        "html": {
+            "title": "Shuruudaha Adeegga",
+            "content": "<h3><strong>Hordhac:</strong></h3><p>Fadlan si taxadar leh u akhri shuruudaha adeegga ka hor inta aadan isticmaalin adeeggayaga.</p><p>&nbsp;</p><h3><strong>Heshiisyada Isticmaalaha:</strong></h3><p>Markaad gelayso ama isticmaalayso Adeegga, waxaad ogolaanaysaa inaad u hogaansanto Shuruudahan.</p><p>&nbsp;</p><h3><strong>Xaddidaadaha:</strong></h3><p>Si gaar ah ayaa lagaaga mamnuucay dhammaan kuwan soo socda:</p><ul><li>Daabacaadda agabka mareegaha meel kasta oo kale oo warbaahin ah;</li><li>Iibinta, shatiga hoose iyo/ama si kale u ganacsiga agabka mareegaha;</li><li>Si guud u soo bandhigida iyo/ama muujinta agabka mareegaha;</li><li>U isticmaalka mareegaha si kasta oo waxyeelo u geysata ama u geysan karta mareegaha;</li></ul><p><br>&nbsp;</p>"
+        }
+    },
+    {
+        "title": "Bogga Hore",
+        "slug": "home",
+        "is_active": 1,
+        "html": {
+            "hero": {
+                "image": "/storage/pages/Z8gttbux3CE1axwCFUyYAmUGhPMP1IGgkohgQ441.webp",
+                "title": "Wax kasta oo aad u baahan tahay si aad u codsato taageero adigoo isticmaalaya <span>Amanah Support</span>",
+                "buttons": [
+                    {
+                        "link": "/login",
+                        "text": "Gal Amanah Support",
+                        "new_tab": false
+                    },
+                    {
+                        "link": "#submit-ticket",
+                        "text": "Gudbi Ticket",
+                        "new_tab": false
+                    }
+                ],
+                "enabled": true,
+                "badge_text": "Waxaa ku kalsoon 10,000+ macaamiil",
+                "description": "<p>Isticmaal Amanah Support si aad u soo wargeliso arrimaha, aad u weydiiso su'aalo, oo aad ula socoto codsiyada socda. Ku dar faahfaahin iyo lifaaqyo si aan dhaqso u caawino.</p>",
+                "trust_indicators": [
+                    "Soo gudbi codsi taageero",
+                    "La soco codsiyadaada",
+                    "Taageero diyaar ah 24/7"
+                ]
+            },
+            "stats": {
+                "items": [
+                    {
+                        "icon": "tick",
+                        "label": "Tigidhada La Xaliyay",
+                        "value": "10,000+"
+                    },
+                    {
+                        "icon": "users",
+                        "label": "Macaamiisha Faraxsan",
+                        "value": "500+"
+                    },
+                    {
+                        "icon": "clock",
+                        "label": "Celceliska Waqtiga Jawaabta",
+                        "value": "< 2 saacadood"
+                    },
+                    {
+                        "icon": "star",
+                        "label": "Qiimeynta",
+                        "value": "5"
+                    }
+                ],
+                "title": "Saameyntayada",
+                "enabled": true,
+                "tagline": "Tirakoobyada",
+                "description": "Qiyaasaha muhiimka ah ee muujinaya guusheena iyo isku halaynta."
+            },
+            "features": {
+                "items": [
+                    {
+                        "icon": "ticket",
+                        "title": "Gudbi Ticket",
+                        "description": "Si toos ah uga samee tigidh bogga hore ama dashboard-ka."
+                    },
+                    {
+                        "icon": "chat",
+                        "title": "Wadahadal degdeg ah",
+                        "description": "Si dhakhso leh ula xiriir wakiil adigoo isticmaalaya badhanka \"Aan Wada Hadalno\"."
+                    },
+                    {
+                        "icon": "email",
+                        "title": "La soco Horumarka Email ahaan",
+                        "description": "La soco emailka mar kasta oo xaaladda tigidhkaagu isbeddesho."
+                    },
+                    {
+                        "icon": "tick",
+                        "title": "Xir Tigidhka",
+                        "description": "Marka arrintaada la xalliyo, wakiilka ayaa xiri doona tigidhka."
+                    }
+                ],
+                "title": "Sida Amanah Support u Shaqeyso",
+                "enabled": true,
+                "tagline": "Habsocodka",
+                "description": "Waa kan sida habka Amanah Support u fududeeyo taageerada."
+            },
+            "settings": {
+                "badge_text": null,
+                "section_title": "Saameyntayada",
+                "section_subtitle": null,
+                "form_header_title": null,
+                "submit_button_label": "Gudbi",
+                "form_header_subtitle": null,
+                "enable_ticket_section": true
+            },
+            "testimonials": {
+                "items": [
+                    {
+                        "name": "John Doe",
+                        "rating": 5,
+                        "company": "Acme Inc.",
+                        "content": "Amanah Support waxay fududaysay hawlgalladayada taageerada."
+                    },
+                    {
+                        "name": "Jane Smith",
+                        "rating": 5,
+                        "company": "BetaCorp",
+                        "content": "UX aad u fiican iyo si degdeg ah loo geeyo."
+                    }
+                ],
+                "title": "Macaamiishayadu Waxay Yiraahdaan",
+                "enabled": true,
+                "tagline": "Markhaatiyada",
+                "description": "Akhri waxa macaamiishayada ku qanacsan ay ka yiraahdaan xalkayaga Amanah Support."
+            }
+        }
+    },
+    {
+        "title": "Footer",
+        "slug": "footer",
+        "is_active": 1,
+        "html": {
+            "email": "support@amanahinsurance.com",
+            "phone": "252631234567",
+            "social": {
+                "twitter": null,
+                "facebook": null,
+                "linkedin": null,
+                "instagram": null
+            },
+            "address": "Burj Omar, Dabaqa 4aad, Wadada 1aad, Hargeysa, Somaliland",
+            "description": "Xalka miiska taageerada xirfadeed ee baahiyahaaga ganacsi.",
+            "company_name": "Amanah Support",
+            "copyright_text": "Xuquuqda oo dhan way dhowran yihiin."
+        }
+    }
+]

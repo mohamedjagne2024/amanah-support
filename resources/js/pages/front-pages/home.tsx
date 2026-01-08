@@ -1,14 +1,13 @@
 import { useForm, router } from '@inertiajs/react';
-import { useState, useRef } from 'react';
-import { 
-  Settings, 
-  Home as HomeIcon, 
-  Star, 
-  BarChart3, 
+import { useState, useRef, useMemo } from 'react';
+import {
+  Settings,
+  Home as HomeIcon,
+  Star,
+  BarChart3,
   MessageSquare,
   Plus,
   X,
-  Upload,
   Image as ImageIcon
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
@@ -90,65 +89,49 @@ type HomePageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
 };
 
 const defaultPageData: PageData = {
   settings: {
     badge_text: '',
-    section_title: 'Our Impact',
+    section_title: '',
     section_subtitle: '',
     form_header_title: '',
     form_header_subtitle: '',
-    submit_button_label: 'Submit',
+    submit_button_label: '',
     enable_ticket_section: false,
   },
   hero: {
     enabled: true,
-    title: 'Simplify your workflow with <span>Amanah Support</span>',
-    description: 'Easily create, assign, manage, and resolve tickets. Just host Amanah Support on your preferred server and start using it right away.',
-    badge_text: 'Trusted by 10,000+ companies',
-    trust_indicators: ['Free 14-day trial', 'No credit card required', '24/7 support'],
-    buttons: [
-      { text: 'Login Amanah Support', link: '/login', new_tab: false },
-      { text: 'Submit ticket', link: '/ticket/open', new_tab: false },
-    ],
-    image: '/landing/images/dashboard-amanah-support.png',
+    title: '',
+    description: '',
+    badge_text: '',
+    trust_indicators: [],
+    buttons: [],
+    image: '',
   },
   features: {
     enabled: true,
-    tagline: 'Process',
-    title: 'How Amanah Support Works',
-    description: "Here's how the Amanah Support process makes support simple and efficient.",
-    items: [
-      { icon: 'ticket', title: 'Submit A ticket', description: "Create a ticket directly from the home page or dashboard." },
-      { icon: 'chat', title: 'Instant talk with agent', description: "Connect instantly with an agent through the \"Chat with us\" button." },
-      { icon: 'email', title: 'Track Progress by Email', description: "Stay updated via email whenever your ticket status changes." },
-      { icon: 'tick', title: 'Close the Ticket', description: "Once your issue is resolved, the agent will close the ticket." },
-    ],
+    tagline: '',
+    title: '',
+    description: '',
+    items: [],
   },
   stats: {
     enabled: true,
-    tagline: 'Statistics',
-    title: 'Our Impact',
-    description: 'Key metrics that showcase our success and reliability.',
-    items: [
-      { label: 'Tickets Resolved', value: '10,000+', icon: 'tick' },
-      { label: 'Happy Customers', value: '500+', icon: 'users' },
-      { label: 'Avg. Response Time', value: '< 2 hours', icon: 'clock' },
-      { label: 'Rating', value: '5.0★', icon: '' },
-    ],
+    tagline: '',
+    title: '',
+    description: '',
+    items: [],
   },
   testimonials: {
     enabled: true,
-    tagline: 'Testimonials',
-    title: 'What Our Customers Say',
-    description: 'Read what our satisfied customers say about our Amanah Support solution.',
-    items: [
-      { name: 'John Doe', company: 'Acme Inc.', content: 'Amanah Support streamlined our support operations.', rating: 5 },
-      { name: 'Jane Smith', company: 'BetaCorp', content: 'Great UX and fast to deploy.', rating: 5 },
-    ],
+    tagline: '',
+    title: '',
+    description: '',
+    items: [],
   },
 };
 
@@ -177,9 +160,17 @@ export default function Home({ title, page }: HomePageProps) {
   const [activeTab, setActiveTab] = useState('settings');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const initialData = page?.html || defaultPageData;
-  
+
+  const initialData = useMemo(() => {
+    if (!page?.html) return defaultPageData;
+    try {
+      return typeof page.html === 'string' ? JSON.parse(page.html) : page.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return defaultPageData;
+    }
+  }, [page?.html]);
+
   const { data, setData, processing, errors } = useForm<PageData>({
     settings: initialData.settings || defaultPageData.settings,
     hero: initialData.hero || defaultPageData.hero,
@@ -344,7 +335,7 @@ export default function Home({ title, page }: HomePageProps) {
           {/* Ticket Section Card */}
           <div className="border border-default-200 rounded-lg p-4 space-y-4">
             <h6 className="font-semibold text-default-900">Ticket Section</h6>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block font-medium text-default-900 text-sm mb-2">Badge Text</label>
@@ -426,14 +417,12 @@ export default function Home({ title, page }: HomePageProps) {
                 type="button"
                 onClick={() => setData('settings', { ...data.settings, enable_ticket_section: !data.settings.enable_ticket_section })}
                 disabled={processing}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                  data.settings.enable_ticket_section ? 'bg-primary' : 'bg-default-200'
-                }`}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${data.settings.enable_ticket_section ? 'bg-primary' : 'bg-default-200'
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    data.settings.enable_ticket_section ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+                  className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${data.settings.enable_ticket_section ? 'translate-x-5' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>
@@ -456,14 +445,12 @@ export default function Home({ title, page }: HomePageProps) {
             type="button"
             onClick={() => setData('hero', { ...data.hero, enabled: !data.hero.enabled })}
             disabled={processing}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-              data.hero.enabled ? 'bg-primary' : 'bg-default-200'
-            }`}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${data.hero.enabled ? 'bg-primary' : 'bg-default-200'
+              }`}
           >
             <span
-              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                data.hero.enabled ? 'translate-x-5' : 'translate-x-0'
-              }`}
+              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${data.hero.enabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
             />
           </button>
         </div>
@@ -661,14 +648,12 @@ export default function Home({ title, page }: HomePageProps) {
             type="button"
             onClick={() => setData('features', { ...data.features, enabled: !data.features.enabled })}
             disabled={processing}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-              data.features.enabled ? 'bg-primary' : 'bg-default-200'
-            }`}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${data.features.enabled ? 'bg-primary' : 'bg-default-200'
+              }`}
           >
             <span
-              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                data.features.enabled ? 'translate-x-5' : 'translate-x-0'
-              }`}
+              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${data.features.enabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
             />
           </button>
         </div>
@@ -790,14 +775,12 @@ export default function Home({ title, page }: HomePageProps) {
             type="button"
             onClick={() => setData('stats', { ...data.stats, enabled: !data.stats.enabled })}
             disabled={processing}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-              data.stats.enabled ? 'bg-primary' : 'bg-default-200'
-            }`}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${data.stats.enabled ? 'bg-primary' : 'bg-default-200'
+              }`}
           >
             <span
-              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                data.stats.enabled ? 'translate-x-5' : 'translate-x-0'
-              }`}
+              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${data.stats.enabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
             />
           </button>
         </div>
@@ -921,14 +904,12 @@ export default function Home({ title, page }: HomePageProps) {
             type="button"
             onClick={() => setData('testimonials', { ...data.testimonials, enabled: !data.testimonials.enabled })}
             disabled={processing}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-              data.testimonials.enabled ? 'bg-primary' : 'bg-default-200'
-            }`}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${data.testimonials.enabled ? 'bg-primary' : 'bg-default-200'
+              }`}
           >
             <span
-              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                data.testimonials.enabled ? 'translate-x-5' : 'translate-x-0'
-              }`}
+              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${data.testimonials.enabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
             />
           </button>
         </div>
@@ -1081,11 +1062,10 @@ export default function Home({ title, page }: HomePageProps) {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-default-500 hover:text-default-700 hover:border-default-300'
-                    }`}
+                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-default-500 hover:text-default-700 hover:border-default-300'
+                      }`}
                   >
                     <Icon className="size-4" />
                     {tab.label}

@@ -1,12 +1,12 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
-import { 
-  Ticket, 
-  MessageCircle, 
-  Mail, 
-  CheckCircle, 
-  Users, 
-  Clock, 
+import {
+  Ticket,
+  MessageCircle,
+  Mail,
+  CheckCircle,
+  Users,
+  Clock,
   Star,
   Shield,
   Settings,
@@ -107,7 +107,7 @@ type HomePageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
   regions: Array<{ id: number; name: string }>;
   types: Array<{ id: number; name: string }>;
@@ -131,9 +131,9 @@ const getIcon = (iconName: string) => {
   return iconMap[iconName] || CheckCircle;
 };
 
-export default function Home({ 
-  title, 
-  page, 
+export default function Home({
+  title,
+  page,
   regions = [],
   types = [],
   custom_fields = [],
@@ -142,10 +142,19 @@ export default function Home({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const { auth } = usePage<SharedData>().props;
-  
+
   const isLoggedIn = !!auth?.user;
 
-  const pageData = page?.html || {};
+  const pageData = useMemo(() => {
+    if (!page?.html) return {};
+    try {
+      return typeof page.html === 'string' ? JSON.parse(page.html) : page.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return {};
+    }
+  }, [page?.html]);
+
   const hero = pageData.hero || {};
   const features = pageData.features || {};
   const stats = pageData.stats || {};
@@ -206,7 +215,7 @@ export default function Home({
   return (
     <>
       <PageMeta title={title} />
-      
+
       <PublicLayout currentPage="/" footer={footer}>
 
         {/* Hero Section */}
@@ -221,14 +230,14 @@ export default function Home({
                       {hero.badge_text}
                     </div>
                   )}
-                  
-                  <h1 
+
+                  <h1
                     className="text-4xl sm:text-5xl lg:text-6xl font-bold text-default-900 leading-tight [&>span]:text-primary"
                     dangerouslySetInnerHTML={{ __html: hero.title || 'Welcome to Amanah Support' }}
                   />
-                  
+
                   {hero.description && (
-                    <div 
+                    <div
                       className="text-lg text-default-600 leading-relaxed max-w-xl"
                       dangerouslySetInnerHTML={{ __html: hero.description }}
                     />
@@ -255,11 +264,10 @@ export default function Home({
                           href={button.link}
                           target={button.new_tab ? '_blank' : undefined}
                           rel={button.new_tab ? 'noopener noreferrer' : undefined}
-                          className={`btn ${
-                            index === 0
+                          className={`btn ${index === 0
                               ? 'bg-primary text-white'
                               : 'border-default-200 text-default-900'
-                          }`}
+                            }`}
                         >
                           {button.text}
                           {index === 0 && <ChevronRight className="size-5 ml-1" />}
@@ -328,7 +336,7 @@ export default function Home({
                           <h3 className="text-lg font-semibold text-default-900 mb-2">
                             {feature.title}
                           </h3>
-                          <div 
+                          <div
                             className="text-default-600 text-sm leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: feature.description }}
                           />
@@ -453,7 +461,7 @@ export default function Home({
                   {settings.form_header_title || 'Submit a Amanah Support Ticket'}
                 </h2>
                 {settings.form_header_subtitle && (
-                  <div 
+                  <div
                     className="text-lg text-default-600 max-w-2xl mx-auto"
                     dangerouslySetInnerHTML={{ __html: settings.form_header_subtitle }}
                   />

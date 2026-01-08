@@ -13,12 +13,15 @@ class CreateFrontPagesTable extends Migration
      */
     public function up()
     {
-        if (Schema::hasTable('front_pages')) { return; }
+        if (Schema::hasTable('front_pages')) {
+            return;
+        }
         Schema::create('front_pages', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title', '150')->nullable();
             $table->string('slug', '50')->nullable();
             $table->integer('is_active')->default(1)->nullable();
+            $table->string('language', 2)->default('en');
             $table->json('html')->nullable();
             $table->timestamps();
         });

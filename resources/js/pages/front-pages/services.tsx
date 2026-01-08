@@ -1,6 +1,6 @@
 import { useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
-import { 
+import { useState, useMemo } from 'react';
+import {
   Plus,
   X,
   Briefcase,
@@ -31,34 +31,31 @@ type ServicesPageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
 };
 
 const defaultPageData: PageData = {
   content: {
-    tagline: 'Our Services',
-    title: 'What We Offer',
-    description: 'Discover our comprehensive range of services designed to meet your needs.',
+    tagline: '',
+    title: '',
+    description: '',
   },
-  services: [
-    {
-      name: 'Technical Support',
-      icon: 'ticket',
-      details: 'Get expert assistance with technical issues and troubleshooting.',
-    },
-    {
-      name: 'Customer Service',
-      icon: 'users',
-      details: 'Dedicated support team to help with inquiries and account management.',
-    },
-  ],
+  services: [],
 };
 
 export default function Services({ title, page }: ServicesPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const initialData = page?.html || defaultPageData;
-  
+  const initialData = useMemo(() => {
+    if (!page?.html) return defaultPageData;
+    try {
+      return typeof page.html === 'string' ? JSON.parse(page.html) : page.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return defaultPageData;
+    }
+  }, [page?.html]);
+
   const { data, setData, processing } = useForm<PageData>({
     content: initialData.content || defaultPageData.content,
     services: initialData.services || defaultPageData.services,

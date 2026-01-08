@@ -11,7 +11,6 @@ use App\Models\Region;
 use App\Models\FrontPage;
 use App\Models\Settings;
 use App\Models\Ticket;
-use App\Models\TicketEntry;
 use App\Models\Type;
 use App\Models\User;
 use App\Traits\HasGoogleCloudStorage;
@@ -29,8 +28,8 @@ class HomeController extends Controller
     {
         return Inertia::render('landing/home', [
             'title' => 'Home - Amanah Support',
-            'page' => FrontPage::where('slug', 'home')->first(),
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'page' => FrontPage::where('slug', 'home')->where('language', app()->getLocale())->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'regions' => Region::orderBy('name')
                 ->get()
                 ->map
@@ -61,7 +60,7 @@ class HomeController extends Controller
             $hide_ticket_fields = json_decode($get_hide_ticket_fields->value, true);
         }
         return Inertia::render('Landing/OpenTicket', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'title' => 'Open Ticket - Amanah Support',
             'hide_ticket_fields' => $hide_ticket_fields,
             'regions' => Region::orderBy('name')

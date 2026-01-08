@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import PageMeta from '@/components/PageMeta';
 import PublicLayout from '@/layouts/public-layout';
 
@@ -13,18 +14,26 @@ type PrivacyPageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
   footer?: any;
 };
 
 export default function Privacy({ title, data: pageInfo, footer }: PrivacyPageProps) {
-  const pageData = pageInfo?.html || {};
+  const pageData = useMemo(() => {
+    if (!pageInfo?.html) return {};
+    try {
+      return typeof pageInfo.html === 'string' ? JSON.parse(pageInfo.html) : pageInfo.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return {};
+    }
+  }, [pageInfo?.html]);
 
   return (
     <>
       <PageMeta title={title || 'Privacy Policy'} />
-      
+
       <PublicLayout currentPage="/privacy" footer={footer}>
         {/* Hero Section */}
         <section className="pt-32 pb-8 px-4 sm:px-6 lg:px-8">

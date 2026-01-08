@@ -1,9 +1,9 @@
 import { useForm } from '@inertiajs/react';
-import { useState } from 'react';
-import { 
-  MapPin, 
-  Phone, 
-  Mail, 
+import { useState, useMemo } from 'react';
+import {
+  MapPin,
+  Phone,
+  Mail,
   Send,
   CheckCircle,
 } from 'lucide-react';
@@ -39,7 +39,7 @@ type ContactPageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
   site_key?: string;
   footer?: any;
@@ -48,7 +48,15 @@ type ContactPageProps = {
 export default function Contact({ title, data: pageInfo, footer }: ContactPageProps & { footer?: any }) {
   const [submitted, setSubmitted] = useState(false);
 
-  const pageData = pageInfo?.html || {};
+  const pageData = useMemo(() => {
+    if (!pageInfo?.html) return {};
+    try {
+      return typeof pageInfo.html === 'string' ? JSON.parse(pageInfo.html) : pageInfo.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return {};
+    }
+  }, [pageInfo?.html]);
   const content = pageData.content || {};
   const location = pageData.location || {};
   const phone = pageData.phone || {};
@@ -75,7 +83,7 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
   return (
     <>
       <PageMeta title={title || 'Contact Us'} />
-      
+
       <PublicLayout currentPage="/contact" footer={footer}>
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
@@ -119,8 +127,8 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
                       <Phone className="size-7 text-info" />
                     </div>
                     <h3 className="text-lg font-semibold text-default-900 mb-2">Phone Number</h3>
-                    <a 
-                      href={`tel:${phone.number}`} 
+                    <a
+                      href={`tel:${phone.number}`}
                       className="text-primary font-medium hover:underline"
                     >
                       {phone.number}
@@ -140,8 +148,8 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
                       <Mail className="size-7 text-warning" />
                     </div>
                     <h3 className="text-lg font-semibold text-default-900 mb-2">Email Address</h3>
-                    <a 
-                      href={`mailto:${email.address}`} 
+                    <a
+                      href={`mailto:${email.address}`}
                       className="text-primary font-medium hover:underline"
                     >
                       {email.address}

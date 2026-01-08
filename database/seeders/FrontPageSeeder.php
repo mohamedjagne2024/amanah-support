@@ -14,17 +14,29 @@ class FrontPageSeeder extends Seeder
      *
      * @return void
      */
-    public function run() {
+    public function run()
+    {
         DB::table('front_pages')->truncate();
-        $json = Storage::disk('json')->get('front_page.json');
-        $frontPages = json_decode($json, true);
-        foreach ($frontPages as $frontPage){
-            FrontPage::factory()->create([
-               'title' => $frontPage['title'],
-               'slug' => $frontPage['slug'],
-               'is_active' => $frontPage['is_active'],
-               'html' => json_encode($frontPage['html']),
-            ]);
+
+        $languages = ['en', 'so', 'ar'];
+
+        foreach ($languages as $lang) {
+            $file = "front_page_{$lang}.json";
+
+            if (Storage::disk('json')->exists($file)) {
+                $json = Storage::disk('json')->get($file);
+                $frontPages = json_decode($json, true);
+
+                foreach ($frontPages as $frontPage) {
+                    FrontPage::factory()->create([
+                        'title' => $frontPage['title'],
+                        'slug' => $frontPage['slug'],
+                        'is_active' => $frontPage['is_active'],
+                        'language' => $lang,
+                        'html' => json_encode($frontPage['html']),
+                    ]);
+                }
+            }
         }
     }
 }

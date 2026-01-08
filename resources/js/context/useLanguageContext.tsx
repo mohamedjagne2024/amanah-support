@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import {
   createContext,
   use,
@@ -44,7 +45,7 @@ export const useLanguageContextSafe = () => {
 const getNestedValue = (obj: any, path: string): string => {
   const keys = path.split('.');
   let value = obj;
-  
+
   for (const key of keys) {
     if (value && typeof value === 'object' && key in value) {
       value = value[key];
@@ -52,7 +53,7 @@ const getNestedValue = (obj: any, path: string): string => {
       return path; // Return the key if not found
     }
   }
-  
+
   return typeof value === 'string' ? value : path;
 };
 
@@ -89,6 +90,8 @@ const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const setLanguage = useCallback(
     (lang: LanguageType) => {
       setLanguageState(lang);
+      document.cookie = `app_locale=${lang}; path=/; max-age=31536000`; // 1 year
+      router.visit(window.location.pathname + window.location.search, { preserveScroll: true });
     },
     [setLanguageState]
   );

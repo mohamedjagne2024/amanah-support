@@ -1,10 +1,10 @@
 import { useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
-import { 
-  FileText, 
-  MapPin, 
-  Phone, 
-  Mail, 
+import { useState, useMemo } from 'react';
+import {
+  FileText,
+  MapPin,
+  Phone,
+  Mail,
   Link as LinkIcon,
   Facebook,
   Twitter,
@@ -36,17 +36,17 @@ type FooterPageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
 };
 
 const defaultPageData: PageData = {
-  description: 'Professional support desk solution for your business needs.',
+  description: '',
   email: '',
   phone: '',
   address: '',
-  company_name: 'Amanah Support',
-  copyright_text: 'All rights reserved.',
+  company_name: '',
+  copyright_text: '',
   social: {
     facebook: '',
     twitter: '',
@@ -57,8 +57,16 @@ const defaultPageData: PageData = {
 
 export default function Footer({ title, page }: FooterPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const initialData = page?.html || defaultPageData;
-  
+  const initialData = useMemo(() => {
+    if (!page?.html) return defaultPageData;
+    try {
+      return typeof page.html === 'string' ? JSON.parse(page.html) : page.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return defaultPageData;
+    }
+  }, [page?.html]);
+
   const { data, setData, processing } = useForm<PageData>({
     description: initialData.description || defaultPageData.description,
     email: initialData.email || defaultPageData.email,

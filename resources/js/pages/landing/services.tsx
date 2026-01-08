@@ -1,10 +1,10 @@
-import { 
-  Ticket, 
-  MessageCircle, 
-  Mail, 
-  CheckCircle, 
-  Users, 
-  Clock, 
+import {
+  Ticket,
+  MessageCircle,
+  Mail,
+  CheckCircle,
+  Users,
+  Clock,
   Star,
   Shield,
   Settings,
@@ -20,6 +20,7 @@ import {
   Server,
   Code,
 } from 'lucide-react';
+import { useMemo } from 'react';
 import PageMeta from '@/components/PageMeta';
 import PublicLayout from '@/layouts/public-layout';
 
@@ -45,7 +46,7 @@ type ServicesPageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
   footer?: any;
 };
@@ -78,14 +79,22 @@ const getIcon = (iconName: string) => {
 };
 
 export default function Services({ title, data: pageInfo, footer }: ServicesPageProps) {
-  const pageData = pageInfo?.html || {};
+  const pageData = useMemo(() => {
+    if (!pageInfo?.html) return {};
+    try {
+      return typeof pageInfo.html === 'string' ? JSON.parse(pageInfo.html) : pageInfo.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return {};
+    }
+  }, [pageInfo?.html]);
   const content = pageData.content || {};
   const services = pageData.services || [];
 
   return (
     <>
       <PageMeta title={title || 'Services'} />
-      
+
       <PublicLayout currentPage="/services" footer={footer}>
         {/* Hero Section */}
         <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
@@ -130,7 +139,7 @@ export default function Services({ title, data: pageInfo, footer }: ServicesPage
                         <h3 className="text-xl font-semibold text-default-900 mb-3">
                           {service.name}
                         </h3>
-                        <div 
+                        <div
                           className="text-default-600 leading-relaxed"
                           dangerouslySetInnerHTML={{ __html: service.details }}
                         />

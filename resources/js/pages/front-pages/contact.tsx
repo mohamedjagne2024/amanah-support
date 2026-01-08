@@ -1,10 +1,10 @@
 import { useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
-import { 
-  FileText, 
-  MapPin, 
-  Phone, 
-  Mail, 
+import { useState, useMemo } from 'react';
+import {
+  FileText,
+  MapPin,
+  Phone,
+  Mail,
   MessageSquare,
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
@@ -39,26 +39,26 @@ type ContactPageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
 };
 
 const defaultPageData: PageData = {
   content: {
-    text: 'GET IN TOUCH WITH US',
-    details: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eius tempor incididunt ut labore et dolore magna aliqua. Ut enim adiqua minim veniam quis nostrud exercitation ullamco',
+    text: '',
+    details: '',
   },
   location: {
-    address: '8013 Alderwood St. South San Francisco, CA 94080',
+    address: '',
     map_url: '',
   },
   phone: {
-    number: '+902930290232',
-    details: 'The phrasal sequence of the is now so that many campaign and benefit.',
+    number: '',
+    details: '',
   },
   email: {
-    address: 'contact@mail.com',
-    details: 'The phrasal sequence of the is now so that many campaign and benefit.',
+    address: '',
+    details: '',
   },
   contact_form: {
     recipient_email: '',
@@ -67,8 +67,16 @@ const defaultPageData: PageData = {
 
 export default function Contact({ title, page }: ContactPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const initialData = page?.html || defaultPageData;
-  
+  const initialData = useMemo(() => {
+    if (!page?.html) return defaultPageData;
+    try {
+      return typeof page.html === 'string' ? JSON.parse(page.html) : page.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return defaultPageData;
+    }
+  }, [page?.html]);
+
   const { data, setData, processing } = useForm<PageData>({
     content: initialData.content || defaultPageData.content,
     location: initialData.location || defaultPageData.location,

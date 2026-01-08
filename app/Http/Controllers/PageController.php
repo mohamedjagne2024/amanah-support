@@ -20,7 +20,7 @@ class PageController extends Controller
     {
         $type = Type::where('id', $typeId)->first();
         return Inertia::render('Landing/KnowledgeBase/ByType', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'title' => 'Blog posts',
             'type' => $type,
             'posts' => KnowledgeBase::where('type_id', $type->id)->orderBy('created_at', 'desc')
@@ -44,7 +44,7 @@ class PageController extends Controller
     public function kb()
     {
         return Inertia::render('landing/kb', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'types' => Type::orderBy('name')->get()->map->only('id', 'name'),
             'filters' => Request::only('search'),
             'kb' => KnowledgeBase::orderBy('created_at', 'desc')
@@ -68,7 +68,7 @@ class PageController extends Controller
     public function faq()
     {
         return Inertia::render('landing/faq', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'title' => 'FAQs',
             'filters' => Request::only('search'),
             'faqs' => Faq::where('status', true)
@@ -90,7 +90,7 @@ class PageController extends Controller
     public function kbDetails(KnowledgeBase $kb_item)
     {
         return Inertia::render('landing/kb-details', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'title' => $kb_item->title,
             'kb' => [
                 'id' => $kb_item->id,
@@ -113,9 +113,9 @@ class PageController extends Controller
 
     public function privacy()
     {
-        $page = FrontPage::where('slug', 'privacy')->first();
+        $page = FrontPage::where('slug', 'privacy')->where('language', app()->getLocale())->first();
         return Inertia::render('landing/privacy', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'title' => $page ? $page->title : 'Privacy Policy',
             'data' => $page
         ]);
@@ -123,9 +123,9 @@ class PageController extends Controller
 
     public function contact()
     {
-        $page = FrontPage::where('slug', 'contact')->first();
+        $page = FrontPage::where('slug', 'contact')->where('language', app()->getLocale())->first();
         return Inertia::render('landing/contact', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'title' => $page->title,
             'data' => $page
         ]);
@@ -133,9 +133,9 @@ class PageController extends Controller
 
     public function services()
     {
-        $page = FrontPage::where('slug', 'services')->first();
+        $page = FrontPage::where('slug', 'services')->where('language', app()->getLocale())->first();
         return Inertia::render('landing/services', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'title' => $page ? $page->title : 'Services',
             'data' => $page
         ]);
@@ -143,9 +143,9 @@ class PageController extends Controller
 
     public function terms()
     {
-        $page = FrontPage::where('slug', 'terms')->first();
+        $page = FrontPage::where('slug', 'terms')->where('language', app()->getLocale())->first();
         return Inertia::render('landing/terms', [
-            'footer' => FrontPage::where('slug', 'footer')->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
             'title' => $page ? $page->title : 'Terms of Service',
             'data' => $page
         ]);

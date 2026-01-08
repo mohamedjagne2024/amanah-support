@@ -1,5 +1,5 @@
 import { useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Shield } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
@@ -17,19 +17,27 @@ type PrivacyPageProps = {
     title: string;
     slug: string;
     is_active: boolean;
-    html: PageData | null;
+    html: PageData | string | null;
   } | null;
 };
 
 const defaultPageData: PageData = {
-  title: 'Privacy Policy',
-  content: '<h2>Privacy Policy</h2><p>Your privacy is important to us. This privacy policy explains what personal data we collect and how we use it.</p>',
+  title: '',
+  content: '',
 };
 
 export default function Privacy({ title, page }: PrivacyPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const initialData = page?.html || defaultPageData;
-  
+  const initialData = useMemo(() => {
+    if (!page?.html) return defaultPageData;
+    try {
+      return typeof page.html === 'string' ? JSON.parse(page.html) : page.html;
+    } catch (e) {
+      console.error('Error parsing page data:', e);
+      return defaultPageData;
+    }
+  }, [page?.html]);
+
   const { data, setData, processing } = useForm<PageData>({
     title: initialData.title || defaultPageData.title,
     content: initialData.content || defaultPageData.content,
