@@ -27,7 +27,7 @@ class FrontPagesController extends Controller
             return abort(404);
         }
         return Inertia::render($components[$slug], [
-            'title' => $page ? $page->title : 'Page Settings',e
+            'title' => $page ? $page->title : 'Page Settings',
             'page' => $page,
         ]);
     }
