@@ -13,10 +13,13 @@ class CreateConversationsTable extends Migration
      */
     public function up()
     {
-        if (Schema::hasTable('conversations')) { return; }
+        if (Schema::hasTable('conversations')) {
+            return;
+        }
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
             $table->string('title', 100)->nullable();
+            $table->integer('region_id')->nullable()->index();
             $table->integer('contact_id')->index();
             $table->timestamps();
         });

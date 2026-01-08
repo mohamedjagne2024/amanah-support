@@ -1,12 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { usePage } from '@inertiajs/react';
-import { 
-  MessageCircle, 
-  X, 
-  Send, 
+import {
+  MessageCircle,
+  X,
+  Send,
   Minimize2,
   Paperclip,
-  FileText
+  FileText,
+  ChevronDown,
+  ChevronRight,
+  HelpCircle,
+  User as UserIcon,
+  ArrowLeft
 } from 'lucide-react';
 import type { SharedData, Auth } from '@/types';
 import { useChatMessageListener } from '@/hooks/usePusher';
@@ -57,7 +62,21 @@ type Conversation = {
   creator?: any;
   messages?: Message[];
   participant?: any;
+  session_contact_id?: number;
 };
+
+type Region = {
+  id: number;
+  name: string;
+};
+
+type Faq = {
+  id: number;
+  name: string;
+  details: string;
+};
+
+type ChatStep = 'register' | 'faq' | 'chat';
 
 // Avatar component with initials or profile picture
 const Avatar = ({ name, profilePicture, className = '' }: { name: string; profilePicture?: string | null; className?: string }) => {
@@ -72,7 +91,7 @@ const Avatar = ({ name, profilePicture, className = '' }: { name: string; profil
   const getColorClass = (name: string) => {
     const colors = [
       'bg-primary',
-      'bg-success', 
+      'bg-success',
       'bg-info',
       'bg-warning',
       'bg-purple-500',
@@ -83,8 +102,8 @@ const Avatar = ({ name, profilePicture, className = '' }: { name: string; profil
 
   if (profilePicture) {
     return (
-      <img 
-        src={profilePicture} 
+      <img
+        src={profilePicture}
         alt={name}
         className={`size-8 rounded-full object-cover ${className}`}
       />
@@ -103,20 +122,42 @@ const formatMessageTime = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
-  
-  const timeStr = date.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
+
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
     minute: '2-digit',
-    hour12: true 
+    hour12: true
   }).toLowerCase();
-  
+
   if (isToday) {
     return timeStr;
   }
-  
+
   const dayStr = date.toLocaleDateString('en-US', { weekday: 'short' });
   return `${dayStr} ${timeStr}`;
 };
+
+// FAQ Accordion Item
+const FaqItem = ({ faq, isExpanded, onToggle }: { faq: Faq; isExpanded: boolean; onToggle: () => void }) => (
+  <div className="border border-default-200 rounded-lg overflow-hidden">
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between p-3 text-left bg-default-50 hover:bg-default-100 transition-colors"
+    >
+      <span className="font-medium text-sm text-default-800">{faq.name}</span>
+      {isExpanded ? (
+        <ChevronDown className="size-4 text-default-500 shrink-0" />
+      ) : (
+        <ChevronRight className="size-4 text-default-500 shrink-0" />
+      )}
+    </button>
+    {isExpanded && (
+      <div className="p-3 bg-card text-sm text-default-600 border-t border-default-200">
+        <div dangerouslySetInnerHTML={{ __html: faq.details }} />
+      </div>
+    )}
+  </div>
+);
 
 export default function ChatWidget() {
   const { auth } = usePage<SharedData>().props;
@@ -131,15 +172,69 @@ export default function ChatWidget() {
   const [hasCheckedConversation, setHasCheckedConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
+  // Guest registration state
+  const [currentStep, setCurrentStep] = useState<ChatStep>('register');
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [faqs, setFaqs] = useState<Faq[]>([]);
+  const [expandedFaqId, setExpandedFaqId] = useState<number | null>(null);
+  const [guestContactId, setGuestContactId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    member_number: '',
+    region_id: '',
+  });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
   const isLoggedIn = !!auth?.user;
   const userRoles = (auth as Auth & { roles?: string[] })?.roles || [];
   const isContact = userRoles.includes('Contact');
 
-  // Only render for logged-in contact users
-  if (!isLoggedIn || !isContact) {
-    return null;
-  }
+  // Check localStorage for existing guest session
+  useEffect(() => {
+    if (!isLoggedIn) {
+      const savedContactId = localStorage.getItem('chat_guest_contact_id');
+      if (savedContactId) {
+        setGuestContactId(parseInt(savedContactId));
+        setCurrentStep('chat');
+      }
+    }
+  }, [isLoggedIn]);
+
+  // Load regions and FAQs when widget opens for non-logged-in users
+  useEffect(() => {
+    if (isOpen && !isLoggedIn && currentStep === 'register') {
+      loadRegions();
+    }
+    if (isOpen && !isLoggedIn && currentStep === 'faq') {
+      loadFaqs();
+    }
+  }, [isOpen, isLoggedIn, currentStep]);
+
+  const loadRegions = async () => {
+    try {
+      const response = await fetch('/chat/regions');
+      if (response.ok) {
+        const data = await response.json();
+        setRegions(data);
+      }
+    } catch (error) {
+      console.error('Failed to load regions:', error);
+    }
+  };
+
+  const loadFaqs = async () => {
+    try {
+      const response = await fetch('/chat/faqs');
+      if (response.ok) {
+        const data = await response.json();
+        setFaqs(data);
+      }
+    } catch (error) {
+      console.error('Failed to load FAQs:', error);
+    }
+  };
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -151,10 +246,10 @@ export default function ChatWidget() {
     scrollToBottom();
   }, [conversation?.messages]);
 
-  // Check if user has an existing conversation (without creating one)
+  // Check if user has an existing conversation (for logged-in contacts)
   const checkExistingConversation = async () => {
     if (!auth?.user) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch('/chat/contact/conversation');
@@ -172,10 +267,42 @@ export default function ChatWidget() {
     }
   };
 
-  // Start a new chat conversation (first time user)
+  // Check if guest has an existing conversation
+  const checkGuestConversation = async () => {
+    if (!guestContactId) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/chat/guest/conversation?contact_id=${guestContactId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.id) {
+          setConversation(data);
+        }
+      }
+    } catch (error) {
+      // Silent fail
+    } finally {
+      setIsLoading(false);
+      setHasCheckedConversation(true);
+    }
+  };
+
+  // Load conversation when step changes to chat
+  useEffect(() => {
+    if (currentStep === 'chat' && !hasCheckedConversation) {
+      if (isLoggedIn) {
+        checkExistingConversation();
+      } else if (guestContactId) {
+        checkGuestConversation();
+      }
+    }
+  }, [currentStep, isLoggedIn, guestContactId, hasCheckedConversation]);
+
+  // Start a new chat conversation (for logged-in contacts)
   const startNewChat = async () => {
     if (!auth?.user) return;
-    
+
     setIsStarting(true);
     try {
       const response = await fetch('/chat/init', {
@@ -189,14 +316,12 @@ export default function ChatWidget() {
           email: auth.user.email,
         }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data && data.id) {
           setConversation(data);
         }
-      } else {
-        // Handle error silently
       }
     } catch (error) {
       // Handle error silently
@@ -205,12 +330,86 @@ export default function ChatWidget() {
     }
   };
 
+  // Start a new chat conversation for guest users
+  const startGuestChat = async () => {
+    setIsStarting(true);
+    try {
+      const response = await fetch('/chat/init', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          member_number: formData.member_number,
+          region_id: formData.region_id ? parseInt(formData.region_id) : null,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.id) {
+          setConversation(data);
+          if (data.session_contact_id) {
+            setGuestContactId(data.session_contact_id);
+            localStorage.setItem('chat_guest_contact_id', data.session_contact_id.toString());
+          }
+          setCurrentStep('chat');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to start chat:', error);
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  // Validate registration form
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      errors.name = 'Full name is required';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email';
+    }
+
+    if (!formData.region_id) {
+      errors.region_id = 'Please select a region';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle registration form submission
+  const handleRegisterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      setCurrentStep('faq');
+    }
+  };
+
   // Refresh conversation messages
   const refreshMessages = async () => {
-    if (!conversation || !auth?.user) return;
-    
+    if (!conversation) return;
+
     try {
-      const response = await fetch('/chat/contact/conversation');
+      let response;
+      if (isLoggedIn && auth?.user) {
+        response = await fetch('/chat/contact/conversation');
+      } else if (guestContactId) {
+        response = await fetch(`/chat/guest/conversation?contact_id=${guestContactId}`);
+      } else {
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
         if (data) {
@@ -249,8 +448,20 @@ export default function ChatWidget() {
   const handleOpen = () => {
     setIsOpen(true);
     setIsMinimized(false);
-    if (!conversation && !hasCheckedConversation) {
-      checkExistingConversation();
+
+    // Determine initial step based on login status
+    if (isLoggedIn && isContact) {
+      setCurrentStep('chat');
+      if (!conversation && !hasCheckedConversation) {
+        checkExistingConversation();
+      }
+    } else if (guestContactId) {
+      setCurrentStep('chat');
+      if (!conversation && !hasCheckedConversation) {
+        checkGuestConversation();
+      }
+    } else if (!isLoggedIn) {
+      setCurrentStep('register');
     }
   };
 
@@ -278,15 +489,19 @@ export default function ChatWidget() {
   };
 
   const handleSendMessage = async () => {
-    if ((!newMessage.trim() && attachments.length === 0) || !conversation || !auth?.user) return;
-    
+    if ((!newMessage.trim() && attachments.length === 0) || !conversation) return;
+
+    // Determine contact_id based on login status
+    const contactId = isLoggedIn ? auth?.user?.id : guestContactId;
+    if (!contactId) return;
+
     setIsSending(true);
     try {
       const formData = new FormData();
       formData.append('conversation_id', conversation.id.toString());
-      formData.append('contact_id', auth.user.id.toString());
+      formData.append('contact_id', contactId.toString());
       formData.append('message', newMessage);
-      
+
       attachments.forEach((file) => {
         formData.append('files[]', file);
       });
@@ -299,7 +514,7 @@ export default function ChatWidget() {
         },
         body: formData,
       });
-      
+
       if (response.ok) {
         const newMsg = await response.json();
         // Add to conversation with deduplication check
@@ -314,8 +529,6 @@ export default function ChatWidget() {
         });
         setNewMessage('');
         setAttachments([]);
-      } else {
-        // Handle error silently
       }
     } catch (error) {
       // Handle error silently
@@ -347,6 +560,369 @@ export default function ChatWidget() {
     return message.user_id !== null;
   };
 
+  // Render Registration Form
+  const renderRegistrationForm = () => (
+    <div className="flex-1 overflow-y-auto p-4">
+      <div className="text-center mb-6">
+        <div className="size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-4">
+          <UserIcon className="size-8 text-primary" />
+        </div>
+        <h4 className="font-semibold text-default-900 mb-2">Welcome to Support</h4>
+        <p className="text-sm text-default-500">Please provide your details to start chatting with our team.</p>
+      </div>
+
+      <form onSubmit={handleRegisterSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-default-700 mb-1">
+            Full Name <span className="text-danger">*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className={`w-full px-3 py-2 rounded-lg border ${formErrors.name ? 'border-danger' : 'border-default-200'
+              } bg-default-50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20`}
+            placeholder="Enter your full name"
+          />
+          {formErrors.name && (
+            <p className="text-xs text-danger mt-1">{formErrors.name}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-default-700 mb-1">
+            Email Address <span className="text-danger">*</span>
+          </label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className={`w-full px-3 py-2 rounded-lg border ${formErrors.email ? 'border-danger' : 'border-default-200'
+              } bg-default-50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20`}
+            placeholder="Enter your email"
+          />
+          {formErrors.email && (
+            <p className="text-xs text-danger mt-1">{formErrors.email}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-default-700 mb-1">
+            Member Number
+          </label>
+          <input
+            type="text"
+            value={formData.member_number}
+            onChange={(e) => setFormData({ ...formData, member_number: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border border-default-200 bg-default-50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+            placeholder="Enter your member number (optional)"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-default-700 mb-1">
+            Region <span className="text-danger">*</span>
+          </label>
+          <select
+            value={formData.region_id}
+            onChange={(e) => setFormData({ ...formData, region_id: e.target.value })}
+            className={`w-full px-3 py-2 rounded-lg border ${formErrors.region_id ? 'border-danger' : 'border-default-200'
+              } bg-default-50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20`}
+          >
+            <option value="">Select your region</option>
+            {regions.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.name}
+              </option>
+            ))}
+          </select>
+          {formErrors.region_id && (
+            <p className="text-xs text-danger mt-1">{formErrors.region_id}</p>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          className="w-full btn bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-all"
+        >
+          Continue
+        </button>
+      </form>
+    </div>
+  );
+
+  // Render FAQ Section
+  const renderFaqSection = () => (
+    <div className="flex-1 overflow-y-auto p-4">
+      <div className="text-center mb-6">
+        <div className="size-16 rounded-full bg-gradient-to-br from-info/20 to-info/10 flex items-center justify-center mx-auto mb-4">
+          <HelpCircle className="size-8 text-info" />
+        </div>
+        <h4 className="font-semibold text-default-900 mb-2">Frequently Asked Questions</h4>
+        <p className="text-sm text-default-500">Check if your question is answered below, or connect with our team.</p>
+      </div>
+
+      {faqs.length > 0 ? (
+        <div className="space-y-2 mb-6">
+          {faqs.map((faq) => (
+            <FaqItem
+              key={faq.id}
+              faq={faq}
+              isExpanded={expandedFaqId === faq.id}
+              onToggle={() => setExpandedFaqId(expandedFaqId === faq.id ? null : faq.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center text-default-500 text-sm mb-6">
+          No FAQs available at the moment.
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <button
+          onClick={startGuestChat}
+          disabled={isStarting}
+          className="w-full btn bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+        >
+          {isStarting ? (
+            <>
+              <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Connecting...
+            </>
+          ) : (
+            <>
+              <MessageCircle className="size-4" />
+              Chat with Live Support
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={() => setCurrentStep('register')}
+          className="w-full text-center text-default-500 text-sm hover:text-default-700 flex items-center justify-center gap-1"
+        >
+          <ArrowLeft className="size-3" />
+          Back to registration
+        </button>
+      </div>
+    </div>
+  );
+
+  // Render Chat Section
+  const renderChatSection = () => (
+    <>
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-default-50">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="flex flex-col items-center gap-3">
+              <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-default-500">Loading...</p>
+            </div>
+          </div>
+        ) : conversation ? (
+          <>
+            {conversation.messages && conversation.messages.length > 0 ? (
+              conversation.messages.map((message) => {
+                const isStaff = isStaffMessage(message);
+                const senderName = getMessageSenderName(message);
+                const senderProfilePicture = getMessageSenderProfilePicture(message);
+
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex ${isStaff ? 'justify-start' : 'justify-end'}`}
+                  >
+                    <div className={`max-w-[85%] ${isStaff ? 'order-1' : ''}`}>
+                      {isStaff && (
+                        <div className="flex items-center gap-2 mb-1">
+                          <Avatar name={senderName} profilePicture={senderProfilePicture} className="size-6 text-[10px]" />
+                          <span className="text-xs text-default-500 font-medium">{senderName}</span>
+                        </div>
+                      )}
+                      <div
+                        className={`rounded-2xl px-4 py-2.5 ${isStaff
+                            ? 'bg-card border border-default-200 text-default-800 rounded-tl-md'
+                            : 'bg-primary text-white rounded-tr-md'
+                          }`}
+                      >
+                        <div
+                          className="text-sm leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: message.message }}
+                        />
+                        {/* Attachments */}
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {message.attachments.map((attachment) => (
+                              <a
+                                key={attachment.id}
+                                href={attachment.url || attachment.path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`flex items-center gap-2 text-xs ${isStaff ? 'text-primary' : 'text-white/90'} hover:underline`}
+                              >
+                                <FileText className="size-3" />
+                                {attachment.name}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <p className={`text-[10px] text-default-400 mt-1 ${isStaff ? 'text-left' : 'text-right'}`}>
+                        {formatMessageTime(message.updated_at)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center px-6">
+                  <p className="text-sm text-default-500 font-medium">No messages yet</p>
+                  <p className="text-xs text-default-400 mt-2">Type your message below and press the send button to start the conversation.</p>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center px-6">
+              <div className="size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="size-8 text-primary" />
+              </div>
+              <h4 className="font-semibold text-default-900 mb-2">Welcome to Support</h4>
+              <p className="text-sm text-default-500 mb-5">Click the button below to start chatting with our support team.</p>
+              <button
+                onClick={isLoggedIn ? startNewChat : () => setCurrentStep('register')}
+                disabled={isStarting}
+                className="btn bg-primary text-white px-6 py-2.5 rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 mx-auto"
+              >
+                {isStarting ? (
+                  <>
+                    <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="size-4" />
+                    Start Chat
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Selected Attachments Preview */}
+      {attachments.length > 0 && (
+        <div className="px-4 py-2 border-t border-default-200 bg-default-50">
+          <div className="flex flex-wrap gap-2">
+            {attachments.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 px-2 py-1 bg-default-100 rounded-lg text-xs"
+              >
+                <FileText className="size-3 text-default-500" />
+                <span className="truncate max-w-[100px]">{file.name}</span>
+                <button
+                  onClick={() => handleRemoveFile(index)}
+                  className="text-default-400 hover:text-danger"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Input Area - Only show when conversation exists */}
+      {conversation && (
+        <div className="p-4 border-t border-default-200 bg-card">
+          <div className="flex items-end gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              multiple
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-shrink-0 p-2 rounded-lg text-default-400 hover:text-default-600 hover:bg-default-100 transition-colors"
+              aria-label="Attach file"
+            >
+              <Paperclip className="size-5" />
+            </button>
+            <div className="flex-1 relative">
+              <textarea
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type a message..."
+                className="w-full px-4 py-2.5 pr-12 rounded-xl border border-default-200 bg-default-50 text-sm resize-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+                rows={1}
+                style={{ minHeight: '42px', maxHeight: '100px' }}
+              />
+            </div>
+            <button
+              onClick={handleSendMessage}
+              disabled={isSending || (!newMessage.trim() && attachments.length === 0)}
+              className="flex-shrink-0 p-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              aria-label="Send message"
+            >
+              {isSending ? (
+                <div className="size-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="size-5" />
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // Determine what content to render based on step
+  const renderContent = () => {
+    if (isLoggedIn && isContact) {
+      return renderChatSection();
+    }
+
+    switch (currentStep) {
+      case 'register':
+        return renderRegistrationForm();
+      case 'faq':
+        return renderFaqSection();
+      case 'chat':
+        return renderChatSection();
+      default:
+        return renderRegistrationForm();
+    }
+  };
+
+  // Get step title for header
+  const getStepTitle = () => {
+    if (isLoggedIn && isContact) {
+      return 'Support Chat';
+    }
+
+    switch (currentStep) {
+      case 'register':
+        return 'Get Started';
+      case 'faq':
+        return 'FAQs & Support';
+      case 'chat':
+        return 'Support Chat';
+      default:
+        return 'Support Chat';
+    }
+  };
+
   return (
     <>
       {/* Chat Toggle Button */}
@@ -369,8 +945,8 @@ export default function ChatWidget() {
         >
           <MessageCircle className="size-5" />
           <span className="font-medium text-sm">Chat with us</span>
-          <X 
-            className="size-4 opacity-70 hover:opacity-100" 
+          <X
+            className="size-4 opacity-70 hover:opacity-100"
             onClick={(e) => {
               e.stopPropagation();
               handleClose();
@@ -389,7 +965,7 @@ export default function ChatWidget() {
                 <MessageCircle className="size-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm">Support Chat</h3>
+                <h3 className="font-semibold text-sm">{getStepTitle()}</h3>
                 <p className="text-xs text-white/80">We typically reply in minutes</p>
               </div>
             </div>
@@ -411,177 +987,8 @@ export default function ChatWidget() {
             </div>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-default-50">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm text-default-500">Loading...</p>
-                </div>
-              </div>
-            ) : conversation ? (
-              <>
-                {conversation.messages && conversation.messages.length > 0 ? (
-                  conversation.messages.map((message) => {
-                    const isStaff = isStaffMessage(message);
-                    const senderName = getMessageSenderName(message);
-                    const senderProfilePicture = getMessageSenderProfilePicture(message);
-                    
-                    return (
-                      <div
-                        key={message.id}
-                        className={`flex ${isStaff ? 'justify-start' : 'justify-end'}`}
-                      >
-                        <div className={`max-w-[85%] ${isStaff ? 'order-1' : ''}`}>
-                          {isStaff && (
-                            <div className="flex items-center gap-2 mb-1">
-                              <Avatar name={senderName} profilePicture={senderProfilePicture} className="size-6 text-[10px]" />
-                              <span className="text-xs text-default-500 font-medium">{senderName}</span>
-                            </div>
-                          )}
-                          <div
-                            className={`rounded-2xl px-4 py-2.5 ${
-                              isStaff
-                                ? 'bg-card border border-default-200 text-default-800 rounded-tl-md'
-                                : 'bg-primary text-white rounded-tr-md'
-                            }`}
-                          >
-                            <div 
-                              className="text-sm leading-relaxed" 
-                              dangerouslySetInnerHTML={{ __html: message.message }} 
-                            />
-                            {/* Attachments */}
-                            {message.attachments && message.attachments.length > 0 && (
-                              <div className="mt-2 space-y-1">
-                                {message.attachments.map((attachment) => (
-                                  <a
-                                    key={attachment.id}
-                                    href={attachment.url || attachment.path}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 text-xs ${isStaff ? 'text-primary' : 'text-white/90'} hover:underline`}
-                                  >
-                                    <FileText className="size-3" />
-                                    {attachment.name}
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <p className={`text-[10px] text-default-400 mt-1 ${isStaff ? 'text-left' : 'text-right'}`}>
-                            {formatMessageTime(message.updated_at)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center px-6">
-                      <p className="text-sm text-default-500 font-medium">No messages yet</p>
-                      <p className="text-xs text-default-400 mt-2">Type your message below and press the send button to start the conversation.</p>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center px-6">
-                  <div className="size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <MessageCircle className="size-8 text-primary" />
-                  </div>
-                  <h4 className="font-semibold text-default-900 mb-2">Welcome to Support</h4>
-                  <p className="text-sm text-default-500 mb-5">Click the button below to start chatting with our support team.</p>
-                  <button
-                    onClick={startNewChat}
-                    disabled={isStarting}
-                    className="btn bg-primary text-white px-6 py-2.5 rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 mx-auto"
-                  >
-                    {isStarting ? (
-                      <>
-                        <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Starting...
-                      </>
-                    ) : (
-                      <>
-                        <MessageCircle className="size-4" />
-                        Start Chat
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Selected Attachments Preview */}
-          {attachments.length > 0 && (
-            <div className="px-4 py-2 border-t border-default-200 bg-default-50">
-              <div className="flex flex-wrap gap-2">
-                {attachments.map((file, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center gap-2 px-2 py-1 bg-default-100 rounded-lg text-xs"
-                  >
-                    <FileText className="size-3 text-default-500" />
-                    <span className="truncate max-w-[100px]">{file.name}</span>
-                    <button
-                      onClick={() => handleRemoveFile(index)}
-                      className="text-default-400 hover:text-danger"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Input Area */}
-          <div className="p-4 border-t border-default-200 bg-card">
-            <div className="flex items-end gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                multiple
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-shrink-0 p-2 rounded-lg text-default-400 hover:text-default-600 hover:bg-default-100 transition-colors"
-                aria-label="Attach file"
-              >
-                <Paperclip className="size-5" />
-              </button>
-              <div className="flex-1 relative">
-                <textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type a message..."
-                  className="w-full px-4 py-2.5 pr-12 rounded-xl border border-default-200 bg-default-50 text-sm resize-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-                  rows={1}
-                  style={{ minHeight: '42px', maxHeight: '100px' }}
-                />
-              </div>
-              <button
-                onClick={handleSendMessage}
-                disabled={isSending || (!newMessage.trim() && attachments.length === 0)}
-                className="flex-shrink-0 p-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Send message"
-              >
-                {isSending ? (
-                  <div className="size-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Send className="size-5" />
-                )}
-              </button>
-            </div>
-          </div>
+          {/* Content */}
+          {renderContent()}
         </div>
       )}
     </>

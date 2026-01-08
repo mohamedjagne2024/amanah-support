@@ -5,10 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Conversation extends Model {
+class Conversation extends Model
+{
     use HasFactory;
 
-    public function resolveRouteBinding($value, $field = null) {
+    protected $fillable = [
+        'title',
+        'contact_id',
+        'region_id',
+    ];
+
+    public function resolveRouteBinding($value, $field = null)
+    {
         return $this->where($field ?? 'id', $value)->firstOrFail();
     }
 
@@ -27,6 +35,11 @@ class Conversation extends Model {
         return $this->belongsTo(Ticket::class, 'ticket_id');
     }
 
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
+
     public function participant()
     {
         return $this->hasOne(Participant::class);
@@ -35,10 +48,14 @@ class Conversation extends Model {
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
-            $query->whereHas('creator', function($q) use($search){
-                $q->where('name', 'like', '%'.$search.'%')
-                ->orWhere('email', 'like', '%'.$search.'%');
+            $query->whereHas('creator', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
             });
+        });
+
+        $query->when($filters['region_id'] ?? null, function ($query, $regionId) {
+            $query->where('region_id', $regionId);
         });
     }
 }
