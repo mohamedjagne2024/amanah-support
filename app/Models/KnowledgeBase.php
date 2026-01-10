@@ -9,18 +9,23 @@ class KnowledgeBase extends Model
 {
     use HasFactory;
     protected $table = 'knowledge_base';
-    public function scopeOrderByTitle($query){
+
+    protected $fillable = ['title', 'details', 'type_id', 'language'];
+    public function scopeOrderByTitle($query)
+    {
         $query->orderBy('title');
     }
 
-    public function type(){
+    public function type()
+    {
         return $this->belongsTo(Type::class, 'type_id');
     }
 
-    public function scopeFilter($query, array $filters){
+    public function scopeFilter($query, array $filters)
+    {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
-                $query->where('title', 'like', '%'.$search.'%')->orWhere('details', 'like', '%'.$search.'%');
+                $query->where('title', 'like', '%' . $search . '%')->orWhere('details', 'like', '%' . $search . '%');
             });
         });
     }

@@ -178,6 +178,45 @@
     "monthsAgo": "Months Ago",
     "today": "Today"
   },
+  "chatWidget": {
+    "welcomeToSupport": "Welcome to Support",
+    "provideDetailsToStart": "Please provide your details to start chatting with our team.",
+    "fullName": "Full Name",
+    "fullNameRequired": "Full name is required",
+    "enterFullName": "Enter your full name",
+    "emailAddress": "Email Address",
+    "emailRequired": "Email is required",
+    "invalidEmail": "Please enter a valid email",
+    "enterEmail": "Enter your email",
+    "memberNumber": "Member Number",
+    "enterMemberNumber": "Enter your member number (optional)",
+    "region": "Region",
+    "selectRegion": "Select your region",
+    "regionRequired": "Please select a region",
+    "continue": "Continue",
+    "faqTitle": "Frequently Asked Questions",
+    "faqSubtitle": "Check if your question is answered below, or connect with our team.",
+    "noFaqsAvailable": "No FAQs available at the moment.",
+    "chatWithLiveSupport": "Chat with Live Support",
+    "connecting": "Connecting...",
+    "backToRegistration": "Back to registration",
+    "loading": "Loading...",
+    "noMessagesYet": "No messages yet",
+    "typeMessageBelow": "Type your message below and press the send button to start the conversation.",
+    "startChat": "Start Chat",
+    "starting": "Starting...",
+    "typeMessage": "Type a message...",
+    "supportChat": "Support Chat",
+    "getStarted": "Get Started",
+    "faqsAndSupport": "FAQs & Support",
+    "weReplyInMinutes": "We typically reply in minutes",
+    "chatWithUs": "Chat with us",
+    "openChat": "Open chat",
+    "minimizeChat": "Minimize chat",
+    "closeChat": "Close chat",
+    "attachFile": "Attach file",
+    "sendMessage": "Send message"
+  },
   "kb": {
     "title": "Knowledge Base",
     "subtitle": "Manage knowledge base articles",
@@ -866,6 +905,109 @@
       "noRoles": "No roles",
       "rolesCount": "roles",
       "more": "more"
+    }
+  },
+  "landing": {
+    "home": {
+      "welcomeTitle": "Welcome to Amanah Support",
+      "ticketTitle": "Amanah Support Ticket Information",
+      "ticketDescription": "Fill in the details below to submit your support ticket. We'll get back to you as soon as possible.",
+      "form": {
+        "fullName": "Full Name",
+        "emailAddress": "Email Address",
+        "phoneNumber": "Phone Number",
+        "memberNumber": "Member Number",
+        "ticketType": "Ticket Type",
+        "selectTicketType": "Select ticket type...",
+        "region": "Region",
+        "selectRegion": "Select region...",
+        "subject": "Subject",
+        "subjectPlaceholder": "Brief description of your issue",
+        "description": "Description",
+        "descriptionPlaceholder": "Please describe your issue in detail...",
+        "attachFiles": "Attach Files (Optional)",
+        "attachFilesHint": "Upload up to 5 files (PDF, DOC, DOCX, JPG, PNG, XLS, XLSX). Max 5MB per file.",
+        "attachFilesButton": "Attach Files",
+        "submitting": "Submitting...",
+        "submitTicket": "Submit Ticket"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find answers to common questions about our services and support.",
+      "searchPlaceholder": "Search FAQs...",
+      "expandAll": "Expand All",
+      "collapseAll": "Collapse All",
+      "noFaqsFound": "No FAQs found",
+      "tryAdjustingSearch": "Try adjusting your search terms.",
+      "noFaqsAvailable": "No frequently asked questions available yet.",
+      "showingCount": "Showing {count} of {total} FAQs",
+      "stillHaveQuestions": "Still have questions?",
+      "cantFindLooking": "Can't find what you're looking for? Our support team is here to help.",
+      "contactSupport": "Contact Support"
+    },
+    "contact": {
+      "tagline": "Contact",
+      "defaultTitle": "Get In Touch With Us",
+      "ourLocation": "Our Location",
+      "phoneNumber": "Phone Number",
+      "emailAddress": "Email Address",
+      "sendUsMessage": "Send Us a Message",
+      "formDescription": "Fill out the form below and we'll get back to you as soon as possible.",
+      "successMessage": "Thank you! Your message has been sent successfully.",
+      "form": {
+        "yourName": "Your Name",
+        "namePlaceholder": "John Doe",
+        "emailAddress": "Email Address",
+        "emailPlaceholder": "john@example.com",
+        "phoneNumber": "Phone Number",
+        "phonePlaceholder": "+1 234 567 8900",
+        "message": "Message",
+        "messagePlaceholder": "Write your message here...",
+        "sending": "Sending...",
+        "sendMessage": "Send Message"
+      }
+    },
+    "kb": {
+      "title": "Knowledge Base",
+      "subtitle": "Browse our collection of articles, guides, and tutorials to help you get the most out of our services.",
+      "searchPlaceholder": "Search articles...",
+      "all": "All",
+      "noArticlesFound": "No articles found",
+      "tryAdjustingFilter": "Try adjusting your search or filter.",
+      "noArticlesAvailable": "No knowledge base articles available yet.",
+      "readMore": "Read more",
+      "showingCount": "Showing {count} of {total} articles",
+      "cantFindLooking": "Can't find what you're looking for?",
+      "checkFaqOrContact": "Check our FAQ section or contact our support team for personalized assistance.",
+      "browseFaqs": "Browse FAQs",
+      "contactSupport": "Contact Support"
+    },
+    "kbDetails": {
+      "home": "Home",
+      "knowledgeBase": "Knowledge Base",
+      "updated": "Updated",
+      "backToKnowledgeBase": "Back to Knowledge Base",
+      "relatedArticles": "Related Articles",
+      "needMoreHelp": "Need more help?",
+      "cantFindLooking": "Can't find what you're looking for?",
+      "contactSupport": "Contact Support"
+    },
+    "privacy": {
+      "defaultTitle": "Privacy Policy",
+      "noContent": "No privacy policy content available."
+    },
+    "terms": {
+      "defaultTitle": "Terms of Service",
+      "noContent": "No terms of service content available."
+    },
+    "services": {
+      "defaultTitle": "Our Services",
+      "noServicesAvailable": "No services available at the moment.",
+      "readyToGetStarted": "Ready to Get Started?",
+      "readyDescription": "Contact us today to learn more about how we can help you.",
+      "contactUs": "Contact Us",
+      "submitTicket": "Submit a Ticket"
     }
   }
 }

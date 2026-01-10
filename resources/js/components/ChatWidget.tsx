@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { SharedData, Auth } from '@/types';
 import { useChatMessageListener } from '@/hooks/usePusher';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type User = {
   id: number;
@@ -161,6 +162,7 @@ const FaqItem = ({ faq, isExpanded, onToggle }: { faq: Faq; isExpanded: boolean;
 
 export default function ChatWidget() {
   const { auth } = usePage<SharedData>().props;
+  const { t } = useLanguageContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -371,17 +373,17 @@ export default function ChatWidget() {
     const errors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      errors.name = 'Full name is required';
+      errors.name = t('chatWidget.fullNameRequired');
     }
 
     if (!formData.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = t('chatWidget.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email';
+      errors.email = t('chatWidget.invalidEmail');
     }
 
     if (!formData.region_id) {
-      errors.region_id = 'Please select a region';
+      errors.region_id = t('chatWidget.regionRequired');
     }
 
     setFormErrors(errors);
@@ -567,14 +569,14 @@ export default function ChatWidget() {
         <div className="size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-4">
           <UserIcon className="size-8 text-primary" />
         </div>
-        <h4 className="font-semibold text-default-900 mb-2">Welcome to Support</h4>
-        <p className="text-sm text-default-500">Please provide your details to start chatting with our team.</p>
+        <h4 className="font-semibold text-default-900 mb-2">{t('chatWidget.welcomeToSupport')}</h4>
+        <p className="text-sm text-default-500">{t('chatWidget.provideDetailsToStart')}</p>
       </div>
 
       <form onSubmit={handleRegisterSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-default-700 mb-1">
-            Full Name <span className="text-danger">*</span>
+            {t('chatWidget.fullName')} <span className="text-danger">*</span>
           </label>
           <input
             type="text"
@@ -582,7 +584,7 @@ export default function ChatWidget() {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className={`w-full px-3 py-2 rounded-lg border ${formErrors.name ? 'border-danger' : 'border-default-200'
               } bg-default-50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20`}
-            placeholder="Enter your full name"
+            placeholder={t('chatWidget.enterFullName')}
           />
           {formErrors.name && (
             <p className="text-xs text-danger mt-1">{formErrors.name}</p>
@@ -591,7 +593,7 @@ export default function ChatWidget() {
 
         <div>
           <label className="block text-sm font-medium text-default-700 mb-1">
-            Email Address <span className="text-danger">*</span>
+            {t('chatWidget.emailAddress')} <span className="text-danger">*</span>
           </label>
           <input
             type="email"
@@ -599,7 +601,7 @@ export default function ChatWidget() {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             className={`w-full px-3 py-2 rounded-lg border ${formErrors.email ? 'border-danger' : 'border-default-200'
               } bg-default-50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20`}
-            placeholder="Enter your email"
+            placeholder={t('chatWidget.enterEmail')}
           />
           {formErrors.email && (
             <p className="text-xs text-danger mt-1">{formErrors.email}</p>
@@ -608,20 +610,20 @@ export default function ChatWidget() {
 
         <div>
           <label className="block text-sm font-medium text-default-700 mb-1">
-            Member Number
+            {t('chatWidget.memberNumber')}
           </label>
           <input
             type="text"
             value={formData.member_number}
             onChange={(e) => setFormData({ ...formData, member_number: e.target.value })}
             className="w-full px-3 py-2 rounded-lg border border-default-200 bg-default-50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-            placeholder="Enter your member number (optional)"
+            placeholder={t('chatWidget.enterMemberNumber')}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-default-700 mb-1">
-            Region <span className="text-danger">*</span>
+            {t('chatWidget.region')} <span className="text-danger">*</span>
           </label>
           <select
             value={formData.region_id}
@@ -629,7 +631,7 @@ export default function ChatWidget() {
             className={`w-full px-3 py-2 rounded-lg border ${formErrors.region_id ? 'border-danger' : 'border-default-200'
               } bg-default-50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20`}
           >
-            <option value="">Select your region</option>
+            <option value="">{t('chatWidget.selectRegion')}</option>
             {regions.map((region) => (
               <option key={region.id} value={region.id}>
                 {region.name}
@@ -645,7 +647,7 @@ export default function ChatWidget() {
           type="submit"
           className="w-full btn bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-all"
         >
-          Continue
+          {t('chatWidget.continue')}
         </button>
       </form>
     </div>
@@ -658,8 +660,8 @@ export default function ChatWidget() {
         <div className="size-16 rounded-full bg-gradient-to-br from-info/20 to-info/10 flex items-center justify-center mx-auto mb-4">
           <HelpCircle className="size-8 text-info" />
         </div>
-        <h4 className="font-semibold text-default-900 mb-2">Frequently Asked Questions</h4>
-        <p className="text-sm text-default-500">Check if your question is answered below, or connect with our team.</p>
+        <h4 className="font-semibold text-default-900 mb-2">{t('chatWidget.faqTitle')}</h4>
+        <p className="text-sm text-default-500">{t('chatWidget.faqSubtitle')}</p>
       </div>
 
       {faqs.length > 0 ? (
@@ -675,7 +677,7 @@ export default function ChatWidget() {
         </div>
       ) : (
         <div className="text-center text-default-500 text-sm mb-6">
-          No FAQs available at the moment.
+          {t('chatWidget.noFaqsAvailable')}
         </div>
       )}
 
@@ -688,12 +690,12 @@ export default function ChatWidget() {
           {isStarting ? (
             <>
               <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Connecting...
+              {t('chatWidget.connecting')}
             </>
           ) : (
             <>
               <MessageCircle className="size-4" />
-              Chat with Live Support
+              {t('chatWidget.chatWithLiveSupport')}
             </>
           )}
         </button>
@@ -703,7 +705,7 @@ export default function ChatWidget() {
           className="w-full text-center text-default-500 text-sm hover:text-default-700 flex items-center justify-center gap-1"
         >
           <ArrowLeft className="size-3" />
-          Back to registration
+          {t('chatWidget.backToRegistration')}
         </button>
       </div>
     </div>
@@ -718,7 +720,7 @@ export default function ChatWidget() {
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-3">
               <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-default-500">Loading...</p>
+              <p className="text-sm text-default-500">{t('chatWidget.loading')}</p>
             </div>
           </div>
         ) : conversation ? (
@@ -743,8 +745,8 @@ export default function ChatWidget() {
                       )}
                       <div
                         className={`rounded-2xl px-4 py-2.5 ${isStaff
-                            ? 'bg-card border border-default-200 text-default-800 rounded-tl-md'
-                            : 'bg-primary text-white rounded-tr-md'
+                          ? 'bg-card border border-default-200 text-default-800 rounded-tl-md'
+                          : 'bg-primary text-white rounded-tr-md'
                           }`}
                       >
                         <div
@@ -779,8 +781,8 @@ export default function ChatWidget() {
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center px-6">
-                  <p className="text-sm text-default-500 font-medium">No messages yet</p>
-                  <p className="text-xs text-default-400 mt-2">Type your message below and press the send button to start the conversation.</p>
+                  <p className="text-sm text-default-500 font-medium">{t('chatWidget.noMessagesYet')}</p>
+                  <p className="text-xs text-default-400 mt-2">{t('chatWidget.typeMessageBelow')}</p>
                 </div>
               </div>
             )}
@@ -792,8 +794,8 @@ export default function ChatWidget() {
               <div className="size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="size-8 text-primary" />
               </div>
-              <h4 className="font-semibold text-default-900 mb-2">Welcome to Support</h4>
-              <p className="text-sm text-default-500 mb-5">Click the button below to start chatting with our support team.</p>
+              <h4 className="font-semibold text-default-900 mb-2">{t('chatWidget.welcomeToSupport')}</h4>
+              <p className="text-sm text-default-500 mb-5">{t('chatWidget.typeMessageBelow')}</p>
               <button
                 onClick={isLoggedIn ? startNewChat : () => setCurrentStep('register')}
                 disabled={isStarting}
@@ -802,12 +804,12 @@ export default function ChatWidget() {
                 {isStarting ? (
                   <>
                     <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Starting...
+                    {t('chatWidget.starting')}
                   </>
                 ) : (
                   <>
                     <MessageCircle className="size-4" />
-                    Start Chat
+                    {t('chatWidget.startChat')}
                   </>
                 )}
               </button>
@@ -854,7 +856,7 @@ export default function ChatWidget() {
             <button
               onClick={() => fileInputRef.current?.click()}
               className="flex-shrink-0 p-2 rounded-lg text-default-400 hover:text-default-600 hover:bg-default-100 transition-colors"
-              aria-label="Attach file"
+              aria-label={t('chatWidget.attachFile')}
             >
               <Paperclip className="size-5" />
             </button>
@@ -863,7 +865,7 @@ export default function ChatWidget() {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
+                placeholder={t('chatWidget.typeMessage')}
                 className="w-full px-4 py-2.5 pr-12 rounded-xl border border-default-200 bg-default-50 text-sm resize-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
                 rows={1}
                 style={{ minHeight: '42px', maxHeight: '100px' }}
@@ -873,7 +875,7 @@ export default function ChatWidget() {
               onClick={handleSendMessage}
               disabled={isSending || (!newMessage.trim() && attachments.length === 0)}
               className="flex-shrink-0 p-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              aria-label="Send message"
+              aria-label={t('chatWidget.sendMessage')}
             >
               {isSending ? (
                 <div className="size-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -908,18 +910,18 @@ export default function ChatWidget() {
   // Get step title for header
   const getStepTitle = () => {
     if (isLoggedIn && isContact) {
-      return 'Support Chat';
+      return t('chatWidget.supportChat');
     }
 
     switch (currentStep) {
       case 'register':
-        return 'Get Started';
+        return t('chatWidget.getStarted');
       case 'faq':
-        return 'FAQs & Support';
+        return t('chatWidget.faqsAndSupport');
       case 'chat':
-        return 'Support Chat';
+        return t('chatWidget.supportChat');
       default:
-        return 'Support Chat';
+        return t('chatWidget.supportChat');
     }
   };
 
@@ -930,7 +932,7 @@ export default function ChatWidget() {
         <button
           onClick={handleOpen}
           className="fixed bottom-6 right-6 z-50 size-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center group"
-          aria-label="Open chat"
+          aria-label={t('chatWidget.openChat')}
         >
           <MessageCircle className="size-6 group-hover:scale-110 transition-transform" />
           <span className="absolute -top-1 -right-1 size-4 bg-success rounded-full border-2 border-white animate-pulse" />
@@ -944,7 +946,7 @@ export default function ChatWidget() {
           className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-full bg-gradient-to-br from-primary to-primary/80 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
         >
           <MessageCircle className="size-5" />
-          <span className="font-medium text-sm">Chat with us</span>
+          <span className="font-medium text-sm">{t('chatWidget.chatWithUs')}</span>
           <X
             className="size-4 opacity-70 hover:opacity-100"
             onClick={(e) => {
@@ -966,21 +968,21 @@ export default function ChatWidget() {
               </div>
               <div>
                 <h3 className="font-semibold text-sm">{getStepTitle()}</h3>
-                <p className="text-xs text-white/80">We typically reply in minutes</p>
+                <p className="text-xs text-white/80">{t('chatWidget.weReplyInMinutes')}</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={handleMinimize}
                 className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
-                aria-label="Minimize chat"
+                aria-label={t('chatWidget.minimizeChat')}
               >
                 <Minimize2 className="size-4" />
               </button>
               <button
                 onClick={handleClose}
                 className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
-                aria-label="Close chat"
+                aria-label={t('chatWidget.closeChat')}
               >
                 <X className="size-4" />
               </button>

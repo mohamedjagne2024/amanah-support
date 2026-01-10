@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import PageMeta from '@/components/PageMeta';
 import PublicLayout from '@/layouts/public-layout';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type PageData = {
   title?: string;
@@ -20,6 +21,8 @@ type TermsPageProps = {
 };
 
 export default function Terms({ title, data: pageInfo, footer }: TermsPageProps) {
+  const { t } = useLanguageContext();
+
   const pageData = useMemo(() => {
     if (!pageInfo?.html) return {};
     try {
@@ -32,14 +35,14 @@ export default function Terms({ title, data: pageInfo, footer }: TermsPageProps)
 
   return (
     <>
-      <PageMeta title={title || 'Terms of Service'} />
+      <PageMeta title={title || t('landing.terms.defaultTitle')} />
 
       <PublicLayout currentPage="/terms" footer={footer}>
         {/* Hero Section */}
         <section className="pt-32 pb-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl font-bold text-default-900 mb-4">
-              {pageData.title || 'Terms of Service'}
+              {pageData.title || t('landing.terms.defaultTitle')}
             </h1>
           </div>
         </section>
@@ -52,7 +55,7 @@ export default function Terms({ title, data: pageInfo, footer }: TermsPageProps)
                 {pageData.content ? (
                   <div dangerouslySetInnerHTML={{ __html: pageData.content }} />
                 ) : (
-                  <p className="text-default-500">No terms of service content available.</p>
+                  <p className="text-default-500">{t('landing.terms.noContent')}</p>
                 )}
               </div>
             </div>

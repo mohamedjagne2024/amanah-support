@@ -9,14 +9,18 @@ class Faq extends Model
 {
     use HasFactory;
 
-    public function scopeOrderByName($query){
+    protected $fillable = ['name', 'details', 'status', 'language'];
+
+    public function scopeOrderByName($query)
+    {
         $query->orderBy('name');
     }
 
-    public function scopeFilter($query, array $filters){
+    public function scopeFilter($query, array $filters)
+    {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
-                $query->where('name', 'like', '%'.$search.'%')->orWhere('details', 'like', '%'.$search.'%');
+                $query->where('name', 'like', '%' . $search . '%')->orWhere('details', 'like', '%' . $search . '%');
             });
         });
     }

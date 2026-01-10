@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
 import PublicLayout from '@/layouts/public-layout';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type PageData = {
   content?: {
@@ -46,6 +47,7 @@ type ContactPageProps = {
 };
 
 export default function Contact({ title, data: pageInfo, footer }: ContactPageProps & { footer?: any }) {
+  const { t } = useLanguageContext();
   const [submitted, setSubmitted] = useState(false);
 
   const pageData = useMemo(() => {
@@ -89,10 +91,10 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
         <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
             <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold uppercase tracking-wider mb-4">
-              Contact
+              {t('landing.contact.tagline')}
             </span>
             <h1 className="text-4xl sm:text-5xl font-bold text-default-900 mb-4">
-              {content.text || 'Get In Touch With Us'}
+              {content.text || t('landing.contact.defaultTitle')}
             </h1>
             {content.details && (
               <p className="text-lg text-default-600 max-w-2xl mx-auto">
@@ -113,7 +115,7 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
                     <div className="size-14 rounded-xl bg-success/10 flex items-center justify-center mx-auto mb-4">
                       <MapPin className="size-7 text-success" />
                     </div>
-                    <h3 className="text-lg font-semibold text-default-900 mb-2">Our Location</h3>
+                    <h3 className="text-lg font-semibold text-default-900 mb-2">{t('landing.contact.ourLocation')}</h3>
                     <p className="text-default-600 text-sm">{location.address}</p>
                   </div>
                 </div>
@@ -126,7 +128,7 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
                     <div className="size-14 rounded-xl bg-info/10 flex items-center justify-center mx-auto mb-4">
                       <Phone className="size-7 text-info" />
                     </div>
-                    <h3 className="text-lg font-semibold text-default-900 mb-2">Phone Number</h3>
+                    <h3 className="text-lg font-semibold text-default-900 mb-2">{t('landing.contact.phoneNumber')}</h3>
                     <a
                       href={`tel:${phone.number}`}
                       className="text-primary font-medium hover:underline"
@@ -147,7 +149,7 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
                     <div className="size-14 rounded-xl bg-warning/10 flex items-center justify-center mx-auto mb-4">
                       <Mail className="size-7 text-warning" />
                     </div>
-                    <h3 className="text-lg font-semibold text-default-900 mb-2">Email Address</h3>
+                    <h3 className="text-lg font-semibold text-default-900 mb-2">{t('landing.contact.emailAddress')}</h3>
                     <a
                       href={`mailto:${email.address}`}
                       className="text-primary font-medium hover:underline"
@@ -186,14 +188,14 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
               {/* Contact Form */}
               <div className={`card ${!location.map_url ? 'lg:col-span-2 max-w-2xl mx-auto w-full' : ''}`}>
                 <div className="card-header">
-                  <h6 className="card-title">Send Us a Message</h6>
-                  <p className="text-sm text-default-500">Fill out the form below and we'll get back to you as soon as possible.</p>
+                  <h6 className="card-title">{t('landing.contact.sendUsMessage')}</h6>
+                  <p className="text-sm text-default-500">{t('landing.contact.formDescription')}</p>
                 </div>
                 <div className="card-body">
                   {submitted && (
                     <div className="mb-6 p-4 bg-success/10 border border-success/20 rounded-lg flex items-center gap-3 text-success">
                       <CheckCircle className="size-5" />
-                      <span>Thank you! Your message has been sent successfully.</span>
+                      <span>{t('landing.contact.successMessage')}</span>
                     </div>
                   )}
 
@@ -201,14 +203,14 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Your Name <span className="text-danger">*</span>
+                          {t('landing.contact.form.yourName')} <span className="text-danger">*</span>
                         </label>
                         <input
                           type="text"
                           value={data.name}
                           onChange={(e) => setData('name', e.target.value)}
                           className="form-input"
-                          placeholder="John Doe"
+                          placeholder={t('landing.contact.form.namePlaceholder')}
                           disabled={processing}
                           required
                         />
@@ -216,14 +218,14 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
                       </div>
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Email Address <span className="text-danger">*</span>
+                          {t('landing.contact.form.emailAddress')} <span className="text-danger">*</span>
                         </label>
                         <input
                           type="email"
                           value={data.email}
                           onChange={(e) => setData('email', e.target.value)}
                           className="form-input"
-                          placeholder="john@example.com"
+                          placeholder={t('landing.contact.form.emailPlaceholder')}
                           disabled={processing}
                           required
                         />
@@ -233,14 +235,14 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
 
                     <div>
                       <label className="block font-medium text-default-900 text-sm mb-2">
-                        Phone Number
+                        {t('landing.contact.form.phoneNumber')}
                       </label>
                       <input
                         type="tel"
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}
                         className="form-input"
-                        placeholder="+1 234 567 8900"
+                        placeholder={t('landing.contact.form.phonePlaceholder')}
                         disabled={processing}
                       />
                       {errors.phone && <p className="text-danger text-sm mt-1">{errors.phone}</p>}
@@ -248,13 +250,13 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
 
                     <div>
                       <label className="block font-medium text-default-900 text-sm mb-2">
-                        Message <span className="text-danger">*</span>
+                        {t('landing.contact.form.message')} <span className="text-danger">*</span>
                       </label>
                       <textarea
                         value={data.message}
                         onChange={(e) => setData('message', e.target.value)}
                         className="form-input min-h-[150px]"
-                        placeholder="Write your message here..."
+                        placeholder={t('landing.contact.form.messagePlaceholder')}
                         disabled={processing}
                         required
                       />
@@ -269,12 +271,12 @@ export default function Contact({ title, data: pageInfo, footer }: ContactPagePr
                       {processing ? (
                         <span className="flex items-center justify-center gap-2">
                           <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                          Sending...
+                          {t('landing.contact.form.sending')}
                         </span>
                       ) : (
                         <span className="flex items-center justify-center gap-2">
                           <Send className="size-4" />
-                          Send Message
+                          {t('landing.contact.form.sendMessage')}
                         </span>
                       )}
                     </button>

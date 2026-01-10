@@ -19,11 +19,14 @@ class PageController extends Controller
     public function kbByType($typeId)
     {
         $type = Type::where('id', $typeId)->first();
+        $locale = app()->getLocale();
         return Inertia::render('Landing/KnowledgeBase/ByType', [
-            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', $locale)->first(),
             'title' => 'Blog posts',
             'type' => $type,
-            'posts' => KnowledgeBase::where('type_id', $type->id)->orderBy('created_at', 'desc')
+            'posts' => KnowledgeBase::where('type_id', $type->id)
+                ->where('language', $locale)
+                ->orderBy('created_at', 'desc')
                 ->filter(Request::only('search'))
                 ->paginate(9)
                 ->withQueryString()
@@ -43,11 +46,13 @@ class PageController extends Controller
 
     public function kb()
     {
+        $locale = app()->getLocale();
         return Inertia::render('landing/kb', [
-            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', $locale)->first(),
             'types' => Type::orderBy('name')->get()->map->only('id', 'name'),
             'filters' => Request::only('search'),
-            'kb' => KnowledgeBase::orderBy('created_at', 'desc')
+            'kb' => KnowledgeBase::where('language', $locale)
+                ->orderBy('created_at', 'desc')
                 ->filter(Request::only('search'))
                 ->paginate(9)
                 ->withQueryString()
@@ -67,11 +72,13 @@ class PageController extends Controller
 
     public function faq()
     {
+        $locale = app()->getLocale();
         return Inertia::render('landing/faq', [
-            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', $locale)->first(),
             'title' => 'FAQs',
             'filters' => Request::only('search'),
             'faqs' => Faq::where('status', true)
+                ->where('language', $locale)
                 ->orderBy('name')
                 ->filter(Request::only('search'))
                 ->paginate(100)
@@ -89,8 +96,9 @@ class PageController extends Controller
 
     public function kbDetails(KnowledgeBase $kb_item)
     {
+        $locale = app()->getLocale();
         return Inertia::render('landing/kb-details', [
-            'footer' => FrontPage::where('slug', 'footer')->where('language', app()->getLocale())->first(),
+            'footer' => FrontPage::where('slug', 'footer')->where('language', $locale)->first(),
             'title' => $kb_item->title,
             'kb' => [
                 'id' => $kb_item->id,
@@ -103,6 +111,7 @@ class PageController extends Controller
             ],
             'types' => Type::whereHas('kb')->get()->map->only('id', 'name'),
             'random_kb' => KnowledgeBase::where('id', '!=', $kb_item->id)
+                ->where('language', $locale)
                 ->inRandomOrder()
                 ->limit(5)
                 ->get()

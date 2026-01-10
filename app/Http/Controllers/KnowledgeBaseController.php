@@ -13,11 +13,14 @@ class KnowledgeBaseController extends Controller
 
     public function index()
     {
+        $locale = app()->getLocale();
         return Inertia::render('kb/index', [
             'title' => 'Knowledge base',
             'filters' => Request::all('search'),
+            'currentLanguage' => $locale,
             'types' => Type::orderBy('name')->get()->map->only('id', 'name'),
-            'knowledge_base' => KnowledgeBase::orderBy('title')
+            'knowledge_base' => KnowledgeBase::where('language', $locale)
+                ->orderBy('title')
                 ->filter(Request::only('search'))
                 ->paginate(10)
                 ->withQueryString()
@@ -27,7 +30,8 @@ class KnowledgeBaseController extends Controller
                         'title' => $knowledge_base->title,
                         'type' => $knowledge_base->type ? $knowledge_base->type->name : '',
                         'type_id' => $knowledge_base->type_id,
-                        'details' => $knowledge_base->details
+                        'details' => $knowledge_base->details,
+                        'language' => $knowledge_base->language,
                     ];
                 }),
         ]);
@@ -35,13 +39,16 @@ class KnowledgeBaseController extends Controller
 
     public function store()
     {
-        KnowledgeBase::create(
-            Request::validate([
-                'title' => ['required', 'max:150'],
-                'type_id' => ['required'],
-                'details' => ['required']
-            ])
-        );
+        $validated = Request::validate([
+            'title' => ['required', 'max:150'],
+            'type_id' => ['required'],
+            'details' => ['required']
+        ]);
+
+        // Add the current language
+        $validated['language'] = app()->getLocale();
+
+        KnowledgeBase::create($validated);
 
         return Redirect::route('knowledge_base')->with('success', 'Knowledge base created.');
     }

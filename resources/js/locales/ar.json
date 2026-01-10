@@ -178,6 +178,45 @@
     "monthsAgo": "أشهر مضت",
     "today": "اليوم"
   },
+  "chatWidget": {
+    "welcomeToSupport": "مرحبًا بك في الدعم",
+    "provideDetailsToStart": "يرجى تقديم بياناتك لبدء الدردشة مع فريقنا.",
+    "fullName": "الاسم الكامل",
+    "fullNameRequired": "الاسم الكامل مطلوب",
+    "enterFullName": "أدخل اسمك الكامل",
+    "emailAddress": "عنوان البريد الإلكتروني",
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
+    "enterEmail": "أدخل بريدك الإلكتروني",
+    "memberNumber": "رقم العضوية",
+    "enterMemberNumber": "أدخل رقم عضويتك (اختياري)",
+    "region": "المنطقة",
+    "selectRegion": "اختر منطقتك",
+    "regionRequired": "يرجى اختيار منطقة",
+    "continue": "متابعة",
+    "faqTitle": "الأسئلة الشائعة",
+    "faqSubtitle": "تحقق مما إذا كان سؤالك مُجاب عليه أدناه، أو تواصل مع فريقنا.",
+    "noFaqsAvailable": "لا توجد أسئلة شائعة متاحة حالياً.",
+    "chatWithLiveSupport": "الدردشة مع الدعم المباشر",
+    "connecting": "جاري الاتصال...",
+    "backToRegistration": "العودة للتسجيل",
+    "loading": "جاري التحميل...",
+    "noMessagesYet": "لا توجد رسائل بعد",
+    "typeMessageBelow": "اكتب رسالتك أدناه واضغط على زر الإرسال لبدء المحادثة.",
+    "startChat": "بدء الدردشة",
+    "starting": "جاري البدء...",
+    "typeMessage": "اكتب رسالة...",
+    "supportChat": "دردشة الدعم",
+    "getStarted": "ابدأ",
+    "faqsAndSupport": "الأسئلة الشائعة والدعم",
+    "weReplyInMinutes": "نرد عادة خلال دقائق",
+    "chatWithUs": "تحدث معنا",
+    "openChat": "فتح الدردشة",
+    "minimizeChat": "تصغير الدردشة",
+    "closeChat": "إغلاق الدردشة",
+    "attachFile": "إرفاق ملف",
+    "sendMessage": "إرسال رسالة"
+  },
   "kb": {
     "title": "قاعدة المعرفة",
     "subtitle": "إدارة مقالات قاعدة المعرفة",
@@ -866,6 +905,109 @@
       "noRoles": "لا توجد أدوار",
       "rolesCount": "أدوار",
       "more": "المزيد"
+    }
+  },
+  "landing": {
+    "home": {
+      "welcomeTitle": "مرحباً بكم في دعم أمانة",
+      "ticketTitle": "معلومات تذكرة دعم أمانة",
+      "ticketDescription": "قم بملء التفاصيل أدناه لتقديم تذكرة الدعم الخاصة بك. سنرد عليك في أقرب وقت ممكن.",
+      "form": {
+        "fullName": "الاسم الكامل",
+        "emailAddress": "عنوان البريد الإلكتروني",
+        "phoneNumber": "رقم الهاتف",
+        "memberNumber": "رقم العضوية",
+        "ticketType": "نوع التذكرة",
+        "selectTicketType": "اختر نوع التذكرة...",
+        "region": "المنطقة",
+        "selectRegion": "اختر المنطقة...",
+        "subject": "الموضوع",
+        "subjectPlaceholder": "وصف موجز لمشكلتك",
+        "description": "الوصف",
+        "descriptionPlaceholder": "يرجى وصف مشكلتك بالتفصيل...",
+        "attachFiles": "إرفاق الملفات (اختياري)",
+        "attachFilesHint": "قم بتحميل حتى 5 ملفات (PDF، DOC، DOCX، JPG، PNG، XLS، XLSX). الحد الأقصى 5 ميجابايت لكل ملف.",
+        "attachFilesButton": "إرفاق الملفات",
+        "submitting": "جاري الإرسال...",
+        "submitTicket": "إرسال التذكرة"
+      }
+    },
+    "faq": {
+      "title": "الأسئلة الشائعة",
+      "subtitle": "ابحث عن إجابات للأسئلة الشائعة حول خدماتنا ودعمنا.",
+      "searchPlaceholder": "البحث في الأسئلة الشائعة...",
+      "expandAll": "توسيع الكل",
+      "collapseAll": "طي الكل",
+      "noFaqsFound": "لم يتم العثور على أسئلة شائعة",
+      "tryAdjustingSearch": "حاول تعديل كلمات البحث.",
+      "noFaqsAvailable": "لا توجد أسئلة شائعة متاحة حتى الآن.",
+      "showingCount": "عرض {count} من {total} سؤال",
+      "stillHaveQuestions": "لا تزال لديك أسئلة؟",
+      "cantFindLooking": "لم تجد ما تبحث عنه؟ فريق الدعم لدينا هنا لمساعدتك.",
+      "contactSupport": "اتصل بالدعم"
+    },
+    "contact": {
+      "tagline": "اتصل بنا",
+      "defaultTitle": "تواصل معنا",
+      "ourLocation": "موقعنا",
+      "phoneNumber": "رقم الهاتف",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "sendUsMessage": "أرسل لنا رسالة",
+      "formDescription": "املأ النموذج أدناه وسنرد عليك في أقرب وقت ممكن.",
+      "successMessage": "شكراً لك! تم إرسال رسالتك بنجاح.",
+      "form": {
+        "yourName": "اسمك",
+        "namePlaceholder": "محمد أحمد",
+        "emailAddress": "عنوان البريد الإلكتروني",
+        "emailPlaceholder": "mohamed@example.com",
+        "phoneNumber": "رقم الهاتف",
+        "phonePlaceholder": "+252 612345678",
+        "message": "الرسالة",
+        "messagePlaceholder": "اكتب رسالتك هنا...",
+        "sending": "جاري الإرسال...",
+        "sendMessage": "إرسال الرسالة"
+      }
+    },
+    "kb": {
+      "title": "قاعدة المعرفة",
+      "subtitle": "تصفح مجموعتنا من المقالات والأدلة والبرامج التعليمية لمساعدتك على الاستفادة القصوى من خدماتنا.",
+      "searchPlaceholder": "البحث في المقالات...",
+      "all": "الكل",
+      "noArticlesFound": "لم يتم العثور على مقالات",
+      "tryAdjustingFilter": "حاول تعديل البحث أو الفلتر.",
+      "noArticlesAvailable": "لا توجد مقالات في قاعدة المعرفة حتى الآن.",
+      "readMore": "اقرأ المزيد",
+      "showingCount": "عرض {count} من {total} مقال",
+      "cantFindLooking": "لم تجد ما تبحث عنه؟",
+      "checkFaqOrContact": "راجع قسم الأسئلة الشائعة أو اتصل بفريق الدعم لدينا للحصول على مساعدة شخصية.",
+      "browseFaqs": "تصفح الأسئلة الشائعة",
+      "contactSupport": "اتصل بالدعم"
+    },
+    "kbDetails": {
+      "home": "الرئيسية",
+      "knowledgeBase": "قاعدة المعرفة",
+      "updated": "محدث",
+      "backToKnowledgeBase": "العودة إلى قاعدة المعرفة",
+      "relatedArticles": "مقالات ذات صلة",
+      "needMoreHelp": "تحتاج المزيد من المساعدة؟",
+      "cantFindLooking": "لم تجد ما تبحث عنه؟",
+      "contactSupport": "اتصل بالدعم"
+    },
+    "privacy": {
+      "defaultTitle": "سياسة الخصوصية",
+      "noContent": "لا يوجد محتوى لسياسة الخصوصية متاح."
+    },
+    "terms": {
+      "defaultTitle": "شروط الخدمة",
+      "noContent": "لا يوجد محتوى لشروط الخدمة متاح."
+    },
+    "services": {
+      "defaultTitle": "خدماتنا",
+      "noServicesAvailable": "لا توجد خدمات متاحة في الوقت الحالي.",
+      "readyToGetStarted": "جاهز للبدء؟",
+      "readyDescription": "تواصل معنا اليوم لمعرفة المزيد عن كيف يمكننا مساعدتك.",
+      "contactUs": "اتصل بنا",
+      "submitTicket": "أرسل تذكرة"
     }
   }
 }

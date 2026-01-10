@@ -178,6 +178,45 @@
     "monthsAgo": "Bilo ka hor",
     "today": "Maanta"
   },
+  "chatWidget": {
+    "welcomeToSupport": "Ku soo dhawoow Taageerada",
+    "provideDetailsToStart": "Fadlan bixii faahfaahinaaga si aad ula hadasho kooxdayada.",
+    "fullName": "Magaca Buuxa",
+    "fullNameRequired": "Magaca buuxa waa waajib",
+    "enterFullName": "Geli magacaaga buuxa",
+    "emailAddress": "Ciwaanka Iimaylka",
+    "emailRequired": "Iimaylka waa waajib",
+    "invalidEmail": "Fadlan geli iimayl sax ah",
+    "enterEmail": "Geli iimaylkaaga",
+    "memberNumber": "Lambarka Xubin",
+    "enterMemberNumber": "Geli lambarka xubinaaga (ikhtiyaari)",
+    "region": "Gobolka",
+    "selectRegion": "Dooro gobolkaaga",
+    "regionRequired": "Fadlan dooro gobol",
+    "continue": "Sii wad",
+    "faqTitle": "Su'aalaha Caadiga",
+    "faqSubtitle": "Eeg haddii su'aashaadu ka mid tahay kuwan hoose, ama la xiriir kooxdayada.",
+    "noFaqsAvailable": "Su'aalaha caadiga hadda ma jiraan.",
+    "chatWithLiveSupport": "La hadal Taageerada Tooska ah",
+    "connecting": "Waa la isku xireyaa...",
+    "backToRegistration": "Ku noqo isdiiwaangelinta",
+    "loading": "Waa la soo rarayaa...",
+    "noMessagesYet": "Wali fariimo malahan",
+    "typeMessageBelow": "Ku qor fariintaada hoos ka dibna riix bataanka dirida si aad u bilowdo wadahadalka.",
+    "startChat": "Bilow Wadahadal",
+    "starting": "Waa la bilaabayaa...",
+    "typeMessage": "Qor fariin...",
+    "supportChat": "Wadahadalka Taageerada",
+    "getStarted": "Bilow",
+    "faqsAndSupport": "Su'aalaha Caadiga & Taageero",
+    "weReplyInMinutes": "Caadi ahaan waxaan ka jawaabaa daqiiqado gudahood",
+    "chatWithUs": "Nala hadal",
+    "openChat": "Fur wadahadalka",
+    "minimizeChat": "Yaree wadahadalka",
+    "closeChat": "Xir wadahadalka",
+    "attachFile": "Ku lifaaq fayl",
+    "sendMessage": "Dir fariin"
+  },
   "kb": {
     "title": "Xogta Aqoonta",
     "subtitle": "Maamul maqaallada xogta aqoonta",
@@ -866,6 +905,109 @@
       "noRoles": "Ma jiraan doorar",
       "rolesCount": "doorar",
       "more": "wax dheeraad ah"
+    }
+  },
+  "landing": {
+    "home": {
+      "welcomeTitle": "Ku soo dhawoow Taageerada Amanah",
+      "ticketTitle": "Macluumaadka Tikidka Taageerada Amanah",
+      "ticketDescription": "Buuxi faahfaahinta hoose si aad u soo gudbiyo tikidkaaga taageerada. Waxaan kugula soo noqon doonaa sida ugu dhakhsaha badan.",
+      "form": {
+        "fullName": "Magaca Oo Buuxa",
+        "emailAddress": "Cinwaanka Iimaylka",
+        "phoneNumber": "Lambarka Taleefanka",
+        "memberNumber": "Lambarka Xubnaha",
+        "ticketType": "Nooca Tikidka",
+        "selectTicketType": "Dooro nooca tikidka...",
+        "region": "Gobolka",
+        "selectRegion": "Dooro gobolka...",
+        "subject": "Mawduuca",
+        "subjectPlaceholder": "Sharaxaad kooban oo ku saabsan dhibaatadaada",
+        "description": "Sharaxaadda",
+        "descriptionPlaceholder": "Fadlan sharax dhibaatadaada si faahfaahsan...",
+        "attachFiles": "Ku lifaaq Faylalka (Ikhtiyaari)",
+        "attachFilesHint": "Soo geli ilaa 5 fayl (PDF, DOC, DOCX, JPG, PNG, XLS, XLSX). Ugu badnaan 5MB fayl kasta.",
+        "attachFilesButton": "Ku lifaaq Faylalka",
+        "submitting": "Waa la dirayaa...",
+        "submitTicket": "Dir Tikidka"
+      }
+    },
+    "faq": {
+      "title": "Su'aalaha Inta Badan La Isweydiiyo",
+      "subtitle": "Ka hel jawaabaha su'aalaha caadiga ah ee ku saabsan adeegyadayada iyo taageeradayada.",
+      "searchPlaceholder": "Raadi Su'aalaha...",
+      "expandAll": "Balaadhi Dhammaan",
+      "collapseAll": "Duub Dhammaan",
+      "noFaqsFound": "Lama helin su'aalo",
+      "tryAdjustingSearch": "Isku day inaad hagaajiso ereyada raadinta.",
+      "noFaqsAvailable": "Weli ma jiraan su'aalo caadi ah oo la heli karo.",
+      "showingCount": "Muujinaya {count} ka mid ah {total} su'aal",
+      "stillHaveQuestions": "Weli ma qabtaa su'aalo?",
+      "cantFindLooking": "Ma heli kartid waxa aad raadinayso? Kooxdayada taageerada ayaa halkan u jooga si ay kugu caawiyaan.",
+      "contactSupport": "La xidhiidh Taageerada"
+    },
+    "contact": {
+      "tagline": "Nala Soo Xidhiidh",
+      "defaultTitle": "Nala Soo Xidhiidh",
+      "ourLocation": "Goobteena",
+      "phoneNumber": "Lambarka Taleefanka",
+      "emailAddress": "Cinwaanka Iimaylka",
+      "sendUsMessage": "Noo Soo Dir Fariin",
+      "formDescription": "Buuxi foomka hoose waxaanan kugula soo noqon doonaa sida ugu dhakhsaha badan.",
+      "successMessage": "Mahadsanid! Fariintaada si guul leh ayaa loo diray.",
+      "form": {
+        "yourName": "Magacaaga",
+        "namePlaceholder": "Maxamed Axmed",
+        "emailAddress": "Cinwaanka Iimaylka",
+        "emailPlaceholder": "maxamed@tusaale.com",
+        "phoneNumber": "Lambarka Taleefanka",
+        "phonePlaceholder": "+252 612345678",
+        "message": "Fariinta",
+        "messagePlaceholder": "Ku qor fariintaada halkan...",
+        "sending": "Waa la dirayaa...",
+        "sendMessage": "Dir Fariinta"
+      }
+    },
+    "kb": {
+      "title": "Saldhigga Aqoonta",
+      "subtitle": "Daawad ururkeena maqaallada, hagayaasha, iyo casharada si ay kugu caawiyaan inaad ka faa'iidaysato adeegyadayada.",
+      "searchPlaceholder": "Raadi maqaallada...",
+      "all": "Dhammaan",
+      "noArticlesFound": "Lama helin maqaallo",
+      "tryAdjustingFilter": "Isku day inaad hagaajiso raadinta ama filtarka.",
+      "noArticlesAvailable": "Weli ma jiraan maqaallo saldhiga aqoonta.",
+      "readMore": "Akhri wax dheeraad ah",
+      "showingCount": "Muujinaya {count} ka mid ah {total} maqaal",
+      "cantFindLooking": "Ma heli kartid waxa aad raadinayso?",
+      "checkFaqOrContact": "Eeg qaybta su'aalaha ama la xidhiidh kooxdayada taageerada si aad u hesho caawimaad gaar ah.",
+      "browseFaqs": "Daawad Su'aalaha",
+      "contactSupport": "La xidhiidh Taageerada"
+    },
+    "kbDetails": {
+      "home": "Guriga",
+      "knowledgeBase": "Saldhigga Aqoonta",
+      "updated": "La cusbooneysiiyay",
+      "backToKnowledgeBase": "Ku noqo Saldhigga Aqoonta",
+      "relatedArticles": "Maqaallada La Xidhiidha",
+      "needMoreHelp": "Wax badan ma u baahan tahay caawimaad?",
+      "cantFindLooking": "Ma heli kartid waxa aad raadinayso?",
+      "contactSupport": "La xidhiidh Taageerada"
+    },
+    "privacy": {
+      "defaultTitle": "Siyaasadda Arrimaha Gaarka ah",
+      "noContent": "Ma jiro waxa ku jira siyaasadda arrimaha gaarka ah oo la heli karo."
+    },
+    "terms": {
+      "defaultTitle": "Shuruudaha Adeegga",
+      "noContent": "Ma jiro waxa ku jira shuruudaha adeegga oo la heli karo."
+    },
+    "services": {
+      "defaultTitle": "Adeegyadayada",
+      "noServicesAvailable": "Ma jiraan adeegyo la heli karo hadda.",
+      "readyToGetStarted": "Diyaar ma u Tahay Inaad Bilaawdo?",
+      "readyDescription": "Nala soo xidhiidh maanta si aad wax badan uga ogaato sida aan kugu caawin karno.",
+      "contactUs": "Nala Soo Xidhiidh",
+      "submitTicket": "Dir Tikid"
     }
   }
 }

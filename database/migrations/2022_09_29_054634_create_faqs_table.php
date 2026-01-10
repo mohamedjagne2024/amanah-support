@@ -13,11 +13,14 @@ class CreateFaqsTable extends Migration
      */
     public function up()
     {
-        if (Schema::hasTable('faqs')) { return; }
+        if (Schema::hasTable('faqs')) {
+            return;
+        }
         Schema::create('faqs', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name', '150')->nullable();
             $table->text('details')->nullable();
+            $table->string('language', '2')->default('en');
             $table->integer('status')->default(1);
             $table->timestamps();
         });

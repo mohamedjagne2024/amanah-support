@@ -17,10 +17,10 @@ import {
   FileText,
 } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
-import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
 import PublicLayout from '@/layouts/public-layout';
 import type { SharedData } from '@/types';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type HeroButton = {
   text: string;
@@ -139,6 +139,7 @@ export default function Home({
   custom_fields = [],
   footer,
 }: HomePageProps & { footer?: any }) {
+  const { t } = useLanguageContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const { auth } = usePage<SharedData>().props;
@@ -233,7 +234,7 @@ export default function Home({
 
                   <h1
                     className="text-4xl sm:text-5xl lg:text-6xl font-bold text-default-900 leading-tight [&>span]:text-primary"
-                    dangerouslySetInnerHTML={{ __html: hero.title || 'Welcome to Amanah Support' }}
+                    dangerouslySetInnerHTML={{ __html: hero.title || t('landing.home.welcomeTitle') }}
                   />
 
                   {hero.description && (
@@ -265,8 +266,8 @@ export default function Home({
                           target={button.new_tab ? '_blank' : undefined}
                           rel={button.new_tab ? 'noopener noreferrer' : undefined}
                           className={`btn ${index === 0
-                              ? 'bg-primary text-white'
-                              : 'border-default-200 text-default-900'
+                            ? 'bg-primary text-white'
+                            : 'border-default-200 text-default-900'
                             }`}
                         >
                           {button.text}
@@ -470,9 +471,9 @@ export default function Home({
 
               <div className="card">
                 <div className="card-header">
-                  <h6 className="card-title">Amanah Support Ticket Information</h6>
+                  <h6 className="card-title">{t('landing.home.ticketTitle')}</h6>
                   <p className="text-sm text-default-500 mt-1">
-                    Fill in the details below to submit your support ticket. We'll get back to you as soon as possible.
+                    {t('landing.home.ticketDescription')}
                   </p>
                 </div>
                 <div className="card-body">
@@ -481,7 +482,7 @@ export default function Home({
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Full Name <span className="text-danger">*</span>
+                          {t('landing.home.form.fullName')} <span className="text-danger">*</span>
                         </label>
                         <input
                           type="text"
@@ -495,7 +496,7 @@ export default function Home({
                       </div>
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Email Address <span className="text-danger">*</span>
+                          {t('landing.home.form.emailAddress')} <span className="text-danger">*</span>
                         </label>
                         <input
                           type="email"
@@ -513,7 +514,7 @@ export default function Home({
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Phone Number
+                          {t('landing.home.form.phoneNumber')}
                         </label>
                         <input
                           type="tel"
@@ -527,7 +528,7 @@ export default function Home({
                       </div>
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Member Number
+                          {t('landing.home.form.memberNumber')}
                         </label>
                         <input
                           type="text"
@@ -545,7 +546,7 @@ export default function Home({
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Ticket Type
+                          {t('landing.home.form.ticketType')}
                         </label>
                         <select
                           value={data.type_id}
@@ -553,7 +554,7 @@ export default function Home({
                           className={`form-input ${errors.type_id ? 'border-danger' : ''}`}
                           disabled={processing}
                         >
-                          <option value="">Select ticket type...</option>
+                          <option value="">{t('landing.home.form.selectTicketType')}</option>
                           {types.map((type) => (
                             <option key={type.id} value={type.id}>
                               {type.name}
@@ -564,7 +565,7 @@ export default function Home({
                       </div>
                       <div>
                         <label className="block font-medium text-default-900 text-sm mb-2">
-                          Region
+                          {t('landing.home.form.region')}
                         </label>
                         <select
                           value={data.region_id}
@@ -572,7 +573,7 @@ export default function Home({
                           className={`form-input ${errors.region_id ? 'border-danger' : ''}`}
                           disabled={processing}
                         >
-                          <option value="">Select region...</option>
+                          <option value="">{t('landing.home.form.selectRegion')}</option>
                           {regions.map((region) => (
                             <option key={region.id} value={region.id}>
                               {region.name}
@@ -586,14 +587,14 @@ export default function Home({
                     {/* Subject */}
                     <div>
                       <label className="block font-medium text-default-900 text-sm mb-2">
-                        Subject <span className="text-danger">*</span>
+                        {t('landing.home.form.subject')} <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
                         value={data.subject}
                         onChange={(e) => setData('subject', e.target.value)}
                         className={`form-input ${errors.subject ? 'border-danger' : ''}`}
-                        placeholder="Brief description of your issue"
+                        placeholder={t('landing.home.form.subjectPlaceholder')}
                         disabled={processing}
                       />
                       {errors.subject && <p className="text-danger text-sm mt-1">{errors.subject}</p>}
@@ -602,10 +603,10 @@ export default function Home({
                     {/* Details */}
                     <div>
                       <label className="block font-medium text-default-900 text-sm mb-2">
-                        Description <span className="text-danger">*</span>
+                        {t('landing.home.form.description')} <span className="text-danger">*</span>
                       </label>
                       <TextEditor
-                        placeholder="Please describe your issue in detail..."
+                        placeholder={t('landing.home.form.descriptionPlaceholder')}
                         onChange={(content) => setData('details', content)}
                         showToolbar={true}
                         className="min-h-[200px]"
@@ -617,10 +618,10 @@ export default function Home({
                     {/* File Attachments */}
                     <div>
                       <label className="block font-medium text-default-900 text-sm mb-2">
-                        Attach Files (Optional)
+                        {t('landing.home.form.attachFiles')}
                       </label>
                       <p className="text-xs text-default-500 mb-3">
-                        Upload up to 5 files (PDF, DOC, DOCX, JPG, PNG, XLS, XLSX). Max 5MB per file.
+                        {t('landing.home.form.attachFilesHint')}
                       </p>
                       <input
                         ref={fileInputRef}
@@ -637,7 +638,7 @@ export default function Home({
                         disabled={processing || attachments.length >= 5}
                       >
                         <Upload className="size-4 mr-2" />
-                        Attach Files
+                        {t('landing.home.form.attachFilesButton')}
                       </button>
                       {attachments.length > 0 && (
                         <div className="mt-3 space-y-2">
@@ -671,10 +672,10 @@ export default function Home({
                       {processing ? (
                         <span className="flex items-center justify-center gap-2">
                           <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                          Submitting...
+                          {t('landing.home.form.submitting')}
                         </span>
                       ) : (
-                        settings.submit_button_label || 'Submit Ticket'
+                        settings.submit_button_label || t('landing.home.form.submitTicket')
                       )}
                     </button>
                   </form>
@@ -687,4 +688,3 @@ export default function Home({
     </>
   );
 }
-

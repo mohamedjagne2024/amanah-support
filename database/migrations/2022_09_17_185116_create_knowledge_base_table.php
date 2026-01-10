@@ -13,11 +13,14 @@ class CreateKnowledgeBaseTable extends Migration
      */
     public function up()
     {
-        if (Schema::hasTable('knowledge_base')) { return; }
+        if (Schema::hasTable('knowledge_base')) {
+            return;
+        }
         Schema::create('knowledge_base', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title');
             $table->text('details')->nullable();
+            $table->string('language', '2')->default('en');
             $table->integer('type_id')->nullable();
             $table->timestamps();
         });

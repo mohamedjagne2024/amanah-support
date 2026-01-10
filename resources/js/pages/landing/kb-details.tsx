@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ArrowLeft, Calendar, Tag, BookOpen, ChevronRight } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
 import PublicLayout from '@/layouts/public-layout';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type TypeOption = {
   id: number;
@@ -33,6 +34,8 @@ type KbDetailsProps = {
 };
 
 export default function KbDetails({ title, kb, types = [], random_kb = [], footer }: KbDetailsProps) {
+  const { t } = useLanguageContext();
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -50,15 +53,15 @@ export default function KbDetails({ title, kb, types = [], random_kb = [], foote
   return (
     <>
       <PageMeta title={title} />
-      
+
       <PublicLayout currentPage="kb" footer={footer} className="pt-16">
         {/* Breadcrumb */}
         <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent py-8">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex items-center gap-2 text-sm text-default-500">
-              <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+              <Link href="/" className="hover:text-primary transition-colors">{t('landing.kbDetails.home')}</Link>
               <ChevronRight className="size-4" />
-              <Link href="/kb" className="hover:text-primary transition-colors">Knowledge Base</Link>
+              <Link href="/kb" className="hover:text-primary transition-colors">{t('landing.kbDetails.knowledgeBase')}</Link>
               <ChevronRight className="size-4" />
               <span className="text-default-700 truncate max-w-[200px]">{kb.title}</span>
             </nav>
@@ -90,14 +93,14 @@ export default function KbDetails({ title, kb, types = [], random_kb = [], foote
                       </span>
                       {kb.updated_at !== kb.created_at && (
                         <span className="text-default-400">
-                          Updated: {formatDate(kb.updated_at)}
+                          {t('landing.kbDetails.updated')}: {formatDate(kb.updated_at)}
                         </span>
                       )}
                     </div>
                   </div>
 
                   {/* Article Body */}
-                  <div 
+                  <div
                     className="prose prose-lg max-w-none text-default-700
                       prose-headings:text-default-900 
                       prose-p:text-default-600 
@@ -122,7 +125,7 @@ export default function KbDetails({ title, kb, types = [], random_kb = [], foote
                   className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
                 >
                   <ArrowLeft className="size-4" />
-                  Back to Knowledge Base
+                  {t('landing.kbDetails.backToKnowledgeBase')}
                 </Link>
               </div>
             </div>
@@ -135,7 +138,7 @@ export default function KbDetails({ title, kb, types = [], random_kb = [], foote
                 <div className="bg-card rounded-xl border border-default-200 p-5">
                   <h3 className="font-semibold text-default-900 mb-4 flex items-center gap-2">
                     <BookOpen className="size-4 text-primary" />
-                    Related Articles
+                    {t('landing.kbDetails.relatedArticles')}
                   </h3>
                   <div className="space-y-3">
                     {random_kb.map((article) => (
@@ -158,15 +161,15 @@ export default function KbDetails({ title, kb, types = [], random_kb = [], foote
 
               {/* Help CTA */}
               <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-5 text-center">
-                <h3 className="font-semibold text-default-900 mb-2">Need more help?</h3>
+                <h3 className="font-semibold text-default-900 mb-2">{t('landing.kbDetails.needMoreHelp')}</h3>
                 <p className="text-sm text-default-600 mb-4">
-                  Can't find what you're looking for?
+                  {t('landing.kbDetails.cantFindLooking')}
                 </p>
                 <Link
                   href="/contact"
                   className="btn bg-primary text-white w-full"
                 >
-                  Contact Support
+                  {t('landing.kbDetails.contactSupport')}
                 </Link>
               </div>
             </div>

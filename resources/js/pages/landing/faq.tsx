@@ -3,6 +3,7 @@ import { ChevronDown, Search, HelpCircle } from 'lucide-react';
 import PageMeta from '@/components/PageMeta';
 import PublicLayout from '@/layouts/public-layout';
 import { Link } from '@inertiajs/react';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type FaqItem = {
   id: number;
@@ -23,6 +24,7 @@ type FaqPageProps = {
 };
 
 export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
+  const { t } = useLanguageContext();
   const [searchQuery, setSearchQuery] = useState(filters?.search || '');
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
 
@@ -32,8 +34,8 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
     if (!searchQuery.trim()) return faqData;
     const query = searchQuery.toLowerCase();
     return faqData.filter(
-      faq => 
-        faq.name.toLowerCase().includes(query) || 
+      faq =>
+        faq.name.toLowerCase().includes(query) ||
         faq.details.toLowerCase().includes(query)
     );
   }, [faqData, searchQuery]);
@@ -61,7 +63,7 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
   return (
     <>
       <PageMeta title={title || 'FAQ'} />
-      
+
       <PublicLayout currentPage="faq" footer={footer} className="pt-16">
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent py-16 lg:py-24">
@@ -70,10 +72,10 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
               <HelpCircle className="size-8 text-primary" />
             </div>
             <h1 className="text-3xl lg:text-4xl font-bold text-default-900 mb-4">
-              Frequently Asked Questions
+              {t('landing.faq.title')}
             </h1>
             <p className="text-lg text-default-600 max-w-2xl mx-auto">
-              Find answers to common questions about our services and support.
+              {t('landing.faq.subtitle')}
             </p>
           </div>
         </div>
@@ -86,7 +88,7 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-default-400" />
                 <input
                   type="text"
-                  placeholder="Search FAQs..."
+                  placeholder={t('landing.faq.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="form-input w-full pl-10"
@@ -97,13 +99,13 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
                   onClick={expandAll}
                   className="btn btn-sm border-default-200 text-default-700 hover:bg-default-50"
                 >
-                  Expand All
+                  {t('landing.faq.expandAll')}
                 </button>
                 <button
                   onClick={collapseAll}
                   className="btn btn-sm border-default-200 text-default-700 hover:bg-default-50"
                 >
-                  Collapse All
+                  {t('landing.faq.collapseAll')}
                 </button>
               </div>
             </div>
@@ -117,9 +119,9 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
               <div className="inline-flex items-center justify-center size-16 rounded-full bg-default-100 mb-4">
                 <HelpCircle className="size-8 text-default-400" />
               </div>
-              <h3 className="text-lg font-medium text-default-900 mb-2">No FAQs found</h3>
+              <h3 className="text-lg font-medium text-default-900 mb-2">{t('landing.faq.noFaqsFound')}</h3>
               <p className="text-default-500">
-                {searchQuery ? 'Try adjusting your search terms.' : 'No frequently asked questions available yet.'}
+                {searchQuery ? t('landing.faq.tryAdjustingSearch') : t('landing.faq.noFaqsAvailable')}
               </p>
             </div>
           ) : (
@@ -134,20 +136,18 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
                     className="w-full px-6 py-4 flex items-center justify-between text-left"
                   >
                     <span className="font-medium text-default-900 pr-4">{faq.name}</span>
-                    <ChevronDown 
-                      className={`size-5 text-default-500 flex-shrink-0 transition-transform duration-200 ${
-                        openItems.has(faq.id) ? 'rotate-180' : ''
-                      }`} 
+                    <ChevronDown
+                      className={`size-5 text-default-500 flex-shrink-0 transition-transform duration-200 ${openItems.has(faq.id) ? 'rotate-180' : ''
+                        }`}
                     />
                   </button>
-                  
-                  <div 
-                    className={`overflow-hidden transition-all duration-200 ${
-                      openItems.has(faq.id) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-                    }`}
+
+                  <div
+                    className={`overflow-hidden transition-all duration-200 ${openItems.has(faq.id) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                      }`}
                   >
                     <div className="px-6 pb-4 border-t border-default-100 pt-4">
-                      <div 
+                      <div
                         className="prose prose-sm max-w-none text-default-600"
                         dangerouslySetInnerHTML={{ __html: faq.details }}
                       />
@@ -161,7 +161,7 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
           {/* Results count */}
           {filteredFaqs.length > 0 && (
             <p className="text-center text-sm text-default-500 mt-8">
-              Showing {filteredFaqs.length} of {faqData.length} FAQs
+              {t('landing.faq.showingCount').replace('{count}', String(filteredFaqs.length)).replace('{total}', String(faqData.length))}
             </p>
           )}
         </div>
@@ -170,13 +170,13 @@ export default function Faq({ title, faqs, filters, footer }: FaqPageProps) {
         <div className="bg-gradient-to-r from-primary/5 to-primary/10 py-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-xl font-semibold text-default-900 mb-2">
-              Still have questions?
+              {t('landing.faq.stillHaveQuestions')}
             </h2>
             <p className="text-default-600 mb-6">
-              Can't find what you're looking for? Our support team is here to help.
+              {t('landing.faq.cantFindLooking')}
             </p>
             <Link href="/contact" className="btn bg-primary text-white">
-              Contact Support
+              {t('landing.faq.contactSupport')}
             </Link>
           </div>
         </div>

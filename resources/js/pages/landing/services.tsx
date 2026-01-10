@@ -23,6 +23,7 @@ import {
 import { useMemo } from 'react';
 import PageMeta from '@/components/PageMeta';
 import PublicLayout from '@/layouts/public-layout';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type ServiceItem = {
   name: string;
@@ -79,6 +80,8 @@ const getIcon = (iconName: string) => {
 };
 
 export default function Services({ title, data: pageInfo, footer }: ServicesPageProps) {
+  const { t } = useLanguageContext();
+
   const pageData = useMemo(() => {
     if (!pageInfo?.html) return {};
     try {
@@ -93,7 +96,7 @@ export default function Services({ title, data: pageInfo, footer }: ServicesPage
 
   return (
     <>
-      <PageMeta title={title || 'Services'} />
+      <PageMeta title={title || t('landing.services.defaultTitle')} />
 
       <PublicLayout currentPage="/services" footer={footer}>
         {/* Hero Section */}
@@ -105,7 +108,7 @@ export default function Services({ title, data: pageInfo, footer }: ServicesPage
               </span>
             )}
             <h1 className="text-4xl sm:text-5xl font-bold text-default-900 mb-4">
-              {content.title || 'Our Services'}
+              {content.title || t('landing.services.defaultTitle')}
             </h1>
             {content.description && (
               <p className="text-lg text-default-600 max-w-2xl mx-auto">
@@ -121,7 +124,7 @@ export default function Services({ title, data: pageInfo, footer }: ServicesPage
             {services.length === 0 ? (
               <div className="text-center py-16">
                 <Briefcase className="size-16 mx-auto mb-4 text-default-300" />
-                <p className="text-default-500 text-lg">No services available at the moment.</p>
+                <p className="text-default-500 text-lg">{t('landing.services.noServicesAvailable')}</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -156,23 +159,23 @@ export default function Services({ title, data: pageInfo, footer }: ServicesPage
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-primary">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Ready to Get Started?
+              {t('landing.services.readyToGetStarted')}
             </h2>
             <p className="text-lg text-white/80 mb-8">
-              Contact us today to learn more about how we can help you.
+              {t('landing.services.readyDescription')}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a
                 href="/contact"
                 className="btn bg-white text-primary hover:bg-white/90"
               >
-                Contact Us
+                {t('landing.services.contactUs')}
               </a>
               <a
                 href="/ticket/open"
                 className="btn border-2 border-white text-white hover:bg-white/10"
               >
-                Submit a Ticket
+                {t('landing.services.submitTicket')}
               </a>
             </div>
           </div>
