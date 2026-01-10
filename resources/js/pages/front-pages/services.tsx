@@ -8,6 +8,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
 import TextEditor from '@/components/TextEditor';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type ServiceItem = {
   name: string;
@@ -45,6 +46,7 @@ const defaultPageData: PageData = {
 };
 
 export default function Services({ title, page }: ServicesPageProps) {
+  const { t } = useLanguageContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const initialData = useMemo(() => {
     if (!page?.html) return defaultPageData;
@@ -96,13 +98,13 @@ export default function Services({ title, page }: ServicesPageProps) {
 
   return (
     <AppLayout>
-      <PageMeta title="Services Page Settings" />
+      <PageMeta title={t('frontPages.services.title')} />
       <main className="pb-24">
         <form onSubmit={handleSubmit}>
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-default-900">Services Page Settings</h1>
-            <p className="text-default-500 mt-1">Configure your services page content</p>
+            <h1 className="text-2xl font-bold text-default-900">{t('frontPages.services.title')}</h1>
+            <p className="text-default-500 mt-1">{t('frontPages.services.subtitle')}</p>
           </div>
 
           <div className="space-y-6 max-w-5xl">
@@ -113,14 +115,14 @@ export default function Services({ title, page }: ServicesPageProps) {
                   <Briefcase className="size-5 text-primary" />
                 </div>
                 <div>
-                  <h6 className="card-title">Page Content</h6>
-                  <p className="text-sm text-default-500">Main header section configuration</p>
+                  <h6 className="card-title">{t('frontPages.services.pageContent')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.services.pageContentDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-medium text-default-900 text-sm mb-2">Tagline</label>
+                    <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.services.tagline')}</label>
                     <input
                       type="text"
                       value={data.content.tagline}
@@ -131,7 +133,7 @@ export default function Services({ title, page }: ServicesPageProps) {
                     />
                   </div>
                   <div>
-                    <label className="block font-medium text-default-900 text-sm mb-2">Title</label>
+                    <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.services.titleField')}</label>
                     <input
                       type="text"
                       value={data.content.title}
@@ -143,11 +145,11 @@ export default function Services({ title, page }: ServicesPageProps) {
                   </div>
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Description</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.services.description')}</label>
                   <textarea
                     value={data.content.description}
                     onChange={(e) => setData('content', { ...data.content, description: e.target.value })}
-                    placeholder="Enter description..."
+                    placeholder={t('frontPages.services.enterDescription')}
                     className="form-input min-h-[100px]"
                     disabled={processing || isSubmitting}
                   />
@@ -163,8 +165,8 @@ export default function Services({ title, page }: ServicesPageProps) {
                     <Briefcase className="size-5 text-success" />
                   </div>
                   <div>
-                    <h6 className="card-title">Services</h6>
-                    <p className="text-sm text-default-500">Add and manage your services</p>
+                    <h6 className="card-title">{t('frontPages.services.servicesSection')}</h6>
+                    <p className="text-sm text-default-500">{t('frontPages.services.servicesDescription')}</p>
                   </div>
                 </div>
                 <button
@@ -173,15 +175,15 @@ export default function Services({ title, page }: ServicesPageProps) {
                   className="btn btn-sm bg-primary text-white"
                   disabled={processing || isSubmitting}
                 >
-                  <Plus className="size-4 mr-1" /> Add Service
+                  <Plus className="size-4 mr-1" /> {t('frontPages.services.addService')}
                 </button>
               </div>
               <div className="card-body space-y-4">
                 {data.services.length === 0 ? (
                   <div className="text-center py-8 text-default-500">
                     <Briefcase className="size-12 mx-auto mb-3 text-default-300" />
-                    <p>No services added yet.</p>
-                    <p className="text-sm">Click "Add Service" to get started.</p>
+                    <p>{t('frontPages.services.noServicesYet')}</p>
+                    <p className="text-sm">{t('frontPages.services.clickAddService')}</p>
                   </div>
                 ) : (
                   data.services.map((service, index) => (
@@ -190,7 +192,7 @@ export default function Services({ title, page }: ServicesPageProps) {
                         <div className="flex-1 space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                             <div className="md:col-span-5">
-                              <label className="block font-medium text-default-900 text-sm mb-2">Service Name</label>
+                              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.services.serviceName')}</label>
                               <input
                                 type="text"
                                 value={service.name}
@@ -201,7 +203,7 @@ export default function Services({ title, page }: ServicesPageProps) {
                               />
                             </div>
                             <div className="md:col-span-3">
-                              <label className="block font-medium text-default-900 text-sm mb-2">Icon</label>
+                              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.services.iconField')}</label>
                               <input
                                 type="text"
                                 value={service.icon}
@@ -210,13 +212,13 @@ export default function Services({ title, page }: ServicesPageProps) {
                                 className="form-input"
                                 disabled={processing || isSubmitting}
                               />
-                              <p className="text-xs text-default-500 mt-1">Enter icon name (e.g. ticket, chat, users, shield, star)</p>
+                              <p className="text-xs text-default-500 mt-1">{t('frontPages.services.iconHint')}</p>
                             </div>
                           </div>
                           <div>
-                            <label className="block font-medium text-default-900 text-sm mb-2">Details</label>
+                            <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.services.serviceDetails')}</label>
                             <textarea
-                              placeholder="Enter service description..."
+                              placeholder={t('frontPages.services.enterServiceDescription')}
                               onChange={(e) => handleServiceChange(index, 'details', e.target.value)}
                               className="form-input"
                               value={service.details}
@@ -243,7 +245,7 @@ export default function Services({ title, page }: ServicesPageProps) {
           <div className="px-6 py-4 max-w-5xl">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <p className="text-sm text-default-500">
-                Changes are saved automatically when you submit the form
+                {t('frontPages.changesSavedMessage')}
               </p>
               <div className="flex items-center gap-3">
                 <button
@@ -252,7 +254,7 @@ export default function Services({ title, page }: ServicesPageProps) {
                   className="btn border-default-200 text-default-700"
                   disabled={isSubmitting}
                 >
-                  Reset
+                  {t('frontPages.reset')}
                 </button>
                 <button
                   type="submit"
@@ -262,10 +264,10 @@ export default function Services({ title, page }: ServicesPageProps) {
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
                       <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                      Saving...
+                      {t('frontPages.saving')}
                     </span>
                   ) : (
-                    'Save Changes'
+                    t('frontPages.saveChanges')
                   )}
                 </button>
               </div>
@@ -276,4 +278,3 @@ export default function Services({ title, page }: ServicesPageProps) {
     </AppLayout>
   );
 }
-

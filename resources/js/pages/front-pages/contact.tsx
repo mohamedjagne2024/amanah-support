@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type PageData = {
   content: {
@@ -66,6 +67,7 @@ const defaultPageData: PageData = {
 };
 
 export default function Contact({ title, page }: ContactPageProps) {
+  const { t } = useLanguageContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const initialData = useMemo(() => {
     if (!page?.html) return defaultPageData;
@@ -103,13 +105,13 @@ export default function Contact({ title, page }: ContactPageProps) {
 
   return (
     <AppLayout>
-      <PageMeta title="Contact Page Settings" />
+      <PageMeta title={t('frontPages.contact.title')} />
       <main className="pb-24">
         <form onSubmit={handleSubmit}>
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-default-900">Contact Page Settings</h1>
-            <p className="text-default-500 mt-1">Configure your contact page content and information</p>
+            <h1 className="text-2xl font-bold text-default-900">{t('frontPages.contact.title')}</h1>
+            <p className="text-default-500 mt-1">{t('frontPages.contact.subtitle')}</p>
           </div>
 
           <div className="space-y-6 max-w-5xl">
@@ -120,13 +122,13 @@ export default function Contact({ title, page }: ContactPageProps) {
                   <FileText className="size-5 text-primary" />
                 </div>
                 <div>
-                  <h6 className="card-title">Content</h6>
-                  <p className="text-sm text-default-500">Main header text and description</p>
+                  <h6 className="card-title">{t('frontPages.contact.contentSection')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.contact.contentDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Text</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.text')}</label>
                   <input
                     type="text"
                     value={data.content.text}
@@ -137,11 +139,11 @@ export default function Contact({ title, page }: ContactPageProps) {
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Details</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.details')}</label>
                   <textarea
                     value={data.content.details}
                     onChange={(e) => setData('content', { ...data.content, details: e.target.value })}
-                    placeholder="Enter description..."
+                    placeholder={t('frontPages.contact.enterDescription')}
                     className="form-input min-h-[100px]"
                     disabled={processing}
                   />
@@ -156,13 +158,13 @@ export default function Contact({ title, page }: ContactPageProps) {
                   <MapPin className="size-5 text-emerald-500" />
                 </div>
                 <div>
-                  <h6 className="card-title">Location</h6>
-                  <p className="text-sm text-default-500">Office address and map embed</p>
+                  <h6 className="card-title">{t('frontPages.contact.locationSection')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.contact.locationDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Location address</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.locationAddress')}</label>
                   <input
                     type="text"
                     value={data.location.address}
@@ -173,7 +175,7 @@ export default function Contact({ title, page }: ContactPageProps) {
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Location map</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.locationMap')}</label>
                   <input
                     type="text"
                     value={data.location.map_url}
@@ -182,7 +184,7 @@ export default function Contact({ title, page }: ContactPageProps) {
                     className="form-input"
                     disabled={processing}
                   />
-                  <p className="text-xs text-default-500 mt-1">Paste Google Maps embed URL here</p>
+                  <p className="text-xs text-default-500 mt-1">{t('frontPages.contact.pasteGoogleMapsUrl')}</p>
                 </div>
               </div>
             </div>
@@ -194,13 +196,13 @@ export default function Contact({ title, page }: ContactPageProps) {
                   <Phone className="size-5 text-blue-500" />
                 </div>
                 <div>
-                  <h6 className="card-title">Phone</h6>
-                  <p className="text-sm text-default-500">Contact phone number</p>
+                  <h6 className="card-title">{t('frontPages.contact.phoneSection')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.contact.phoneDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Phone number</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.phoneNumber')}</label>
                   <input
                     type="text"
                     value={data.phone.number}
@@ -211,11 +213,11 @@ export default function Contact({ title, page }: ContactPageProps) {
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Details</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.details')}</label>
                   <textarea
                     value={data.phone.details}
                     onChange={(e) => setData('phone', { ...data.phone, details: e.target.value })}
-                    placeholder="The phrasal sequence of the is now so that many campaign and benefit."
+                    placeholder={t('frontPages.contact.enterDescription')}
                     className="form-input min-h-[100px]"
                     disabled={processing}
                   />
@@ -230,13 +232,13 @@ export default function Contact({ title, page }: ContactPageProps) {
                   <Mail className="size-5 text-amber-500" />
                 </div>
                 <div>
-                  <h6 className="card-title">Email</h6>
-                  <p className="text-sm text-default-500">Contact email address</p>
+                  <h6 className="card-title">{t('frontPages.contact.emailSection')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.contact.emailDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Email address</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.emailAddress')}</label>
                   <input
                     type="email"
                     value={data.email.address}
@@ -247,11 +249,11 @@ export default function Contact({ title, page }: ContactPageProps) {
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Email details</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.emailDetails')}</label>
                   <textarea
                     value={data.email.details}
                     onChange={(e) => setData('email', { ...data.email, details: e.target.value })}
-                    placeholder="The phrasal sequence of the is now so that many campaign and benefit."
+                    placeholder={t('frontPages.contact.enterDescription')}
                     className="form-input min-h-[100px]"
                     disabled={processing}
                   />
@@ -266,13 +268,13 @@ export default function Contact({ title, page }: ContactPageProps) {
                   <MessageSquare className="size-5 text-purple-500" />
                 </div>
                 <div>
-                  <h6 className="card-title">Contact Form</h6>
-                  <p className="text-sm text-default-500">Settings for the contact form</p>
+                  <h6 className="card-title">{t('frontPages.contact.contactFormSection')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.contact.contactFormDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Recipient Email (for the contact form)</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.contact.recipientEmail')}</label>
                   <input
                     type="email"
                     value={data.contact_form.recipient_email}
@@ -281,7 +283,7 @@ export default function Contact({ title, page }: ContactPageProps) {
                     className="form-input"
                     disabled={processing}
                   />
-                  <p className="text-xs text-default-500 mt-1">Contact form submissions will be sent to this email</p>
+                  <p className="text-xs text-default-500 mt-1">{t('frontPages.contact.recipientEmailHint')}</p>
                 </div>
               </div>
             </div>
@@ -291,7 +293,7 @@ export default function Contact({ title, page }: ContactPageProps) {
           <div className="px-6 py-4 max-w-5xl">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <p className="text-sm text-default-500">
-                Changes are saved automatically when you submit the form
+                {t('frontPages.changesSavedMessage')}
               </p>
               <div className="flex items-center gap-3">
                 <button
@@ -300,7 +302,7 @@ export default function Contact({ title, page }: ContactPageProps) {
                   className="btn border-default-200 text-default-700"
                   disabled={isSubmitting}
                 >
-                  Reset
+                  {t('frontPages.reset')}
                 </button>
                 <button
                   type="submit"
@@ -310,10 +312,10 @@ export default function Contact({ title, page }: ContactPageProps) {
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
                       <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                      Saving...
+                      {t('frontPages.saving')}
                     </span>
                   ) : (
-                    'Save Changes'
+                    t('frontPages.saveChanges')
                   )}
                 </button>
               </div>
@@ -324,4 +326,3 @@ export default function Contact({ title, page }: ContactPageProps) {
     </AppLayout>
   );
 }
-

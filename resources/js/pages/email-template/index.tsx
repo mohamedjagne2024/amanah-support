@@ -6,6 +6,7 @@ import AppLayout from "@/layouts/app-layout";
 import PageHeader from "@/components/Pageheader";
 import PageMeta from "@/components/PageMeta";
 import { Mail } from "lucide-react";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type EmailTemplateRecord = {
   id: number;
@@ -38,6 +39,8 @@ type EmailTemplatePageProps = {
 };
 
 export default function Index({ templates, filters }: EmailTemplatePageProps) {
+  const { t } = useLanguageContext();
+
   const safeTemplates: EmailTemplatePaginator = {
     data: templates?.data ?? [],
     current_page: templates?.current_page ?? 1,
@@ -66,7 +69,7 @@ export default function Index({ templates, filters }: EmailTemplatePageProps) {
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.page !== safeTemplates.current_page ||
         query.perPage !== safeTemplates.per_page ||
@@ -108,7 +111,7 @@ export default function Index({ templates, filters }: EmailTemplatePageProps) {
     () => [
       {
         accessorKey: "name",
-        header: "Template Name",
+        header: t('settings.emailTemplates.templateName'),
         cell: ({ getValue }) => (
           <span className="font-medium text-default-800">{getValue<string>()}</span>
         ),
@@ -116,7 +119,7 @@ export default function Index({ templates, filters }: EmailTemplatePageProps) {
       },
       {
         accessorKey: "details",
-        header: "Details",
+        header: t('settings.emailTemplates.details'),
         cell: ({ getValue }) => (
           <span className="text-default-600 text-sm">{getValue<string>()}</span>
         ),
@@ -124,7 +127,7 @@ export default function Index({ templates, filters }: EmailTemplatePageProps) {
       },
       {
         accessorKey: "slug",
-        header: "Slug",
+        header: t('settings.emailTemplates.slug'),
         cell: ({ getValue }) => (
           <span className="font-mono text-sm text-default-600 bg-default-100 px-2 py-1 rounded">
             {getValue<string>()}
@@ -133,33 +136,33 @@ export default function Index({ templates, filters }: EmailTemplatePageProps) {
         enableSorting: true
       }
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<EmailTemplateRecord>[]>(
     () => [
       {
-        label: "Edit Template",
+        label: t('settings.emailTemplates.editTemplate'),
         value: "edit",
         onSelect: (template) => {
           router.visit(`/settings/templates/${template.id}/edit`);
         }
       }
     ],
-    []
+    [t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title="Email Templates" />
+      <PageMeta title={t('settings.emailTemplates.title')} />
       <main>
-        <PageHeader 
-          title="Email Templates" 
-          subtitle="Manage email notification templates"
+        <PageHeader
+          title={t('settings.emailTemplates.title')}
+          subtitle={t('settings.emailTemplates.subtitle')}
           icon={Mail}
           count={safeTemplates.total}
         />
-        
+
         <div className="space-y-6">
           <DataTable<EmailTemplateRecord>
             data={safeTemplates.data}

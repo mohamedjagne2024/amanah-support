@@ -5,6 +5,7 @@ import { Menu, MenuButton, MenuItem, MenuItems, Disclosure, DisclosureButton, Di
 import AppLayout from "@/layouts/app-layout";
 import PageMeta from "@/components/PageMeta";
 import ComboboxComponent, { SelectOption } from "@/components/Combobox";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type RecentActivity = {
   type: "ticket" | "comment" | "message";
@@ -101,6 +102,7 @@ export default function SupportByOrganization({
   reportData,
   filters,
 }: SupportByOrganizationPageProps) {
+  const { t } = useLanguageContext();
   const [isLoading, setIsLoading] = useState(false);
 
   // Local filter state
@@ -117,7 +119,7 @@ export default function SupportByOrganization({
   );
 
   // Get filter label helper
-  const getOrganizationLabel = (value: string) => 
+  const getOrganizationLabel = (value: string) =>
     organizations.find((o) => String(o.id) === value)?.name || "All";
 
   // Check if any filters are applied
@@ -183,7 +185,7 @@ export default function SupportByOrganization({
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Support by Organization Report</title>
+          <title>${t('reports.supportByOrg.title')}</title>
           ${stylesheetLinks}
           ${styleTags}
           <style>
@@ -226,18 +228,18 @@ export default function SupportByOrganization({
     `);
     printWindow.document.close();
 
-    printWindow.onafterprint = function() {
+    printWindow.onafterprint = function () {
       printWindow.close();
     };
 
-    printWindow.onload = function() {
-      setTimeout(function() {
+    printWindow.onload = function () {
+      setTimeout(function () {
         printWindow.focus();
         printWindow.print();
       }, 500);
     };
 
-    setTimeout(function() {
+    setTimeout(function () {
       if (!printWindow.closed && printWindow.document.readyState === 'complete') {
         printWindow.focus();
         printWindow.print();
@@ -270,36 +272,36 @@ export default function SupportByOrganization({
     if (filters.date_from && filters.date_to) {
       return `${new Date(filters.date_from).toLocaleDateString()} - ${new Date(filters.date_to).toLocaleDateString()}`;
     }
-    if (filters.date_from) return `From ${new Date(filters.date_from).toLocaleDateString()}`;
-    if (filters.date_to) return `To ${new Date(filters.date_to).toLocaleDateString()}`;
-    return "All Time";
+    if (filters.date_from) return `${t('reports.supportByOrg.from')} ${new Date(filters.date_from).toLocaleDateString()}`;
+    if (filters.date_to) return `${t('reports.supportByOrg.to')} ${new Date(filters.date_to).toLocaleDateString()}`;
+    return t('reports.supportByOrg.allTime');
   };
 
   const formatAddress = (org: OrganizationInfo): string => {
     const parts = [org.address, org.city, org.region, org.country].filter(Boolean);
-    return parts.join(', ') || 'No address provided';
+    return parts.join(', ') || t('reports.supportByOrg.noAddressProvided');
   };
 
   const generatedAt = new Date().toLocaleString();
 
   return (
     <AppLayout>
-      <PageMeta title="Support by Organization Report" />
+      <PageMeta title={t('reports.supportByOrg.title')} />
       <main>
         {/* Page Header & Filters - Hidden on print */}
         <Disclosure as="div" className="mb-4 print:hidden" defaultOpen={!!hasFilters}>
           {({ open }) => (
             <>
               <div className="flex items-center md:justify-between flex-wrap gap-2 mb-4">
-                <h4 className="text-default-900 text-lg font-semibold">Support by Organization Report</h4>
+                <h4 className="text-default-900 text-lg font-semibold">{t('reports.supportByOrg.title')}</h4>
                 <div className="flex items-center gap-3">
                   <DisclosureButton className="btn border btn-outline-dashed border-primary text-primary hover:bg-primary/10 btn-sm">
                     <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
-                    Filters {hasFilters && <span className="text-primary text-xs">(Applied)</span>}
+                    {t('reports.supportByOrg.filters')} {hasFilters && <span className="text-primary text-xs">({t('reports.supportByOrg.applied')})</span>}
                   </DisclosureButton>
                   <Menu as="div" className="relative inline-flex">
                     <MenuButton className="btn border btn-outline-dashed border-primary text-primary hover:bg-primary/10 btn-sm">
-                      Actions
+                      {t('reports.supportByOrg.actions')}
                     </MenuButton>
                     <MenuItems
                       anchor="bottom end"
@@ -309,11 +311,10 @@ export default function SupportByOrganization({
                         {({ focus }) => (
                           <button
                             onClick={handlePrint}
-                            className={`w-full text-left flex items-center gap-2 py-1.5 font-medium px-3 text-default-500 rounded cursor-pointer ${
-                              focus ? "bg-default-150" : ""
-                            }`}
+                            className={`w-full text-left flex items-center gap-2 py-1.5 font-medium px-3 text-default-500 rounded cursor-pointer ${focus ? "bg-default-150" : ""
+                              }`}
                           >
-                            <Printer className="size-4" /> Print
+                            <Printer className="size-4" /> {t('reports.supportByOrg.print')}
                           </button>
                         )}
                       </MenuItem>
@@ -327,18 +328,18 @@ export default function SupportByOrganization({
                 <div className="card-body">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-default-700 mb-1.5">Organization</label>
+                      <label className="block text-sm font-medium text-default-700 mb-1.5">{t('reports.supportByOrg.organization')}</label>
                       <ComboboxComponent
                         options={organizationOptions}
                         value={organizationOptions.find((opt) => opt.value === localFilters.organization_id) || null}
                         onChange={(val) => setLocalFilters((prev) => ({ ...prev, organization_id: val ? String((val as SelectOption).value) : "" }))}
-                        placeholder="Select organization"
+                        placeholder={t('reports.supportByOrg.selectOrganization')}
                         isClearable
                         inputClassName="form-input form-input-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-default-700 mb-1.5">From Date</label>
+                      <label className="block text-sm font-medium text-default-700 mb-1.5">{t('reports.supportByOrg.fromDate')}</label>
                       <input
                         type="date"
                         value={localFilters.date_from}
@@ -347,7 +348,7 @@ export default function SupportByOrganization({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-default-700 mb-1.5">To Date</label>
+                      <label className="block text-sm font-medium text-default-700 mb-1.5">{t('reports.supportByOrg.toDate')}</label>
                       <input
                         type="date"
                         value={localFilters.date_to}
@@ -363,7 +364,7 @@ export default function SupportByOrganization({
                         className="btn btn-sm bg-transparent border border-default-300 text-default-700 hover:bg-default-100"
                         disabled={isLoading}
                       >
-                        Clear
+                        {t('reports.supportByOrg.clear')}
                       </button>
                     )}
                     <button
@@ -374,10 +375,10 @@ export default function SupportByOrganization({
                       {isLoading ? (
                         <span className="inline-flex items-center gap-2">
                           <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Applying...
+                          {t('reports.supportByOrg.applying')}
                         </span>
                       ) : (
-                        "Apply Filters"
+                        t('reports.supportByOrg.applyFilters')
                       )}
                     </button>
                   </div>
@@ -394,20 +395,20 @@ export default function SupportByOrganization({
             <div className="flex justify-between items-start w-full">
               {/* Logo */}
               <div className="flex-shrink-0">
-                <img 
-                  src="/assets/images/logo-dark.png" 
-                  alt="Company Logo" 
+                <img
+                  src="/assets/images/logo-dark.png"
+                  alt="Company Logo"
                   className="h-20 w-auto object-contain"
                 />
               </div>
-              
+
               {/* Report Title */}
               <div className="text-right">
                 <h1 className="text-4xl font-bold text-primary tracking-wide">
-                  SUPPORT BY ORGANIZATION REPORT
+                  {t('reports.supportByOrg.title').toUpperCase()}
                 </h1>
                 <p className="text-sm text-default-600 mt-1">
-                  Generated: {generatedAt}
+                  {t('reports.supportByOrg.generated')}: {generatedAt}
                 </p>
               </div>
             </div>
@@ -444,18 +445,18 @@ export default function SupportByOrganization({
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="size-4" />
-                      <span>{reportData.summary.total_contacts} Contact(s)</span>
+                      <span>{reportData.summary.total_contacts} {t('reports.supportByOrg.contact')}(s)</span>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Total Summary Box */}
                 <div className="text-right">
-                  <p className="text-sm text-default-500 mb-1">Period</p>
+                  <p className="text-sm text-default-500 mb-1">{t('reports.supportByOrg.period')}</p>
                   <p className="text-xl font-bold text-default-900">
                     {formatDateRange()}
                   </p>
-                  <p className="text-sm text-default-500 mt-1">{reportData.summary.tickets_submitted} Total Tickets Submitted</p>
+                  <p className="text-sm text-default-500 mt-1">{reportData.summary.tickets_submitted} {t('reports.supportByOrg.totalTicketsSubmitted')}</p>
                 </div>
               </div>
             </div>
@@ -467,13 +468,13 @@ export default function SupportByOrganization({
             {hasFilters && (
               <div className="mb-6">
                 <p className="text-sm font-medium text-default-600 mb-3">
-                  Filter Criteria
+                  {t('reports.supportByOrg.filterCriteria')}
                 </p>
                 <div className="p-3 bg-default-50 rounded-lg border border-default-200">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {filters.organization_id && (
                       <div>
-                        <span className="text-xs text-default-500">Organization:</span>
+                        <span className="text-xs text-default-500">{t('reports.supportByOrg.organization')}:</span>
                         <span className="text-sm font-medium text-default-800 ml-2">
                           {getOrganizationLabel(String(filters.organization_id))}
                         </span>
@@ -481,7 +482,7 @@ export default function SupportByOrganization({
                     )}
                     {filters.date_from && (
                       <div>
-                        <span className="text-xs text-default-500">From:</span>
+                        <span className="text-xs text-default-500">{t('reports.supportByOrg.from')}:</span>
                         <span className="text-sm font-medium text-default-800 ml-2">
                           {new Date(filters.date_from).toLocaleDateString()}
                         </span>
@@ -489,7 +490,7 @@ export default function SupportByOrganization({
                     )}
                     {filters.date_to && (
                       <div>
-                        <span className="text-xs text-default-500">To:</span>
+                        <span className="text-xs text-default-500">{t('reports.supportByOrg.to')}:</span>
                         <span className="text-sm font-medium text-default-800 ml-2">
                           {new Date(filters.date_to).toLocaleDateString()}
                         </span>
@@ -503,7 +504,7 @@ export default function SupportByOrganization({
             {/* No Organization Selected */}
             {!reportData ? (
               <div className="text-center py-12 text-default-500 border border-default-200 rounded-lg">
-                Select an organization to generate the support report
+                {t('reports.supportByOrg.selectOrgPrompt')}
               </div>
             ) : (
               <div className="border border-default-200 rounded-lg overflow-hidden">
@@ -513,13 +514,13 @@ export default function SupportByOrganization({
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary">Tickets Summary</span>
+                          <span className="font-semibold text-primary">{t('reports.supportByOrg.ticketsSummary')}</span>
                           <div className="flex gap-6 text-sm">
                             <span className="text-primary">
-                              <span className="font-medium">Total Submitted:</span> {reportData.summary.tickets_submitted}
+                              <span className="font-medium">{t('reports.supportByOrg.totalSubmitted')}:</span> {reportData.summary.tickets_submitted}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">Resolution Rate:</span> {reportData.performance.resolution_rate}%
+                              <span className="font-medium">{t('reports.supportByOrg.resolutionRate')}:</span> {reportData.performance.resolution_rate}%
                             </span>
                           </div>
                         </div>
@@ -528,23 +529,23 @@ export default function SupportByOrganization({
 
                     {/* Tickets Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Metric</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
-                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">Metric</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.supportByOrg.metric')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.count')}</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.metric')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.count')}</th>
                     </tr>
 
                     {/* Tickets Data */}
                     <tr className="border-t border-default-100 hover:bg-default-50/50">
-                      <td className="px-6 py-2 text-sm text-default-700">Tickets Submitted</td>
+                      <td className="px-6 py-2 text-sm text-default-700">{t('reports.supportByOrg.ticketsSubmitted')}</td>
                       <td className="px-4 py-2 text-sm text-default-900 text-center font-semibold">{reportData.summary.tickets_submitted}</td>
-                      <td className="px-4 py-2 text-sm text-default-700">Tickets Open</td>
+                      <td className="px-4 py-2 text-sm text-default-700">{t('reports.supportByOrg.ticketsOpen')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-yellow-600">{reportData.summary.tickets_open}</td>
                     </tr>
                     <tr className="border-t border-default-100 hover:bg-default-50/50">
-                      <td className="px-6 py-2 text-sm text-default-700">Tickets Closed</td>
+                      <td className="px-6 py-2 text-sm text-default-700">{t('reports.supportByOrg.ticketsClosed')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-green-600">{reportData.summary.tickets_closed}</td>
-                      <td className="px-4 py-2 text-sm text-default-700">Tickets Pending</td>
+                      <td className="px-4 py-2 text-sm text-default-700">{t('reports.supportByOrg.ticketsPending')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-orange-600">{reportData.summary.tickets_pending}</td>
                     </tr>
 
@@ -555,16 +556,16 @@ export default function SupportByOrganization({
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary">Comments (Ticket Replies)</span>
+                          <span className="font-semibold text-primary">{t('reports.supportByOrg.comments')}</span>
                           <div className="flex gap-6 text-sm">
                             <span className="text-primary">
-                              <span className="font-medium">Total:</span> {reportData.summary.total_comments}
+                              <span className="font-medium">{t('reports.supportByOrg.total')}:</span> {reportData.summary.total_comments}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">From Contacts:</span> {reportData.summary.comments_from_contacts}
+                              <span className="font-medium">{t('reports.supportByOrg.fromContacts')}:</span> {reportData.summary.comments_from_contacts}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">From Staff:</span> {reportData.summary.comments_from_staff}
+                              <span className="font-medium">{t('reports.supportByOrg.fromStaff')}:</span> {reportData.summary.comments_from_staff}
                             </span>
                           </div>
                         </div>
@@ -578,13 +579,13 @@ export default function SupportByOrganization({
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary">Messages & Conversations</span>
+                          <span className="font-semibold text-primary">{t('reports.supportByOrg.messagesConversations')}</span>
                           <div className="flex gap-6 text-sm">
                             <span className="text-primary">
-                              <span className="font-medium">Total Messages:</span> {reportData.summary.total_messages}
+                              <span className="font-medium">{t('reports.supportByOrg.totalMessages')}:</span> {reportData.summary.total_messages}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">Total Conversations:</span> {reportData.summary.total_conversations}
+                              <span className="font-medium">{t('reports.supportByOrg.totalConversations')}:</span> {reportData.summary.total_conversations}
                             </span>
                           </div>
                         </div>
@@ -597,29 +598,29 @@ export default function SupportByOrganization({
                     {/* PERFORMANCE METRICS SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Performance Metrics</span>
+                        <span className="font-semibold text-primary">{t('reports.supportByOrg.performanceMetrics')}</span>
                       </td>
                     </tr>
 
                     {/* Performance Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Metric</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Value</th>
-                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">Metric</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Value</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.supportByOrg.metric')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.value')}</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.metric')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.value')}</th>
                     </tr>
 
                     {/* Performance Data */}
                     <tr className="border-t border-default-100 hover:bg-default-50/50">
-                      <td className="px-6 py-2 text-sm text-default-700">Avg. Response Time</td>
+                      <td className="px-6 py-2 text-sm text-default-700">{t('reports.supportByOrg.avgResponseTime')}</td>
                       <td className="px-4 py-2 text-sm text-default-900 text-center font-semibold">{formatHours(reportData.performance.avg_response_time_hours)}</td>
-                      <td className="px-4 py-2 text-sm text-default-700">Avg. Resolution Time</td>
+                      <td className="px-4 py-2 text-sm text-default-700">{t('reports.supportByOrg.avgResolutionTime')}</td>
                       <td className="px-4 py-2 text-sm text-default-900 text-center font-semibold">{formatHours(reportData.performance.avg_resolution_time_hours)}</td>
                     </tr>
                     <tr className="border-t border-default-100 hover:bg-default-50/50">
-                      <td className="px-6 py-2 text-sm text-default-700">Resolution Rate</td>
+                      <td className="px-6 py-2 text-sm text-default-700">{t('reports.supportByOrg.resolutionRate')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-green-600">{reportData.performance.resolution_rate}%</td>
-                      <td className="px-4 py-2 text-sm text-default-700">Satisfaction Score</td>
+                      <td className="px-4 py-2 text-sm text-default-700">{t('reports.supportByOrg.satisfactionScore')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-amber-600">
                         {reportData.performance.satisfaction_score > 0 ? `${reportData.performance.satisfaction_score}/5` : 'N/A'}
                       </td>
@@ -631,15 +632,15 @@ export default function SupportByOrganization({
                     {/* TICKETS BY STATUS SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Tickets by Status</span>
+                        <span className="font-semibold text-primary">{t('reports.supportByOrg.ticketsByStatus')}</span>
                       </td>
                     </tr>
 
                     {/* Status Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Status</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>Percentage</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.supportByOrg.status')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.count')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>{t('reports.supportByOrg.percentage')}</th>
                     </tr>
 
                     {/* Status Data */}
@@ -657,7 +658,7 @@ export default function SupportByOrganization({
                       })
                     ) : (
                       <tr className="border-t border-default-100">
-                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">No data available</td>
+                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">{t('reports.supportByOrg.noDataAvailable')}</td>
                       </tr>
                     )}
 
@@ -667,15 +668,15 @@ export default function SupportByOrganization({
                     {/* TICKETS BY PRIORITY SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Tickets by Priority</span>
+                        <span className="font-semibold text-primary">{t('reports.supportByOrg.ticketsByPriority')}</span>
                       </td>
                     </tr>
 
                     {/* Priority Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Priority</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>Percentage</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.supportByOrg.priority')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.count')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>{t('reports.supportByOrg.percentage')}</th>
                     </tr>
 
                     {/* Priority Data */}
@@ -693,7 +694,7 @@ export default function SupportByOrganization({
                       })
                     ) : (
                       <tr className="border-t border-default-100">
-                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">No data available</td>
+                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">{t('reports.supportByOrg.noDataAvailable')}</td>
                       </tr>
                     )}
 
@@ -703,15 +704,15 @@ export default function SupportByOrganization({
                     {/* TICKETS BY CATEGORY SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Tickets by Category</span>
+                        <span className="font-semibold text-primary">{t('reports.supportByOrg.ticketsByCategory')}</span>
                       </td>
                     </tr>
 
                     {/* Category Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Category</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>Percentage</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.supportByOrg.category')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.count')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>{t('reports.supportByOrg.percentage')}</th>
                     </tr>
 
                     {/* Category Data */}
@@ -729,7 +730,7 @@ export default function SupportByOrganization({
                       })
                     ) : (
                       <tr className="border-t border-default-100">
-                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">No data available</td>
+                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">{t('reports.supportByOrg.noDataAvailable')}</td>
                       </tr>
                     )}
 
@@ -739,16 +740,16 @@ export default function SupportByOrganization({
                     {/* TICKETS BY CONTACT SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Tickets by Contact</span>
+                        <span className="font-semibold text-primary">{t('reports.supportByOrg.ticketsByContact')}</span>
                       </td>
                     </tr>
 
                     {/* Contact Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Contact</th>
-                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">Email</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Tickets</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Percentage</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.supportByOrg.contact')}</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.email')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.ticketsCount')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.percentage')}</th>
                     </tr>
 
                     {/* Contact Data */}
@@ -767,7 +768,7 @@ export default function SupportByOrganization({
                       })
                     ) : (
                       <tr className="border-t border-default-100">
-                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">No data available</td>
+                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">{t('reports.supportByOrg.noDataAvailable')}</td>
                       </tr>
                     )}
 
@@ -777,16 +778,16 @@ export default function SupportByOrganization({
                     {/* RECENT ACTIVITY SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Recent Activity (Last 20)</span>
+                        <span className="font-semibold text-primary">{t('reports.supportByOrg.recentActivity')}</span>
                       </td>
                     </tr>
 
                     {/* Activity Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Date/Time</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Type</th>
-                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">Description</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Reference</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.supportByOrg.dateTime')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.type')}</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.description')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.supportByOrg.reference')}</th>
                     </tr>
 
                     {/* Activity Data */}
@@ -812,7 +813,7 @@ export default function SupportByOrganization({
                       ))
                     ) : (
                       <tr className="border-t border-default-100">
-                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">No recent activity</td>
+                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">{t('reports.supportByOrg.noRecentActivity')}</td>
                       </tr>
                     )}
 
@@ -820,19 +821,19 @@ export default function SupportByOrganization({
                     <tr className="bg-default-200 border-t-2 border-default-400">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-default-800">SUMMARY TOTALS</span>
+                          <span className="font-bold text-default-800">{t('reports.supportByOrg.summaryTotals')}</span>
                           <div className="flex gap-8">
                             <span className="font-bold text-default-800">
-                              Tickets: {reportData.summary.tickets_submitted}
+                              {t('reports.supportByOrg.ticketsCount')}: {reportData.summary.tickets_submitted}
                             </span>
                             <span className="font-bold text-default-800">
-                              Open: {reportData.summary.tickets_open}
+                              {t('reports.supportByOrg.open')}: {reportData.summary.tickets_open}
                             </span>
                             <span className="font-bold text-default-800">
-                              Closed: {reportData.summary.tickets_closed}
+                              {t('reports.supportByOrg.closed')}: {reportData.summary.tickets_closed}
                             </span>
                             <span className="font-bold text-default-800">
-                              Resolution: {reportData.performance.resolution_rate}%
+                              {t('reports.supportByOrg.resolution')}: {reportData.performance.resolution_rate}%
                             </span>
                           </div>
                         </div>
@@ -848,16 +849,16 @@ export default function SupportByOrganization({
           <div className="card-footer !py-3.5 !px-8 print:border-none print:px-0 flex-col gap-4">
             {/* Page Number */}
             <div className="text-center text-sm text-default-500">
-              Page 1 of 1
+              {t('reports.supportByOrg.pageOf')}
             </div>
-            
+
             {/* Footer Info */}
             <div className="flex justify-between items-center w-full">
               <span className="text-xs text-default-500">
-                Generated: {generatedAt}
+                {t('reports.supportByOrg.generated')}: {generatedAt}
               </span>
               <span className="text-xs text-default-500">
-                Amanah Support System - Support by Organization Report
+                {t('reports.supportByOrg.systemFooter')}
               </span>
             </div>
           </div>

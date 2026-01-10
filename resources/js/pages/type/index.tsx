@@ -8,6 +8,7 @@ import AppLayout from "@/layouts/app-layout";
 import PageHeader from "@/components/Pageheader";
 import PageMeta from "@/components/PageMeta";
 import { FileText } from "lucide-react";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type TypeRecord = {
   id: number;
@@ -36,6 +37,8 @@ type TypePageProps = {
 };
 
 export default function Index({ types, filters }: TypePageProps) {
+  const { t } = useLanguageContext();
+
   const safeTypes: TypePaginator = {
     data: types?.data ?? [],
     current_page: types?.current_page ?? 1,
@@ -53,17 +56,17 @@ export default function Index({ types, filters }: TypePageProps) {
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingType, setEditingType] = useState<TypeRecord | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingType, setDeletingType] = useState<TypeRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Bulk delete dialog state
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [bulkDeleteIds, setBulkDeleteIds] = useState<number[]>([]);
@@ -76,7 +79,7 @@ export default function Index({ types, filters }: TypePageProps) {
   // Drawer handlers
   const handleOpenDrawer = useCallback((type?: TypeRecord) => {
     setEditingType(type ?? null);
-    setFormData({ 
+    setFormData({
       name: type?.name ?? ""
     });
     setFormErrors({});
@@ -94,11 +97,11 @@ export default function Index({ types, filters }: TypePageProps) {
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
-    const url = editingType 
-      ? `/settings/types/${editingType.id}` 
+
+    const url = editingType
+      ? `/settings/types/${editingType.id}`
       : "/settings/types";
-    
+
     const method = editingType ? "put" : "post";
 
     router[method](url, formData, {
@@ -180,7 +183,7 @@ export default function Index({ types, filters }: TypePageProps) {
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.page !== safeTypes.current_page ||
         query.perPage !== safeTypes.per_page ||
@@ -222,40 +225,40 @@ export default function Index({ types, filters }: TypePageProps) {
     () => [
       {
         accessorKey: "name",
-        header: "Type Name",
+        header: t('settings.types.typeName'),
         cell: ({ getValue }) => (
           <span className="font-medium text-default-800">{getValue<string>()}</span>
         ),
         enableSorting: true
       }
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<TypeRecord>[]>(
     () => [
       {
-        label: "Edit",
+        label: t('table.edit'),
         value: "edit",
         onSelect: (type) => {
           handleOpenDrawer(type);
         }
       },
       {
-        label: "Delete",
+        label: t('table.delete'),
         value: "delete",
         onSelect: (type) => {
           handleOpenDeleteDialog(type);
         }
       },
     ],
-    [handleOpenDrawer, handleOpenDeleteDialog]
+    [handleOpenDrawer, handleOpenDeleteDialog, t]
   );
 
   const bulkActions = useMemo<DataTableBulkAction<TypeRecord>[]>(
     () => [
       {
-        label: "Delete selection",
+        label: t('settings.types.deleteSelection'),
         value: "delete",
         onSelect: async (selectedRows) => {
           const ids = selectedRows.map(row => row.id);
@@ -263,20 +266,20 @@ export default function Index({ types, filters }: TypePageProps) {
         }
       }
     ],
-    [handleOpenBulkDeleteDialog]
+    [handleOpenBulkDeleteDialog, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title="Types" />
+      <PageMeta title={t('settings.types.title')} />
       <main>
-        <PageHeader 
-          title="Types" 
-          subtitle="Manage ticket types"
+        <PageHeader
+          title={t('settings.types.title')}
+          subtitle={t('settings.types.subtitle')}
           icon={FileText}
           count={safeTypes.total}
         />
-        
+
         <div className="space-y-6">
           <DataTable<TypeRecord>
             data={safeTypes.data}
@@ -304,7 +307,7 @@ export default function Index({ types, filters }: TypePageProps) {
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Create Type
+                {t('settings.types.createType')}
               </button>
             )}
             rowActions={rowActions}
@@ -317,7 +320,7 @@ export default function Index({ types, filters }: TypePageProps) {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        title={editingType ? "Edit Type" : "Create Type"}
+        title={editingType ? t('settings.types.editType') : t('settings.types.createType')}
         size="lg"
         placement="right"
         footer={
@@ -328,7 +331,7 @@ export default function Index({ types, filters }: TypePageProps) {
               onClick={handleCloseDrawer}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('settings.types.cancel')}
             </button>
             <button
               type="submit"
@@ -339,10 +342,10 @@ export default function Index({ types, filters }: TypePageProps) {
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  {t('settings.types.processing')}
                 </span>
               ) : (
-                editingType ? "Update" : "Create"
+                editingType ? t('settings.types.update') : t('settings.types.create')
               )}
             </button>
           </>
@@ -351,12 +354,12 @@ export default function Index({ types, filters }: TypePageProps) {
         <form id="type-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Type Name <span className="text-danger">*</span>
+              {t('settings.types.typeName')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter type name"
+              placeholder={t('settings.types.enterTypeName')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               disabled={isSubmitting}
@@ -378,10 +381,10 @@ export default function Index({ types, filters }: TypePageProps) {
           }
         }}
         onConfirm={handleConfirmDelete}
-        title="Confirm Delete"
-        description={`Are you sure you want to delete the type "${deletingType?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('settings.types.confirmDeleteTitle')}
+        description={`${t('settings.types.confirmDelete')} "${deletingType?.name}"? ${t('settings.types.actionCannotBeUndone')}`}
+        confirmText={t('settings.types.delete')}
+        cancelText={t('settings.types.cancel')}
         confirmVariant="danger"
         isLoading={isDeleting}
         size="lg"
@@ -396,10 +399,10 @@ export default function Index({ types, filters }: TypePageProps) {
           }
         }}
         onConfirm={handleConfirmBulkDelete}
-        title="Confirm Bulk Delete"
-        description={`Are you sure you want to delete ${bulkDeleteIds.length} type(s)? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('settings.types.confirmBulkDeleteTitle')}
+        description={`${t('settings.types.confirmBulkDelete')} ${bulkDeleteIds.length} ${t('settings.types.types')}? ${t('settings.types.actionCannotBeUndone')}`}
+        confirmText={t('settings.types.delete')}
+        cancelText={t('settings.types.cancel')}
         confirmVariant="danger"
         isLoading={isBulkDeleting}
         size="lg"

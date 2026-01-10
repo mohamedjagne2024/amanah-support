@@ -8,6 +8,7 @@ import AppLayout from "@/layouts/app-layout";
 import PageHeader from "@/components/Pageheader";
 import PageMeta from "@/components/PageMeta";
 import { Building2 } from "lucide-react";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type RegionRecord = {
   id: number;
@@ -36,6 +37,8 @@ type RegionPageProps = {
 };
 
 export default function Index({ regions, filters }: RegionPageProps) {
+  const { t } = useLanguageContext();
+
   const safeRegions: RegionPaginator = {
     data: regions?.data ?? [],
     current_page: regions?.current_page ?? 1,
@@ -53,17 +56,17 @@ export default function Index({ regions, filters }: RegionPageProps) {
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingRegion, setEditingRegion] = useState<RegionRecord | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingRegion, setDeletingRegion] = useState<RegionRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Bulk delete dialog state
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [bulkDeleteIds, setBulkDeleteIds] = useState<number[]>([]);
@@ -76,7 +79,7 @@ export default function Index({ regions, filters }: RegionPageProps) {
   // Drawer handlers
   const handleOpenDrawer = useCallback((region?: RegionRecord) => {
     setEditingRegion(region ?? null);
-    setFormData({ 
+    setFormData({
       name: region?.name ?? ""
     });
     setFormErrors({});
@@ -94,11 +97,11 @@ export default function Index({ regions, filters }: RegionPageProps) {
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
-    const url = editingRegion 
-      ? `/settings/regions/${editingRegion.id}` 
+
+    const url = editingRegion
+      ? `/settings/regions/${editingRegion.id}`
       : "/settings/regions";
-    
+
     const method = editingRegion ? "put" : "post";
 
     router[method](url, formData, {
@@ -180,7 +183,7 @@ export default function Index({ regions, filters }: RegionPageProps) {
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.page !== safeRegions.current_page ||
         query.perPage !== safeRegions.per_page ||
@@ -222,40 +225,40 @@ export default function Index({ regions, filters }: RegionPageProps) {
     () => [
       {
         accessorKey: "name",
-        header: "Region Name",
+        header: t('settings.regions.regionName'),
         cell: ({ getValue }) => (
           <span className="font-medium text-default-800">{getValue<string>()}</span>
         ),
         enableSorting: true
       }
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<RegionRecord>[]>(
     () => [
       {
-        label: "Edit",
+        label: t('table.edit'),
         value: "edit",
         onSelect: (region) => {
           handleOpenDrawer(region);
         }
       },
       {
-        label: "Delete",
+        label: t('table.delete'),
         value: "delete",
         onSelect: (region) => {
           handleOpenDeleteDialog(region);
         }
       },
     ],
-    [handleOpenDrawer, handleOpenDeleteDialog]
+    [handleOpenDrawer, handleOpenDeleteDialog, t]
   );
 
   const bulkActions = useMemo<DataTableBulkAction<RegionRecord>[]>(
     () => [
       {
-        label: "Delete selection",
+        label: t('settings.regions.deleteSelection'),
         value: "delete",
         onSelect: async (selectedRows) => {
           const ids = selectedRows.map(row => row.id);
@@ -263,20 +266,20 @@ export default function Index({ regions, filters }: RegionPageProps) {
         }
       }
     ],
-    [handleOpenBulkDeleteDialog]
+    [handleOpenBulkDeleteDialog, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title="Regions" />
+      <PageMeta title={t('settings.regions.title')} />
       <main>
-        <PageHeader 
-          title="Regions" 
-          subtitle="Manage organization regions"
+        <PageHeader
+          title={t('settings.regions.title')}
+          subtitle={t('settings.regions.subtitle')}
           icon={Building2}
           count={safeRegions.total}
         />
-        
+
         <div className="space-y-6">
           <DataTable<RegionRecord>
             data={safeRegions.data}
@@ -304,7 +307,7 @@ export default function Index({ regions, filters }: RegionPageProps) {
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Create Region
+                {t('settings.regions.createRegion')}
               </button>
             )}
             rowActions={rowActions}
@@ -317,7 +320,7 @@ export default function Index({ regions, filters }: RegionPageProps) {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        title={editingRegion ? "Edit Region" : "Create Region"}
+        title={editingRegion ? t('settings.regions.editRegion') : t('settings.regions.createRegion')}
         size="lg"
         placement="right"
         footer={
@@ -328,7 +331,7 @@ export default function Index({ regions, filters }: RegionPageProps) {
               onClick={handleCloseDrawer}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('settings.regions.cancel')}
             </button>
             <button
               type="submit"
@@ -339,10 +342,10 @@ export default function Index({ regions, filters }: RegionPageProps) {
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  {t('settings.regions.processing')}
                 </span>
               ) : (
-                editingRegion ? "Update" : "Create"
+                editingRegion ? t('settings.regions.update') : t('settings.regions.create')
               )}
             </button>
           </>
@@ -351,12 +354,12 @@ export default function Index({ regions, filters }: RegionPageProps) {
         <form id="region-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Region Name <span className="text-danger">*</span>
+              {t('settings.regions.regionName')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter region name"
+              placeholder={t('settings.regions.enterRegionName')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               disabled={isSubmitting}
@@ -378,10 +381,10 @@ export default function Index({ regions, filters }: RegionPageProps) {
           }
         }}
         onConfirm={handleConfirmDelete}
-        title="Confirm Delete"
-        description={`Are you sure you want to delete the region "${deletingRegion?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('settings.regions.confirmDeleteTitle')}
+        description={`${t('settings.regions.confirmDelete')} "${deletingRegion?.name}"? ${t('settings.regions.actionCannotBeUndone')}`}
+        confirmText={t('settings.regions.delete')}
+        cancelText={t('settings.regions.cancel')}
         confirmVariant="danger"
         isLoading={isDeleting}
         size="lg"
@@ -396,10 +399,10 @@ export default function Index({ regions, filters }: RegionPageProps) {
           }
         }}
         onConfirm={handleConfirmBulkDelete}
-        title="Confirm Bulk Delete"
-        description={`Are you sure you want to delete ${bulkDeleteIds.length} region(s)? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('settings.regions.confirmBulkDeleteTitle')}
+        description={`${t('settings.regions.confirmBulkDelete')} ${bulkDeleteIds.length} ${t('settings.regions.regions')}? ${t('settings.regions.actionCannotBeUndone')}`}
+        confirmText={t('settings.regions.delete')}
+        cancelText={t('settings.regions.cancel')}
         confirmVariant="danger"
         isLoading={isBulkDeleting}
         size="lg"

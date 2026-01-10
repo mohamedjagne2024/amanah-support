@@ -5,6 +5,7 @@ import ApexChartClient from '@/components/client-wrapper/ApexChartClient';
 import type { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import PageHeader from '@/components/Pageheader';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 interface DashboardProps {
   userName: string;
@@ -35,6 +36,8 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) => {
+  const { t } = useLanguageContext();
+
   // Chart color palettes
   const statusColors = ['#3b82f6', '#14b8a6', '#f97316', '#ef4444', '#a855f7', '#22c55e'];
   const priorityColors = ['#ef4444', '#f97316', '#eab308', '#22c55e']; // Critical=Red, High=Orange, Medium=Yellow, Low=Green
@@ -60,9 +63,9 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
       },
       tooltip: {
         y: {
-            formatter: function (val) {
-                return val + " tickets"
-            }
+          formatter: function (val) {
+            return val + ` ${t('dashboard.ticket')}`
+          }
         }
       },
       stroke: {
@@ -70,7 +73,7 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
         colors: ['transparent']
       }
     };
-  }, [charts.ticketsByStatus]);
+  }, [charts.ticketsByStatus, t]);
 
   const statusChartSeries = useMemo(() => {
     return charts.ticketsByStatus?.map((item) => item.count) || [];
@@ -87,7 +90,7 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
         fontFamily: 'inherit',
       },
       labels: data.map((item) => item.priority),
-      colors: priorityColors.slice(0, data.length), 
+      colors: priorityColors.slice(0, data.length),
       legend: { show: false },
       dataLabels: { enabled: false },
       plotOptions: {
@@ -97,17 +100,17 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
       },
       tooltip: {
         y: {
-            formatter: function (val) {
-                return val + " tickets"
-            }
+          formatter: function (val) {
+            return val + ` ${t('dashboard.ticket')}`
+          }
         }
       },
-       stroke: {
+      stroke: {
         show: true,
         colors: ['transparent']
       }
     };
-  }, [charts.ticketsByPriority]);
+  }, [charts.ticketsByPriority, t]);
 
   const priorityChartSeries = useMemo(() => {
     return charts.ticketsByPriority?.map((item) => item.count) || [];
@@ -117,7 +120,7 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
   const categoryChartOptions = useMemo((): ApexOptions => {
     const data = charts.ticketsByCategory || [];
     return {
-      series: [{ name: 'Tickets', data: data.map((item) => item.count) }],
+      series: [{ name: t('menus.tickets'), data: data.map((item) => item.count) }],
       chart: {
         type: 'bar',
         height: 320,
@@ -132,23 +135,23 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
         },
       },
       dataLabels: { enabled: true },
-       xaxis: {
+      xaxis: {
         categories: data.map((item) => item.category),
       },
       colors: ['#8b5cf6'],
       grid: { borderColor: '#e5e7eb' },
     };
-  }, [charts.ticketsByCategory]);
+  }, [charts.ticketsByCategory, t]);
 
   const categoryChartSeries = useMemo(() => {
-    return [{ name: 'Tickets', data: charts.ticketsByCategory?.map((item) => item.count) || [] }];
-  }, [charts.ticketsByCategory]);
+    return [{ name: t('menus.tickets'), data: charts.ticketsByCategory?.map((item) => item.count) || [] }];
+  }, [charts.ticketsByCategory, t]);
 
   // Tickets Trend Chart
   const trendChartOptions = useMemo((): ApexOptions => {
     const data = charts.ticketsTrend || [];
     return {
-      series: [{ name: 'Tickets', data: data.map((item) => item.count) }],
+      series: [{ name: t('menus.tickets'), data: data.map((item) => item.count) }],
       chart: {
         type: 'area',
         height: 320,
@@ -167,11 +170,11 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
       colors: ['#0ea5e9'],
       grid: { borderColor: '#e5e7eb', strokeDashArray: 4 },
     };
-  }, [charts.ticketsTrend]);
+  }, [charts.ticketsTrend, t]);
 
   const trendChartSeries = useMemo(() => {
-    return [{ name: 'Tickets', data: charts.ticketsTrend?.map((item) => item.count) || [] }];
-  }, [charts.ticketsTrend]);
+    return [{ name: t('menus.tickets'), data: charts.ticketsTrend?.map((item) => item.count) || [] }];
+  }, [charts.ticketsTrend, t]);
 
   const getPriorityColor = (priority: string) => {
     const p = (priority || '').toLowerCase();
@@ -191,9 +194,9 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
 
   return (
     <AppLayout>
-      <PageMeta title="Dashboard" />
-      <main className="w-full">        
-      <PageHeader title="Dashboard" subtitle="Overview of your support tickets" />
+      <PageMeta title={t('dashboard.title')} />
+      <main className="w-full">
+        <PageHeader title={t('dashboard.title')} subtitle={t('dashboard.subtitle')} />
         <div className="space-y-6 mt-6">
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -201,13 +204,13 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
               <div className="card-body relative p-6">
                 <LuTicket className="absolute top-0 size-32 text-primary/10 -end-10 dark:text-primary/20" />
                 <div className="flex items-center gap-4">
-                    <div className="btn btn-icon size-12 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center">
-                        <LuTicket className="size-6" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-default-600 dark:text-default-400">Total Tickets</p>
-                        <h4 className="text-2xl font-bold text-default-900 dark:text-white mt-1">{metrics.totalTickets?.toLocaleString() || 0}</h4>
-                    </div>
+                  <div className="btn btn-icon size-12 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center">
+                    <LuTicket className="size-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-default-600 dark:text-default-400">{t('dashboard.totalTickets')}</p>
+                    <h4 className="text-2xl font-bold text-default-900 dark:text-white mt-1">{metrics.totalTickets?.toLocaleString() || 0}</h4>
+                  </div>
                 </div>
               </div>
             </div>
@@ -216,13 +219,13 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
               <div className="card-body relative p-6">
                 <LuCircleAlert className="absolute top-0 size-32 text-info/10 -end-10 dark:text-info/20" />
                 <div className="flex items-center gap-4">
-                    <div className="btn btn-icon size-12 bg-info text-white rounded-full shadow-lg shadow-info/30 flex items-center justify-center">
-                        <LuCircleAlert className="size-6" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-default-600 dark:text-default-400">Open Tickets</p>
-                        <h4 className="text-2xl font-bold text-default-900 dark:text-white mt-1">{metrics.openTickets?.toLocaleString() || 0}</h4>
-                    </div>
+                  <div className="btn btn-icon size-12 bg-info text-white rounded-full shadow-lg shadow-info/30 flex items-center justify-center">
+                    <LuCircleAlert className="size-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-default-600 dark:text-default-400">{t('dashboard.openTickets')}</p>
+                    <h4 className="text-2xl font-bold text-default-900 dark:text-white mt-1">{metrics.openTickets?.toLocaleString() || 0}</h4>
+                  </div>
                 </div>
               </div>
             </div>
@@ -231,13 +234,13 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
               <div className="card-body relative p-6">
                 <LuCircleCheck className="absolute top-0 size-32 text-success/10 -end-10 dark:text-success/20" />
                 <div className="flex items-center gap-4">
-                    <div className="btn btn-icon size-12 bg-success text-white rounded-full shadow-lg shadow-success/30 flex items-center justify-center">
-                        <LuCircleCheck className="size-6" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-default-600 dark:text-default-400">Closed Tickets</p>
-                        <h4 className="text-2xl font-bold text-default-900 dark:text-white mt-1">{metrics.closedTickets?.toLocaleString() || 0}</h4>
-                    </div>
+                  <div className="btn btn-icon size-12 bg-success text-white rounded-full shadow-lg shadow-success/30 flex items-center justify-center">
+                    <LuCircleCheck className="size-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-default-600 dark:text-default-400">{t('dashboard.closedTickets')}</p>
+                    <h4 className="text-2xl font-bold text-default-900 dark:text-white mt-1">{metrics.closedTickets?.toLocaleString() || 0}</h4>
+                  </div>
                 </div>
               </div>
             </div>
@@ -246,13 +249,13 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
               <div className="card-body relative p-6">
                 <LuUserX className="absolute top-0 size-32 text-warning/10 -end-10 dark:text-warning/20" />
                 <div className="flex items-center gap-4">
-                    <div className="btn btn-icon size-12 bg-warning text-white rounded-full shadow-lg shadow-warning/30 flex items-center justify-center">
-                        <LuUserX className="size-6" />
-                    </div>
-                    <div>
-                         <p className="text-sm font-medium text-default-600 dark:text-default-400">Unassigned</p>
-                         <h4 className="text-2xl font-bold text-default-900 dark:text-white mt-1">{metrics.unassignedTickets?.toLocaleString() || 0}</h4>
-                    </div>
+                  <div className="btn btn-icon size-12 bg-warning text-white rounded-full shadow-lg shadow-warning/30 flex items-center justify-center">
+                    <LuUserX className="size-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-default-600 dark:text-default-400">{t('dashboard.unassigned')}</p>
+                    <h4 className="text-2xl font-bold text-default-900 dark:text-white mt-1">{metrics.unassignedTickets?.toLocaleString() || 0}</h4>
+                  </div>
                 </div>
               </div>
             </div>
@@ -260,155 +263,155 @@ const Dashboard = ({ userName, metrics, charts, activities }: DashboardProps) =>
 
           {/* Charts Row 1 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-             <div className="card bg-white dark:bg-default-100 shadow-sm border border-default-200">
-                <div className="card-header border-b border-default-200 p-4">
-                    <h6 className="card-title text-base font-semibold text-default-900">Tickets by Status</h6>
-                </div>
-                <div className="card-body p-4">
-                    <ApexChartClient
-                        getOptions={() => statusChartOptions}
-                        series={statusChartSeries}
-                        type="donut"
-                        height={280}
-                    />
-                    <div className="mt-6 grid grid-cols-2 gap-4">
-                        {charts.ticketsByStatus.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-default-50 dark:bg-default-200">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="size-3 rounded-full"
-                                style={{ backgroundColor: statusColors[index % statusColors.length] }}
-                              />
-                              <span className="text-sm font-medium text-default-700">{item.status}</span>
-                            </div>
-                            <span className="text-sm font-bold text-default-900">{item.count}</span>
-                          </div>
-                        ))}
+            <div className="card bg-white dark:bg-default-100 shadow-sm border border-default-200">
+              <div className="card-header border-b border-default-200 p-4">
+                <h6 className="card-title text-base font-semibold text-default-900">{t('dashboard.ticketsByStatus')}</h6>
+              </div>
+              <div className="card-body p-4">
+                <ApexChartClient
+                  getOptions={() => statusChartOptions}
+                  series={statusChartSeries}
+                  type="donut"
+                  height={280}
+                />
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  {charts.ticketsByStatus.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-default-50 dark:bg-default-200">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="size-3 rounded-full"
+                          style={{ backgroundColor: statusColors[index % statusColors.length] }}
+                        />
+                        <span className="text-sm font-medium text-default-700">{item.status}</span>
+                      </div>
+                      <span className="text-sm font-bold text-default-900">{item.count}</span>
                     </div>
+                  ))}
                 </div>
+              </div>
             </div>
 
             <div className="card bg-white dark:bg-default-100 shadow-sm border border-default-200">
-                <div className="card-header border-b border-default-200 p-4">
-                    <h6 className="card-title text-base font-semibold text-default-900">Tickets by Priority</h6>
-                </div>
-                <div className="card-body p-4">
-                    <ApexChartClient
-                        getOptions={() => priorityChartOptions}
-                        series={priorityChartSeries}
-                        type="donut"
-                        height={280}
-                    />
-                     <div className="mt-6 grid grid-cols-2 gap-4">
-                        {charts.ticketsByPriority.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-default-50 dark:bg-default-200">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="size-3 rounded-full"
-                                style={{ backgroundColor: priorityColors[index % priorityColors.length] }}
-                              />
-                              <span className="text-sm font-medium text-default-700">{item.priority}</span>
-                            </div>
-                            <span className="text-sm font-bold text-default-900">{item.count}</span>
-                          </div>
-                        ))}
+              <div className="card-header border-b border-default-200 p-4">
+                <h6 className="card-title text-base font-semibold text-default-900">{t('dashboard.ticketsByPriority')}</h6>
+              </div>
+              <div className="card-body p-4">
+                <ApexChartClient
+                  getOptions={() => priorityChartOptions}
+                  series={priorityChartSeries}
+                  type="donut"
+                  height={280}
+                />
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  {charts.ticketsByPriority.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-default-50 dark:bg-default-200">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="size-3 rounded-full"
+                          style={{ backgroundColor: priorityColors[index % priorityColors.length] }}
+                        />
+                        <span className="text-sm font-medium text-default-700">{item.priority}</span>
+                      </div>
+                      <span className="text-sm font-bold text-default-900">{item.count}</span>
                     </div>
+                  ))}
                 </div>
+              </div>
             </div>
           </div>
 
           {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="card lg:col-span-2 bg-white dark:bg-default-100 shadow-sm border border-default-200">
-                    <div className="card-header border-b border-default-200 p-4">
-                         <h6 className="card-title text-base font-semibold text-default-900">Ticket Volume Trend</h6>
-                    </div>
-                    <div className="card-body p-4">
-                        <ApexChartClient
-                            getOptions={() => trendChartOptions}
-                            series={trendChartSeries}
-                            type="area"
-                            height={320}
-                        />
-                    </div>
-                </div>
-
-                <div className="card bg-white dark:bg-default-100 shadow-sm border border-default-200">
-                     <div className="card-header border-b border-default-200 p-4">
-                         <h6 className="card-title text-base font-semibold text-default-900">Tickets by Category</h6>
-                    </div>
-                     <div className="card-body p-4">
-                        <ApexChartClient
-                            getOptions={() => categoryChartOptions}
-                            series={categoryChartSeries}
-                            type="bar"
-                            height={320}
-                        />
-                    </div>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="card lg:col-span-2 bg-white dark:bg-default-100 shadow-sm border border-default-200">
+              <div className="card-header border-b border-default-200 p-4">
+                <h6 className="card-title text-base font-semibold text-default-900">{t('dashboard.ticketVolumeTrend')}</h6>
+              </div>
+              <div className="card-body p-4">
+                <ApexChartClient
+                  getOptions={() => trendChartOptions}
+                  series={trendChartSeries}
+                  type="area"
+                  height={320}
+                />
+              </div>
             </div>
+
+            <div className="card bg-white dark:bg-default-100 shadow-sm border border-default-200">
+              <div className="card-header border-b border-default-200 p-4">
+                <h6 className="card-title text-base font-semibold text-default-900">{t('dashboard.ticketsByCategory')}</h6>
+              </div>
+              <div className="card-body p-4">
+                <ApexChartClient
+                  getOptions={() => categoryChartOptions}
+                  series={categoryChartSeries}
+                  type="bar"
+                  height={320}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Recent Tickets */}
           <div className="card bg-white dark:bg-default-100 shadow-sm border border-default-200">
             <div className="card-header border-b border-default-200 p-4 flex items-center justify-between">
-                <h6 className="card-title text-base font-semibold text-default-900">Recent Tickets</h6>
+              <h6 className="card-title text-base font-semibold text-default-900">{t('dashboard.recentTickets')}</h6>
             </div>
             <div className="card-body p-0">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-default-50 border-b border-default-200 dark:bg-default-200">
-                            <tr>
-                                <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">Ticket</th>
-                                <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">Requester</th>
-                                <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">Category</th>
-                                <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">Priority</th>
-                                <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">Status</th>
-                                <th className="px-6 py-3 text-end text-xs font-medium text-default-500 uppercase">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-default-200">
-                            {activities.recentTickets.map((ticket) => (
-                                <tr key={ticket.id} className="hover:bg-default-50 transition-colors dark:hover:bg-default-200">
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-col">
-                                            <span className="font-semibold text-default-900 line-clamp-1 dark:text-default-300">{ticket.title}</span>
-                                            <span className="text-xs text-default-500">#{ticket.uid}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                         <div className="flex items-center gap-2">
-                                            <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
-                                                {ticket.user_name ? ticket.user_name.charAt(0) : 'U'}
-                                            </div>
-                                            <span className="text-sm text-default-700 dark:text-default-400">{ticket.user_name}</span>
-                                        </div>
-                                    </td>
-                                     <td className="px-6 py-4">
-                                        <span className="text-sm text-default-600 dark:text-default-400">{ticket.category}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                                            {ticket.priority}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                                            {ticket.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-end text-sm text-default-500 whitespace-nowrap">
-                                        {ticket.created_at}
-                                    </td>
-                                </tr>
-                            ))}
-                            {activities.recentTickets.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="text-center py-4 text-default-500">No recent tickets found.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-default-50 border-b border-default-200 dark:bg-default-200">
+                    <tr>
+                      <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">{t('dashboard.ticket')}</th>
+                      <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">{t('dashboard.requester')}</th>
+                      <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">{t('dashboard.category')}</th>
+                      <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">{t('dashboard.priority')}</th>
+                      <th className="px-6 py-3 text-start text-xs font-medium text-default-500 uppercase">{t('dashboard.status')}</th>
+                      <th className="px-6 py-3 text-end text-xs font-medium text-default-500 uppercase">{t('dashboard.date')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-default-200">
+                    {activities.recentTickets.map((ticket) => (
+                      <tr key={ticket.id} className="hover:bg-default-50 transition-colors dark:hover:bg-default-200">
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-default-900 line-clamp-1 dark:text-default-300">{ticket.title}</span>
+                            <span className="text-xs text-default-500">#{ticket.uid}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
+                              {ticket.user_name ? ticket.user_name.charAt(0) : 'U'}
+                            </div>
+                            <span className="text-sm text-default-700 dark:text-default-400">{ticket.user_name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-default-600 dark:text-default-400">{ticket.category}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
+                            {ticket.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                            {ticket.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-end text-sm text-default-500 whitespace-nowrap">
+                          {ticket.created_at}
+                        </td>
+                      </tr>
+                    ))}
+                    {activities.recentTickets.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center py-4 text-default-500">{t('dashboard.noRecentTickets')}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

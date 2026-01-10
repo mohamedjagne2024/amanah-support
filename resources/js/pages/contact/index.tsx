@@ -6,6 +6,7 @@ import Drawer from "@/components/Drawer";
 import AppLayout from "@/layouts/app-layout";
 import PageMeta from "@/components/PageMeta";
 import PageHeader from "@/components/Pageheader";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type Contact = {
   id: number;
@@ -58,6 +59,7 @@ type ContactManagementPageProps = {
 };
 
 export default function ContactManagement({ title, contacts, countries, organizations, filters }: ContactManagementPageProps) {
+  const { t } = useLanguageContext();
   const safeFilters = {
     search: filters?.search ?? "",
     sort_by: filters?.sort_by ?? null,
@@ -65,7 +67,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Edit drawer state (Manage Contact)
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
@@ -150,7 +152,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
         },
       }
     );
-    }, [editingContact, editFormData, handleCloseEditDrawer, isSaving]);
+  }, [editingContact, editFormData, handleCloseEditDrawer, isSaving]);
 
   // Create drawer handlers
   const handleOpenCreateDrawer = useCallback(() => {
@@ -202,12 +204,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
   }, [createFormData, handleCloseCreateDrawer]);
 
   const handleDeleteContact = useCallback((contact: Contact) => {
-    if (!confirm(`Are you sure you want to delete ${contact.name}?`)) return;
+    if (!confirm(`${t('contacts.deleteConfirm')} ${contact.name}?`)) return;
 
     router.delete(`/contacts/${contact.id}`, {
       preserveScroll: true,
     });
-  }, []);
+  }, [t]);
 
   const submitQuery = useCallback(
     (partial: Partial<{ search: string; sort_by: string | null; sort_direction: 'asc' | 'desc' | null; page: number; per_page: number }>) => {
@@ -219,7 +221,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
         per_page: partial.per_page ?? contacts.per_page,
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.page !== contacts.current_page ||
         query.per_page !== contacts.per_page ||
@@ -255,13 +257,13 @@ export default function ContactManagement({ title, contacts, countries, organiza
     () => [
       {
         accessorKey: "name",
-        header: "Contact",
+        header: t('contacts.columns.contact'),
         cell: ({ getValue, row }) => (
           <div className="flex items-center gap-3">
             {row.original.photo ? (
-              <img 
-                src={row.original.photo} 
-                alt={getValue<string>()} 
+              <img
+                src={row.original.photo}
+                alt={getValue<string>()}
                 className="size-10 rounded-full object-cover"
               />
             ) : (
@@ -281,7 +283,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
       },
       {
         accessorKey: "organization",
-        header: "Organization",
+        header: t('contacts.columns.organization'),
         cell: ({ getValue }) => {
           const org = getValue<string | null>();
           return org ? (
@@ -294,7 +296,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
       },
       {
         accessorKey: "phone",
-        header: "Phone",
+        header: t('contacts.columns.phone'),
         cell: ({ getValue }) => (
           <span className="text-default-600">{getValue<string | null>() || '-'}</span>
         ),
@@ -302,7 +304,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
       },
       {
         accessorKey: "city",
-        header: "Location",
+        header: t('contacts.columns.location'),
         cell: ({ getValue, row }) => {
           const city = getValue<string | null>();
           const country = row.original.country;
@@ -315,41 +317,41 @@ export default function ContactManagement({ title, contacts, countries, organiza
       },
       {
         accessorKey: "created_at",
-        header: "Joined",
+        header: t('contacts.columns.joined'),
         cell: ({ getValue }) => (
           <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
         ),
         enableSorting: true,
       },
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<Contact>[]>(
     () => [
       {
-        label: "Edit Contact",
+        label: t('contacts.editContact'),
         value: "edit",
         onSelect: (contact) => {
           handleOpenEditDrawer(contact);
         }
       },
       {
-        label: "Delete Contact",
+        label: t('common.delete'),
         value: "delete",
         onSelect: (contact) => {
           handleDeleteContact(contact);
         }
       },
     ],
-    [handleOpenEditDrawer, handleDeleteContact]
+    [handleOpenEditDrawer, handleDeleteContact, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title={title || "Contacts"} />
+      <PageMeta title={t('contacts.title')} />
       <main>
-        <PageHeader title={title || "Contacts"} />
+        <PageHeader title={t('contacts.title')} />
         <div className="space-y-6">
           <DataTable<Contact>
             data={contacts.data}
@@ -392,7 +394,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Add Contact
+                {t('contacts.addContact')}
               </button>
             )}
             isLoading={isLoading}
@@ -405,7 +407,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
       <Drawer
         isOpen={isEditDrawerOpen}
         onClose={handleCloseEditDrawer}
-        title="Edit Contact"
+        title={t('contacts.editContact')}
         size="lg"
         placement="right"
         footer={
@@ -416,7 +418,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
               onClick={handleCloseEditDrawer}
               disabled={isSaving}
             >
-              Cancel
+              {t('contacts.buttons.cancel')}
             </button>
             <button
               type="submit"
@@ -427,10 +429,10 @@ export default function ContactManagement({ title, contacts, countries, organiza
               {isSaving ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
+                  {t('contacts.buttons.saving')}
                 </span>
               ) : (
-                "Save Changes"
+                t('contacts.buttons.saveChanges')
               )}
             </button>
           </>
@@ -440,9 +442,9 @@ export default function ContactManagement({ title, contacts, countries, organiza
           {/* Contact Info Header */}
           <div className="bg-default-50 p-4 rounded-lg flex items-center gap-3">
             {editingContact?.photo ? (
-              <img 
-                src={editingContact.photo} 
-                alt={editingContact.name} 
+              <img
+                src={editingContact.photo}
+                alt={editingContact.name}
                 className="size-12 rounded-full object-cover"
               />
             ) : (
@@ -460,12 +462,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Name <span className="text-danger">*</span>
+              {t('contacts.form.name')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter contact name"
+              placeholder={t('contacts.form.enterName')}
               value={editFormData.name}
               onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
               disabled={isSaving}
@@ -478,12 +480,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Email <span className="text-danger">*</span>
+              {t('contacts.form.email')} <span className="text-danger">*</span>
             </label>
             <input
               type="email"
               name="email"
-              placeholder="Enter email address"
+              placeholder={t('contacts.form.enterEmail')}
               value={editFormData.email}
               onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
               disabled={isSaving}
@@ -496,7 +498,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Organization
+              {t('contacts.form.organization')}
             </label>
             <select
               name="organization_id"
@@ -505,7 +507,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
               disabled={isSaving}
               className={`form-input w-full ${editFormErrors.organization_id ? 'border-danger focus:ring-danger' : ''}`}
             >
-              <option value="">No organization</option>
+              <option value="">{t('contacts.form.noOrganization')}</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
                   {org.name}
@@ -519,12 +521,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Phone
+              {t('contacts.form.phone')}
             </label>
             <input
               type="tel"
               name="phone"
-              placeholder="Enter phone number"
+              placeholder={t('contacts.form.enterPhone')}
               value={editFormData.phone}
               onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
               disabled={isSaving}
@@ -538,12 +540,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                City
+                {t('contacts.form.city')}
               </label>
               <input
                 type="text"
                 name="city"
-                placeholder="Enter city"
+                placeholder={t('contacts.form.enterCity')}
                 value={editFormData.city}
                 onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
                 disabled={isSaving}
@@ -556,7 +558,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                Country
+                {t('contacts.form.country')}
               </label>
               <select
                 name="country_id"
@@ -565,7 +567,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
                 disabled={isSaving}
                 className={`form-input w-full ${editFormErrors.country_id ? 'border-danger focus:ring-danger' : ''}`}
               >
-                <option value="">Select country</option>
+                <option value="">{t('contacts.form.selectCountry')}</option>
                 {countries.map((country) => (
                   <option key={country.id} value={country.id}>
                     {country.name}
@@ -580,12 +582,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              New Password <span className="text-default-500 text-xs">(leave blank to keep current)</span>
+              {t('contacts.form.newPassword')} <span className="text-default-500 text-xs">({t('contacts.form.leaveBlank')})</span>
             </label>
             <input
               type="password"
               name="password"
-              placeholder="Enter new password"
+              placeholder={t('contacts.form.enterNewPassword')}
               value={editFormData.password}
               onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
               disabled={isSaving}
@@ -602,7 +604,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
       <Drawer
         isOpen={isCreateDrawerOpen}
         onClose={handleCloseCreateDrawer}
-        title="Add New Contact"
+        title={t('contacts.addNewContact')}
         size="lg"
         placement="right"
         footer={
@@ -613,7 +615,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
               onClick={handleCloseCreateDrawer}
               disabled={isCreating}
             >
-              Cancel
+              {t('contacts.buttons.cancel')}
             </button>
             <button
               type="submit"
@@ -624,10 +626,10 @@ export default function ContactManagement({ title, contacts, countries, organiza
               {isCreating ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating...
+                  {t('contacts.buttons.creating')}
                 </span>
               ) : (
-                  "Add Contact"
+                t('contacts.buttons.addContact')
               )}
             </button>
           </>
@@ -636,12 +638,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
         <form id="create-contact-form" onSubmit={handleCreateContact} className="space-y-4">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Name <span className="text-danger">*</span>
+              {t('contacts.form.name')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter contact name"
+              placeholder={t('contacts.form.enterName')}
               value={createFormData.name}
               onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
               disabled={isCreating}
@@ -654,12 +656,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Email <span className="text-danger">*</span>
+              {t('contacts.form.email')} <span className="text-danger">*</span>
             </label>
             <input
               type="email"
               name="email"
-              placeholder="Enter email address"
+              placeholder={t('contacts.form.enterEmail')}
               value={createFormData.email}
               onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
               disabled={isCreating}
@@ -672,7 +674,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Organization
+              {t('contacts.form.organization')}
             </label>
             <select
               name="organization_id"
@@ -681,7 +683,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
               disabled={isCreating}
               className={`form-input w-full ${createFormErrors.organization_id ? 'border-danger focus:ring-danger' : ''}`}
             >
-              <option value="">No organization</option>
+              <option value="">{t('contacts.form.noOrganization')}</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
                   {org.name}
@@ -695,12 +697,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Phone
+              {t('contacts.form.phone')}
             </label>
             <input
               type="tel"
               name="phone"
-              placeholder="Enter phone number"
+              placeholder={t('contacts.form.enterPhone')}
               value={createFormData.phone}
               onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
               disabled={isCreating}
@@ -714,12 +716,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                City
+                {t('contacts.form.city')}
               </label>
               <input
                 type="text"
                 name="city"
-                placeholder="Enter city"
+                placeholder={t('contacts.form.enterCity')}
                 value={createFormData.city}
                 onChange={(e) => setCreateFormData({ ...createFormData, city: e.target.value })}
                 disabled={isCreating}
@@ -732,7 +734,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                Country
+                {t('contacts.form.country')}
               </label>
               <select
                 name="country_id"
@@ -741,7 +743,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
                 disabled={isCreating}
                 className={`form-input w-full ${createFormErrors.country_id ? 'border-danger focus:ring-danger' : ''}`}
               >
-                <option value="">Select country</option>
+                <option value="">{t('contacts.form.selectCountry')}</option>
                 {countries.map((country) => (
                   <option key={country.id} value={country.id}>
                     {country.name}
@@ -756,12 +758,12 @@ export default function ContactManagement({ title, contacts, countries, organiza
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Password
+              {t('contacts.form.password')}
             </label>
             <input
               type="password"
               name="password"
-              placeholder="Enter password (optional)"
+              placeholder={t('contacts.form.enterPassword')}
               value={createFormData.password}
               onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
               disabled={isCreating}
@@ -770,7 +772,7 @@ export default function ContactManagement({ title, contacts, countries, organiza
             {createFormErrors.password && (
               <p className="text-danger text-sm mt-1">{createFormErrors.password}</p>
             )}
-            <p className="text-default-500 text-xs mt-1">Leave blank to auto-generate a password</p>
+            <p className="text-default-500 text-xs mt-1">{t('contacts.form.leaveBlankAutoGenerate')}</p>
           </div>
         </form>
       </Drawer>

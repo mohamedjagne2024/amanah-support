@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type PageData = {
   description: string;
@@ -56,6 +57,7 @@ const defaultPageData: PageData = {
 };
 
 export default function Footer({ title, page }: FooterPageProps) {
+  const { t } = useLanguageContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const initialData = useMemo(() => {
     if (!page?.html) return defaultPageData;
@@ -95,13 +97,13 @@ export default function Footer({ title, page }: FooterPageProps) {
 
   return (
     <AppLayout>
-      <PageMeta title="Footer Settings" />
+      <PageMeta title={t('frontPages.footer.title')} />
       <main className="pb-24">
         <form onSubmit={handleSubmit}>
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-default-900">Footer Settings</h1>
-            <p className="text-default-500 mt-1">Configure your website footer content</p>
+            <h1 className="text-2xl font-bold text-default-900">{t('frontPages.footer.title')}</h1>
+            <p className="text-default-500 mt-1">{t('frontPages.footer.subtitle')}</p>
           </div>
 
           <div className="space-y-6 max-w-5xl">
@@ -112,13 +114,13 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <FileText className="size-5 text-primary" />
                 </div>
                 <div>
-                  <h6 className="card-title">General</h6>
-                  <p className="text-sm text-default-500">Company info and description</p>
+                  <h6 className="card-title">{t('frontPages.footer.generalSection')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.footer.generalDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Company Name</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.footer.companyName')}</label>
                   <input
                     type="text"
                     value={data.company_name}
@@ -129,7 +131,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Description</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.footer.description')}</label>
                   <textarea
                     value={data.description}
                     onChange={(e) => setData('description', e.target.value)}
@@ -137,10 +139,10 @@ export default function Footer({ title, page }: FooterPageProps) {
                     className="form-input min-h-[100px]"
                     disabled={isSubmitting}
                   />
-                  <p className="text-xs text-default-500 mt-1">Short description shown in the footer</p>
+                  <p className="text-xs text-default-500 mt-1">{t('frontPages.footer.descriptionHint')}</p>
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Copyright Text</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.footer.copyrightText')}</label>
                   <input
                     type="text"
                     value={data.copyright_text}
@@ -161,8 +163,8 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <Phone className="size-5 text-emerald-500" />
                 </div>
                 <div>
-                  <h6 className="card-title">Contact Information</h6>
-                  <p className="text-sm text-default-500">Contact details shown in footer</p>
+                  <h6 className="card-title">{t('frontPages.footer.contactSection')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.footer.contactDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
@@ -170,7 +172,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
                       <span className="flex items-center gap-2">
-                        <Mail className="size-4" /> Email Address
+                        <Mail className="size-4" /> {t('frontPages.footer.emailAddress')}
                       </span>
                     </label>
                     <input
@@ -185,7 +187,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
                       <span className="flex items-center gap-2">
-                        <Phone className="size-4" /> Phone Number
+                        <Phone className="size-4" /> {t('frontPages.footer.phoneNumber')}
                       </span>
                     </label>
                     <input
@@ -201,7 +203,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                 <div>
                   <label className="block font-medium text-default-900 text-sm mb-2">
                     <span className="flex items-center gap-2">
-                      <MapPin className="size-4" /> Address
+                      <MapPin className="size-4" /> {t('frontPages.footer.address')}
                     </span>
                   </label>
                   <textarea
@@ -222,8 +224,8 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <LinkIcon className="size-5 text-blue-500" />
                 </div>
                 <div>
-                  <h6 className="card-title">Social Media Links</h6>
-                  <p className="text-sm text-default-500">Add your social media profile URLs</p>
+                  <h6 className="card-title">{t('frontPages.footer.socialSection')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.footer.socialDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
@@ -231,7 +233,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
                       <span className="flex items-center gap-2">
-                        <Facebook className="size-4" /> Facebook
+                        <Facebook className="size-4" /> {t('frontPages.footer.facebook')}
                       </span>
                     </label>
                     <input
@@ -246,7 +248,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
                       <span className="flex items-center gap-2">
-                        <Twitter className="size-4" /> Twitter / X
+                        <Twitter className="size-4" /> {t('frontPages.footer.twitter')}
                       </span>
                     </label>
                     <input
@@ -261,7 +263,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
                       <span className="flex items-center gap-2">
-                        <Instagram className="size-4" /> Instagram
+                        <Instagram className="size-4" /> {t('frontPages.footer.instagram')}
                       </span>
                     </label>
                     <input
@@ -276,7 +278,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
                       <span className="flex items-center gap-2">
-                        <Linkedin className="size-4" /> LinkedIn
+                        <Linkedin className="size-4" /> {t('frontPages.footer.linkedin')}
                       </span>
                     </label>
                     <input
@@ -297,7 +299,7 @@ export default function Footer({ title, page }: FooterPageProps) {
           <div className="px-6 py-4 max-w-5xl">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <p className="text-sm text-default-500">
-                Changes are saved automatically when you submit the form
+                {t('frontPages.changesSavedMessage')}
               </p>
               <div className="flex items-center gap-3">
                 <button
@@ -306,7 +308,7 @@ export default function Footer({ title, page }: FooterPageProps) {
                   className="btn border-default-200 text-default-700"
                   disabled={isSubmitting}
                 >
-                  Reset
+                  {t('frontPages.reset')}
                 </button>
                 <button
                   type="submit"
@@ -316,10 +318,10 @@ export default function Footer({ title, page }: FooterPageProps) {
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
                       <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                      Saving...
+                      {t('frontPages.saving')}
                     </span>
                   ) : (
-                    'Save Changes'
+                    t('frontPages.saveChanges')
                   )}
                 </button>
               </div>
@@ -330,4 +332,3 @@ export default function Footer({ title, page }: FooterPageProps) {
     </AppLayout>
   );
 }
-

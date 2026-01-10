@@ -5,8 +5,9 @@ import { menuItemsData, type MenuItemType } from './menu';
 import { getAllMenuHrefs, isItemActive, isMenuActive } from './navigation-utils';
 import type { SharedData } from '@/types';
 import { useUnreadChatListener } from '@/hooks/usePusher';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
-const MenuItemWithChildren = ({ item, allHrefs }: { item: MenuItemType; allHrefs: string[] }) => {
+const MenuItemWithChildren = ({ item, allHrefs, t }: { item: MenuItemType; allHrefs: string[]; t: (key: string) => string }) => {
   const { url } = usePage();
   const Icon = item.icon;
 
@@ -22,22 +23,21 @@ const MenuItemWithChildren = ({ item, allHrefs }: { item: MenuItemType; allHrefs
             <Icon />
           </span>
         )}
-        <span className="menu-text">{item.label}</span>
+        <span className="menu-text">{t(item.label)}</span>
         <span className="menu-arrow">
           <LuChevronRight />
         </span>
       </button>
 
       <ul
-        className={`sub-menu hs-accordion-content hs-accordion-group ${
-          isActive ? 'block' : 'hidden'
-        }`}
+        className={`sub-menu hs-accordion-content hs-accordion-group ${isActive ? 'block' : 'hidden'
+          }`}
       >
         {item.children?.map((child: MenuItemType) =>
           child.children ? (
-            <MenuItemWithChildren key={child.key} item={child} allHrefs={allHrefs} />
+            <MenuItemWithChildren key={child.key} item={child} allHrefs={allHrefs} t={t} />
           ) : (
-            <MenuItem key={child.key} item={child} allHrefs={allHrefs} />
+            <MenuItem key={child.key} item={child} allHrefs={allHrefs} t={t} />
           )
         )}
       </ul>
@@ -45,7 +45,7 @@ const MenuItemWithChildren = ({ item, allHrefs }: { item: MenuItemType; allHrefs
   );
 };
 
-const MenuItem = ({ item, allHrefs }: { item: MenuItemType; allHrefs: string[] }) => {
+const MenuItem = ({ item, allHrefs, t }: { item: MenuItemType; allHrefs: string[]; t: (key: string) => string }) => {
   const { url } = usePage();
   const Icon = item.icon;
   const isActive = item.href ? isMenuActive(url, item.href, allHrefs) : false;
@@ -58,12 +58,11 @@ const MenuItem = ({ item, allHrefs }: { item: MenuItemType; allHrefs: string[] }
             <Icon />
           </span>
         )}
-        <div className="menu-text">{item.label}</div>
+        <div className="menu-text">{t(item.label)}</div>
         {item.badge !== undefined && item.badge !== 0 && item.badge !== '' && (
-          <span 
-            className={`ms-auto px-2 py-0.5 rounded-full text-xs font-medium ${
-              item.badgeColor || 'bg-primary text-white'
-            }`}
+          <span
+            className={`ms-auto px-2 py-0.5 rounded-full text-xs font-medium ${item.badgeColor || 'bg-primary text-white'
+              }`}
           >
             {typeof item.badge === 'number' && item.badge > 99 ? '99+' : item.badge}
           </span>
@@ -75,23 +74,24 @@ const MenuItem = ({ item, allHrefs }: { item: MenuItemType; allHrefs: string[] }
 
 const AppMenu = () => {
   const { props, url } = usePage<SharedData>();
+  const { t } = useLanguageContext();
   const initialUnreadCount = props.unreadChatCount || 0;
-  
+
   // Use local state for real-time updates
   const [unreadChatCount, setUnreadChatCount] = useState(initialUnreadCount);
-  
+
   // Reset count when navigating to chat page (messages get marked as read)
   useEffect(() => {
     if (url.startsWith('/chat/')) {
       setUnreadChatCount(0);
     }
   }, [url]);
-  
+
   // Sync with server data on page navigation
   useEffect(() => {
     setUnreadChatCount(initialUnreadCount);
   }, [initialUnreadCount]);
-  
+
   // Listen for real-time unread message notifications
   useUnreadChatListener(() => {
     // Only increment if we're not currently on the chat page
@@ -123,12 +123,12 @@ const AppMenu = () => {
       {enhancedMenuItems.map((item: MenuItemType) =>
         item.isTitle ? (
           <li className="menu-title" key={item.key}>
-            <span>{item.label}</span>
+            <span>{t(item.label)}</span>
           </li>
         ) : item.children ? (
-          <MenuItemWithChildren key={item.key} item={item} allHrefs={allHrefs} />
+          <MenuItemWithChildren key={item.key} item={item} allHrefs={allHrefs} t={t} />
         ) : (
-          <MenuItem key={item.key} item={item} allHrefs={allHrefs} />
+          <MenuItem key={item.key} item={item} allHrefs={allHrefs} t={t} />
         )
       )}
     </ul>

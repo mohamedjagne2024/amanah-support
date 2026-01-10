@@ -8,6 +8,7 @@ import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
 import PageHeader from '@/components/Pageheader';
 import Breadcrumb from '@/components/Breadcrumb';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 
 type ContactOption = {
@@ -55,6 +56,7 @@ export default function Create({
   all_categories,
   requiredFields = [],
 }: CreateTicketPageProps) {
+  const { t } = useLanguageContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
 
@@ -166,20 +168,20 @@ export default function Create({
 
   return (
     <AppLayout>
-      <PageMeta title="Create Ticket" />
+      <PageMeta title={t('ticket.createTicket')} />
       <main className="max-w-5xl">
         <Breadcrumb
           items={[
-            { label: 'Tickets', href: '/tickets' },
-            { label: 'Create Ticket' }
+            { label: t('menus.tickets'), href: '/tickets' },
+            { label: t('ticket.createTicket') }
           ]}
           className="mb-4"
         />
-        <PageHeader title="Create Ticket" />
+        <PageHeader title={t('ticket.createTicket')} />
         <form onSubmit={handleSubmit} className="space-y-6 pb-8">
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Ticket Information</h6>
+              <h6 className="card-title">{t('ticket.ticketInformation')}</h6>
             </div>
             <div className="card-body">
               <div className="space-y-6">
@@ -190,7 +192,7 @@ export default function Create({
                     <Combobox
                       label={
                         <>
-                          Contact <span className="text-danger">*</span>
+                          {t('ticket.contact')} <span className="text-danger">*</span>
                         </>
                       }
                       options={contactOptions}
@@ -202,7 +204,7 @@ export default function Create({
                       onChange={(option) =>
                         setData('contact_id', option?.value?.toString() || '')
                       }
-                      placeholder="Start typing"
+                      placeholder={t('ticket.startTyping')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -215,7 +217,7 @@ export default function Create({
                     <Combobox
                       label={
                         <>
-                          Priority{requiredFields.includes('priority') && <span className="text-danger">*</span>}
+                          {t('ticket.priority')}{requiredFields.includes('priority') && <span className="text-danger">*</span>}
                         </>
                       }
                       options={priorityOptions}
@@ -227,7 +229,7 @@ export default function Create({
                       onChange={(option) =>
                         setData('priority', option?.value?.toString() || '')
                       }
-                      placeholder="Select priority"
+                      placeholder={t('ticket.selectPriority')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -240,7 +242,7 @@ export default function Create({
                     <Combobox
                       label={
                         <>
-                          Type{requiredFields.includes('ticket_type') && <span className="text-danger">*</span>}
+                          {t('ticket.type')}{requiredFields.includes('ticket_type') && <span className="text-danger">*</span>}
                         </>
                       }
                       options={typeOptions}
@@ -252,7 +254,7 @@ export default function Create({
                       onChange={(option) =>
                         setData('type_id', option?.value?.toString() || '')
                       }
-                      placeholder="Select type"
+                      placeholder={t('ticket.selectType')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -268,7 +270,7 @@ export default function Create({
                     <Combobox
                       label={
                         <>
-                          Region{requiredFields.includes('region') && <span className="text-danger">*</span>}
+                          {t('ticket.region')}{requiredFields.includes('region') && <span className="text-danger">*</span>}
                         </>
                       }
                       options={regionOptions}
@@ -280,7 +282,7 @@ export default function Create({
                       onChange={(option) =>
                         setData('region_id', option?.value?.toString() || '')
                       }
-                      placeholder="Select a region"
+                      placeholder={t('ticket.selectRegion')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -293,7 +295,7 @@ export default function Create({
                     <Combobox
                       label={
                         <>
-                          Assigned to{requiredFields.includes('assigned_to') && <span className="text-danger">*</span>}
+                          {t('ticket.assignedTo')}{requiredFields.includes('assigned_to') && <span className="text-danger">*</span>}
                         </>
                       }
                       options={assigneeOptions}
@@ -305,7 +307,7 @@ export default function Create({
                       onChange={(option) =>
                         setData('assigned_to', option?.value?.toString() || '')
                       }
-                      placeholder="Start typing"
+                      placeholder={t('ticket.startTyping')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -320,7 +322,7 @@ export default function Create({
                   <Combobox
                     label={
                       <>
-                        Category{requiredFields.includes('category') && <span className="text-danger">*</span>}
+                        {t('ticket.category')}{requiredFields.includes('category') && <span className="text-danger">*</span>}
                       </>
                     }
                     options={categoryOptions}
@@ -330,7 +332,7 @@ export default function Create({
                       ) || null
                     }
                     onChange={(option) => setData('category_id', option?.value?.toString() || '')}
-                    placeholder="Select a category"
+                    placeholder={t('ticket.selectCategory')}
                     disabled={processing}
                     isClearable
                     isSearchable
@@ -341,14 +343,14 @@ export default function Create({
                 {/* Subject Field - Full Width */}
                 <div className="w-full">
                   <label className="block font-medium text-default-900 text-sm mb-2">
-                    Subject <span className="text-danger">*</span>
+                    {t('ticket.subject')} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
                     name="subject"
                     value={data.subject}
                     onChange={(e) => setData('subject', e.target.value)}
-                    placeholder="Enter subject"
+                    placeholder={t('ticket.enterSubject')}
                     disabled={processing}
                     className="form-input"
                   />
@@ -358,11 +360,11 @@ export default function Create({
                 {/* Request Details Field - Full Width with Rich Text Editor */}
                 <div className="w-full">
                   <label className="block font-medium text-default-900 text-sm mb-2">
-                    Request Details <span className="text-danger">*</span>
+                    {t('ticket.requestDetails')} <span className="text-danger">*</span>
                   </label>
                   <input type="hidden" name="details" value={data.details} />
                   <TextEditor
-                    placeholder="Enter detailed request information..."
+                    placeholder={t('ticket.enterDetails')}
                     onChange={handleDetailsChange}
                     showToolbar={true}
                     className="min-h-[200px]"
@@ -373,10 +375,10 @@ export default function Create({
                 {/* Attachments Upload Field */}
                 <div>
                   <label className="block font-medium text-default-900 text-sm mb-2">
-                    Attach Files
+                    {t('ticket.attachFiles')}
                   </label>
                   <p className="text-xs text-default-500 mb-3">
-                    Upload up to 5 files (PDF, DOC, DOCX, JPG, PNG, XLS, XLSX). Max 5MB per file.
+                    {t('ticket.attachFilesDescription')}
                   </p>
                   <input
                     ref={fileInputRef}
@@ -394,7 +396,7 @@ export default function Create({
                     className="btn btn-sm border-default-200 text-default-700 hover:bg-default-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Upload className="size-4 mr-2" />
-                    Attach Files
+                    {t('ticket.attachFiles')}
                   </button>
 
                   {/* Attachments List */}
@@ -441,7 +443,7 @@ export default function Create({
                 className="btn border-default-200 text-default-900"
                 disabled={processing}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </Link>
             <button
@@ -452,10 +454,10 @@ export default function Create({
               {processing ? (
                 <span className="flex items-center gap-2">
                   <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                  Creating...
+                  {t('ticket.creating')}
                 </span>
               ) : (
-                'Create Ticket'
+                t('ticket.createTicket')
               )}
             </button>
           </div>

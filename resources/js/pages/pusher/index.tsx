@@ -5,6 +5,7 @@ import PageMeta from '@/components/PageMeta';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/Pageheader';
 import { MessageSquare, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { useLanguageContext } from '@/context/useLanguageContext';
 import axios from 'axios';
 
 type PusherSettingsPageProps = {
@@ -17,6 +18,8 @@ type PusherSettingsPageProps = {
 };
 
 export default function Index({ settings }: PusherSettingsPageProps) {
+  const { t } = useLanguageContext();
+
   const { data, setData, processing, errors } = useForm<{
     pusher_app_id: string;
     pusher_app_key: string;
@@ -34,7 +37,7 @@ export default function Index({ settings }: PusherSettingsPageProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     router.put('/settings/pusher', {
       ...data,
     });
@@ -46,7 +49,7 @@ export default function Index({ settings }: PusherSettingsPageProps) {
 
     try {
       const response = await axios.post('/settings/pusher/test');
-      
+
       if (response.data.success) {
         setTestStatus('success');
         setTestMessage(response.data.message);
@@ -62,11 +65,11 @@ export default function Index({ settings }: PusherSettingsPageProps) {
 
   return (
     <AppLayout>
-      <PageMeta title="Pusher Settings" />
+      <PageMeta title={t('settings.pusher.title')} />
       <main className="max-w-4xl">
-        <PageHeader 
-          title="Pusher Chat Settings" 
-          subtitle="Configure Pusher for real-time chat functionality"
+        <PageHeader
+          title={t('settings.pusher.title')}
+          subtitle={t('settings.pusher.subtitle')}
           icon={MessageSquare}
         />
 
@@ -74,7 +77,7 @@ export default function Index({ settings }: PusherSettingsPageProps) {
           {/* Pusher Configuration */}
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Pusher Credentials</h6>
+              <h6 className="card-title">{t('settings.pusher.credentials')}</h6>
             </div>
             <div className="card-body">
               <div className="space-y-6">
@@ -82,7 +85,7 @@ export default function Index({ settings }: PusherSettingsPageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Pusher App ID <span className="text-danger">*</span>
+                      {t('settings.pusher.appId')} <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
@@ -95,13 +98,13 @@ export default function Index({ settings }: PusherSettingsPageProps) {
                     />
                     <InputError message={errors.pusher_app_id} />
                     <p className="text-default-500 text-xs mt-1">
-                      Your Pusher application ID
+                      {t('settings.pusher.appIdHint')}
                     </p>
                   </div>
 
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Pusher App Key <span className="text-danger">*</span>
+                      {t('settings.pusher.appKey')} <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
@@ -114,7 +117,7 @@ export default function Index({ settings }: PusherSettingsPageProps) {
                     />
                     <InputError message={errors.pusher_app_key} />
                     <p className="text-default-500 text-xs mt-1">
-                      Your Pusher application key
+                      {t('settings.pusher.appKeyHint')}
                     </p>
                   </div>
                 </div>
@@ -123,27 +126,27 @@ export default function Index({ settings }: PusherSettingsPageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Pusher App Secret <span className="text-danger">*</span>
+                      {t('settings.pusher.appSecret')} <span className="text-danger">*</span>
                     </label>
                     <input
                       type="password"
                       name="pusher_app_secret"
                       value={data.pusher_app_secret}
                       onChange={(e) => setData('pusher_app_secret', e.target.value)}
-                      placeholder="Enter your app secret"
+                      placeholder={t('settings.pusher.enterAppSecret')}
                       disabled={processing}
                       className="form-input font-mono"
                       autoComplete="off"
                     />
                     <InputError message={errors.pusher_app_secret} />
                     <p className="text-default-500 text-xs mt-1">
-                      Your Pusher application secret (kept private)
+                      {t('settings.pusher.appSecretHint')}
                     </p>
                   </div>
 
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Pusher App Cluster <span className="text-danger">*</span>
+                      {t('settings.pusher.appCluster')} <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
@@ -156,7 +159,7 @@ export default function Index({ settings }: PusherSettingsPageProps) {
                     />
                     <InputError message={errors.pusher_app_cluster} />
                     <p className="text-default-500 text-xs mt-1">
-                      The cluster where your app is hosted
+                      {t('settings.pusher.appClusterHint')}
                     </p>
                   </div>
                 </div>
@@ -167,12 +170,12 @@ export default function Index({ settings }: PusherSettingsPageProps) {
           {/* Test Connection */}
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Test Connection</h6>
+              <h6 className="card-title">{t('settings.pusher.testConnection')}</h6>
             </div>
             <div className="card-body">
               <div className="space-y-4">
                 <p className="text-default-600 text-sm">
-                  Test your Pusher credentials to ensure they are configured correctly before saving.
+                  {t('settings.pusher.testConnectionDescription')}
                 </p>
 
                 <div className="flex items-start gap-3">
@@ -185,12 +188,12 @@ export default function Index({ settings }: PusherSettingsPageProps) {
                     {testStatus === 'testing' ? (
                       <>
                         <Loader2 className="size-4 animate-spin" />
-                        Testing Connection...
+                        {t('settings.pusher.testingConnection')}
                       </>
                     ) : (
                       <>
                         <MessageSquare className="size-4" />
-                        Test Connection
+                        {t('settings.pusher.testConnection')}
                       </>
                     )}
                   </button>
@@ -199,7 +202,7 @@ export default function Index({ settings }: PusherSettingsPageProps) {
                     <div className="flex-1 bg-success-50 border border-success-200 rounded-lg p-3 flex items-start gap-2">
                       <CheckCircle className="size-5 text-success-600 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-success-900 font-medium text-sm">Connection Successful</p>
+                        <p className="text-success-900 font-medium text-sm">{t('settings.pusher.connectionSuccessful')}</p>
                         <p className="text-success-700 text-sm">{testMessage}</p>
                       </div>
                     </div>
@@ -209,7 +212,7 @@ export default function Index({ settings }: PusherSettingsPageProps) {
                     <div className="flex-1 bg-danger-50 border border-danger-200 rounded-lg p-3 flex items-start gap-2">
                       <XCircle className="size-5 text-danger-600 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-danger-900 font-medium text-sm">Connection Failed</p>
+                        <p className="text-danger-900 font-medium text-sm">{t('settings.pusher.connectionFailed')}</p>
                         <p className="text-danger-700 text-sm">{testMessage}</p>
                       </div>
                     </div>
@@ -221,17 +224,17 @@ export default function Index({ settings }: PusherSettingsPageProps) {
 
           {/* Information Banner */}
           <div className="bg-info-50 border border-info-200 rounded-lg p-4">
-            <h4 className="font-semibold text-info-900 mb-2">How to get your Pusher credentials</h4>
+            <h4 className="font-semibold text-info-900 mb-2">{t('settings.pusher.howToGetCredentials')}</h4>
             <div className="text-info-700 text-sm space-y-2">
               <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>Go to <a href="https://pusher.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-info-900">pusher.com</a> and sign in or create an account</li>
-                <li>Create a new Channels app or select an existing one</li>
-                <li>Navigate to "App Keys" in your app dashboard</li>
-                <li>Copy your App ID, Key, Secret, and Cluster</li>
-                <li>Paste them into the fields above</li>
+                <li>{t('settings.pusher.step1')}</li>
+                <li>{t('settings.pusher.step2')}</li>
+                <li>{t('settings.pusher.step3')}</li>
+                <li>{t('settings.pusher.step4')}</li>
+                <li>{t('settings.pusher.step5')}</li>
               </ol>
               <div className="mt-3 pt-3 border-t border-info-200">
-                <p className="font-medium mb-1">Common Clusters:</p>
+                <p className="font-medium mb-1">{t('settings.pusher.commonClusters')}:</p>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div><strong>us2:</strong> US East (Ohio)</div>
                   <div><strong>us3:</strong> US West (Oregon)</div>
@@ -254,10 +257,10 @@ export default function Index({ settings }: PusherSettingsPageProps) {
               {processing ? (
                 <span className="flex items-center gap-2">
                   <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                  Saving...
+                  {t('settings.pusher.saving')}
                 </span>
               ) : (
-                'Save Pusher Settings'
+                t('settings.pusher.savePusherSettings')
               )}
             </button>
           </div>

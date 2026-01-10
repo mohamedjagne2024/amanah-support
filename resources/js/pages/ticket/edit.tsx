@@ -1,15 +1,15 @@
 import { useForm, Link, router } from '@inertiajs/react';
 import { useMemo, useState, useRef } from 'react';
-import { 
-  Upload, 
-  X, 
-  FileText, 
-  Calendar, 
-  Mail, 
-  Clock, 
-  Eye, 
-  Trash2, 
-  Edit3, 
+import {
+  Upload,
+  X,
+  FileText,
+  Calendar,
+  Mail,
+  Clock,
+  Eye,
+  Trash2,
+  Edit3,
   Tag,
   Ticket,
   Download
@@ -22,6 +22,7 @@ import TextEditor from '@/components/TextEditor';
 import DatePicker from '@/components/DatePicker';
 import { ConfirmDialog } from '@/components/Dialog';
 import Breadcrumb from '@/components/Breadcrumb';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type ContactOption = {
   id: number;
@@ -135,12 +136,13 @@ export default function Edit({
   comments,
   requiredFields = [],
 }: EditTicketPageProps) {
+  const { t } = useLanguageContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newAttachments, setNewAttachments] = useState<File[]>([]);
   const [removedFileIds, setRemovedFileIds] = useState<number[]>([]);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [tagInput, setTagInput] = useState('');
-  
+
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -302,7 +304,6 @@ export default function Edit({
     post(`/tickets/${ticket.id}`, {
       forceFormData: true,
       onSuccess: () => {
-        // Clear the local attachments state after successful upload
         setNewAttachments([]);
         setRemovedFileIds([]);
         setData('files', []);
@@ -354,14 +355,14 @@ export default function Edit({
 
   return (
     <AppLayout>
-      <PageMeta title={`Edit Ticket #${ticket.uid}`} />
+      <PageMeta title={`${t('ticket.editTicket')} #${ticket.uid}`} />
       <main className="pb-8">
-        
-        <Breadcrumb 
+
+        <Breadcrumb
           items={[
-            { label: 'Tickets', href: '/tickets' },
+            { label: t('menus.tickets'), href: '/tickets' },
             { label: `#${ticket.uid}`, href: `/tickets/${ticket.uid}` },
-            { label: 'Edit' }
+            { label: t('common.edit') }
           ]}
           className="mb-4"
         />
@@ -375,26 +376,26 @@ export default function Edit({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold text-default-900">
-                  Edit Ticket #{ticket.uid}
+                  {t('ticket.editTicket')} #{ticket.uid}
                 </h1>
                 {ticket.closed && (
                   <span className="px-2 py-0.5 rounded text-xs font-medium bg-success/10 text-success">
-                    Closed
+                    {t('ticket.closed')}
                   </span>
                 )}
               </div>
               <p className="text-default-600 text-sm mt-1 line-clamp-1">{ticket.subject}</p>
-              
+
               {/* Metadata Row */}
               <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-default-500">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="size-4" />
-                  <span>Created {ticket.created_at}</span>
+                  <span>{t('ticket.created')} {ticket.created_at}</span>
                 </div>
                 {ticket.due && (
                   <div className="flex items-center gap-1.5">
                     <Clock className="size-4" />
-                    <span>Due {ticket.due}</span>
+                    <span>{t('ticket.due')} {ticket.due}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -403,7 +404,7 @@ export default function Edit({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Clock className="size-4" />
-                  <span>Last modified {ticket.updated_at}</span>
+                  <span>{t('ticket.lastModified')} {ticket.updated_at}</span>
                 </div>
               </div>
 
@@ -418,7 +419,7 @@ export default function Edit({
                 {parsedTags.length > 0 && (
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-default-200 text-default-700 flex items-center gap-1">
                     <Tag className="size-3" />
-                    {parsedTags.length} tags
+                    {parsedTags.length} {t('ticket.tags')}
                   </span>
                 )}
               </div>
@@ -430,7 +431,7 @@ export default function Edit({
             <Link href={`/tickets/${ticket.uid}`}>
               <button type="button" className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary hover:border-primary/10">
                 <Eye className="size-4 me-1" />
-                View Ticket
+                {t('ticket.viewTicket')}
               </button>
             </Link>
             <button
@@ -439,7 +440,7 @@ export default function Edit({
               className="btn btn-sm bg-danger/15 text-danger hover:bg-danger hover:text-white"
             >
               <Trash2 className="size-4 me-1" />
-              Delete
+              {t('common.delete')}
             </button>
           </div>
         </div>
@@ -451,20 +452,20 @@ export default function Edit({
               {/* Basic Information Card */}
               <div className="card">
                 <div className="card-header">
-                  <h6 className="card-title">Basic Information</h6>
+                  <h6 className="card-title">{t('ticket.basicInformation')}</h6>
                 </div>
                 <div className="card-body space-y-6">
                   {/* Subject */}
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Subject <span className="text-danger">*</span>
+                      {t('ticket.subject')} <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
                       name="subject"
                       value={data.subject}
                       onChange={(e) => setData('subject', e.target.value)}
-                      placeholder="Enter subject"
+                      placeholder={t('ticket.enterSubject')}
                       disabled={processing}
                       className="form-input"
                     />
@@ -475,7 +476,7 @@ export default function Edit({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="block font-medium text-default-900 text-sm">
-                        Description <span className="text-danger">*</span>
+                        {t('ticket.description')} <span className="text-danger">*</span>
                       </label>
                       <button
                         type="button"
@@ -483,14 +484,14 @@ export default function Edit({
                         className="text-sm text-primary hover:underline flex items-center gap-1"
                       >
                         <Edit3 className="size-3" />
-                        Edit
+                        {t('common.edit')}
                       </button>
                     </div>
                     {isEditingDescription ? (
                       <>
                         <input type="hidden" name="details" value={data.details} />
                         <TextEditor
-                          placeholder="Enter detailed request information..."
+                          placeholder={t('ticket.enterDetails')}
                           onChange={handleDetailsChange}
                           showToolbar={true}
                           className="min-h-[200px]"
@@ -498,9 +499,9 @@ export default function Edit({
                         />
                       </>
                     ) : (
-                      <div 
+                      <div
                         className="max-w-none p-4 bg-default-50 rounded-lg border border-default-200 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-default-300 [&_blockquote]:pl-4 [&_blockquote]:italic"
-                        dangerouslySetInnerHTML={{ __html: data.details || '<p class="text-default-400 italic">No description provided</p>' }}
+                        dangerouslySetInnerHTML={{ __html: data.details || `<p class="text-default-400 italic">${t('ticket.noDescription')}</p>` }}
                       />
                     )}
                     <InputError message={errors.details} />
@@ -511,7 +512,7 @@ export default function Edit({
               {/* Attachments Card */}
               <div className="card">
                 <div className="card-header">
-                  <h6 className="card-title">Attachments</h6>
+                  <h6 className="card-title">{t('ticket.attachments')}</h6>
                 </div>
                 <div className="card-body">
                   <input
@@ -530,7 +531,7 @@ export default function Edit({
                     className="btn btn-sm bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
                   >
                     <Upload className="size-4 mr-2" />
-                    Attach Files
+                    {t('ticket.attachFiles')}
                   </button>
 
                   {/* Existing Attachments */}
@@ -550,7 +551,7 @@ export default function Edit({
                             </p>
                             <p className="text-xs text-default-500">
                               {formatFileSize(attachment.size)}
-                              {attachment.user && ` • Uploaded by ${attachment.user.name}`}
+                              {attachment.user && ` • ${t('ticket.uploadedBy')} ${attachment.user.name}`}
                             </p>
                           </div>
                           <a
@@ -558,7 +559,7 @@ export default function Edit({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-shrink-0 size-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center hover:bg-primary hover:text-white transition-colors"
-                            title="View"
+                            title={t('common.view')}
                           >
                             <Eye className="size-4" />
                           </a>
@@ -574,7 +575,7 @@ export default function Edit({
                             type="button"
                             onClick={() => handleRemoveExistingFile(attachment.id)}
                             className="flex-shrink-0 size-8 bg-danger/10 text-danger rounded-lg flex items-center justify-center hover:bg-danger hover:text-white transition-colors"
-                            title="Remove"
+                            title={t('common.delete')}
                           >
                             <X className="size-4" />
                           </button>
@@ -586,7 +587,7 @@ export default function Edit({
                   {/* New Attachments */}
                   {newAttachments.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs text-default-500 font-medium">New Files:</p>
+                      <p className="text-xs text-default-500 font-medium">{t('ticket.newFiles')}</p>
                       {newAttachments.map((file, index) => (
                         <div
                           key={`new-${file.name}-${index}`}
@@ -616,7 +617,7 @@ export default function Edit({
                   )}
 
                   {visibleAttachments.length === 0 && newAttachments.length === 0 && (
-                    <p className="text-sm text-default-400 italic">No attachments</p>
+                    <p className="text-sm text-default-400 italic">{t('ticket.noAttachments')}</p>
                   )}
                 </div>
               </div>
@@ -624,7 +625,7 @@ export default function Edit({
               {/* Comments Card */}
               <div className="card">
                 <div className="card-header">
-                  <h6 className="card-title">Comments</h6>
+                  <h6 className="card-title">{t('ticket.comments')}</h6>
                 </div>
                 <div className="card-body">
                   {/* Existing Comments */}
@@ -644,7 +645,7 @@ export default function Edit({
                                 {comment.created_at}
                               </span>
                             </div>
-                            <div 
+                            <div
                               className="text-sm text-default-600 prose prose-sm max-w-none"
                               dangerouslySetInnerHTML={{ __html: comment.details }}
                             />
@@ -655,16 +656,16 @@ export default function Edit({
                   )}
 
                   {comments.length === 0 && (
-                    <p className="text-sm text-default-400 italic mb-6">No comments yet</p>
+                    <p className="text-sm text-default-400 italic mb-6">{t('ticket.noComments')}</p>
                   )}
 
                   {/* Add Comment */}
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Add Comment
+                      {t('ticket.addComment')}
                     </label>
                     <TextEditor
-                      placeholder="Write a comment..."
+                      placeholder={t('ticket.writeComment')}
                       onChange={handleCommentChange}
                       showToolbar={true}
                       className="min-h-[150px]"
@@ -679,14 +680,14 @@ export default function Edit({
               {/* Properties Card */}
               <div className="card">
                 <div className="card-header">
-                  <h6 className="card-title">Properties</h6>
+                  <h6 className="card-title">{t('ticket.properties')}</h6>
                 </div>
                 <div className="card-body space-y-4">
                   {/* Contact */}
                   <div>
                     <input type="hidden" name="contact_id" value={data.contact_id} />
                     <Combobox
-                      label="Contact"
+                      label={t('ticket.contact')}
                       options={contactOptions}
                       value={
                         contactOptions.find(
@@ -696,7 +697,7 @@ export default function Edit({
                       onChange={(option) =>
                         setData('contact_id', option?.value?.toString() || '')
                       }
-                      placeholder="Search contact"
+                      placeholder={t('ticket.searchContact')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -708,7 +709,7 @@ export default function Edit({
                   <div>
                     <input type="hidden" name="priority" value={data.priority} />
                     <Combobox
-                      label="Priority"
+                      label={t('ticket.priority')}
                       options={priorityOptions}
                       value={
                         priorityOptions.find(
@@ -718,7 +719,7 @@ export default function Edit({
                       onChange={(option) =>
                         setData('priority', option?.value?.toString() || '')
                       }
-                      placeholder="Select priority"
+                      placeholder={t('ticket.selectPriority')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -730,7 +731,7 @@ export default function Edit({
                   <div>
                     <input type="hidden" name="status" value={data.status} />
                     <Combobox
-                      label="Status"
+                      label={t('ticket.status')}
                       options={statusOptions}
                       value={
                         statusOptions.find(
@@ -740,7 +741,7 @@ export default function Edit({
                       onChange={(option) =>
                         setData('status', option?.value?.toString() || '')
                       }
-                      placeholder="Select status"
+                      placeholder={t('ticket.selectStatus')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -754,7 +755,7 @@ export default function Edit({
                     <Combobox
                       label={
                         <>
-                          Assigned to
+                          {t('ticket.assignedTo')}
                           {requiredFields.includes('assigned_to') && (
                             <span className="text-danger">*</span>
                           )}
@@ -769,7 +770,7 @@ export default function Edit({
                       onChange={(option) =>
                         setData('assigned_to', option?.value?.toString() || '')
                       }
-                      placeholder="Select assignee"
+                      placeholder={t('ticket.selectAssignee')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -783,7 +784,7 @@ export default function Edit({
                     <Combobox
                       label={
                         <>
-                          Type
+                          {t('ticket.type')}
                           {requiredFields.includes('ticket_type') && (
                             <span className="text-danger">*</span>
                           )}
@@ -798,7 +799,7 @@ export default function Edit({
                       onChange={(option) =>
                         setData('type_id', option?.value?.toString() || '')
                       }
-                      placeholder="Select type"
+                      placeholder={t('ticket.selectType')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -812,7 +813,7 @@ export default function Edit({
                     <Combobox
                       label={
                         <>
-                          Region
+                          {t('ticket.region')}
                           {requiredFields.includes('region') && (
                             <span className="text-danger">*</span>
                           )}
@@ -827,7 +828,7 @@ export default function Edit({
                       onChange={(option) =>
                         setData('region_id', option?.value?.toString() || '')
                       }
-                      placeholder="Select region"
+                      placeholder={t('ticket.selectRegion')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -841,7 +842,7 @@ export default function Edit({
                     <Combobox
                       label={
                         <>
-                          Category
+                          {t('ticket.category')}
                           {requiredFields.includes('category') && (
                             <span className="text-danger">*</span>
                           )}
@@ -854,7 +855,7 @@ export default function Edit({
                         ) || null
                       }
                       onChange={(option) => setData('category_id', option?.value?.toString() || '')}
-                      placeholder="Select category"
+                      placeholder={t('ticket.selectCategory')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -867,16 +868,16 @@ export default function Edit({
               {/* Additional Details Card */}
               <div className="card">
                 <div className="card-header">
-                  <h6 className="card-title">Additional Details</h6>
+                  <h6 className="card-title">{t('ticket.details')}</h6>
                 </div>
                 <div className="card-body space-y-4">
                   {/* Due Date */}
                   <div>
                     <DatePicker
-                      label="Due Date"
+                      label={t('ticket.dueDate')}
                       value={data.due}
                       onChange={(dates, dateStr) => setData('due', dateStr)}
-                      placeholder="Select due date"
+                      placeholder={t('ticket.dueDate')}
                       disabled={processing}
                       options={{
                         enableTime: true,
@@ -887,7 +888,7 @@ export default function Edit({
                   {/* Source */}
                   <div>
                     <Combobox
-                      label="Source"
+                      label={t('ticket.source')}
                       options={sourceOptions}
                       value={
                         sourceOptions.find(
@@ -897,7 +898,7 @@ export default function Edit({
                       onChange={(option) =>
                         setData('source', option?.value?.toString() || 'Email')
                       }
-                      placeholder="Select source"
+                      placeholder={t('ticket.source')}
                       disabled={processing}
                       isSearchable={false}
                     />
@@ -906,7 +907,7 @@ export default function Edit({
                   {/* Tags */}
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Tags
+                      {t('ticket.tags')}
                     </label>
                     <div className="flex gap-2 mb-2">
                       <input
@@ -919,7 +920,7 @@ export default function Edit({
                             handleAddTag();
                           }
                         }}
-                        placeholder="email, notifications, configuration"
+                        placeholder={t('ticket.addTag')}
                         className="form-input flex-1"
                         disabled={processing}
                       />
@@ -956,7 +957,7 @@ export default function Edit({
                     className="btn border-default-200 text-default-900"
                     disabled={processing}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </Link>
                 <button
@@ -967,10 +968,10 @@ export default function Edit({
                   {processing ? (
                     <span className="flex items-center gap-2">
                       <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                      Saving...
+                      {t('ticket.updating')}
                     </span>
                   ) : (
-                    'Save Changes'
+                    t('common.save')
                   )}
                 </button>
               </div>
@@ -988,10 +989,10 @@ export default function Edit({
           }
         }}
         onConfirm={handleConfirmDelete}
-        title="Confirm Delete"
+        title={t('common.delete')}
         description={`Are you sure you want to delete the ticket "${ticket.subject}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         confirmVariant="danger"
         isLoading={isDeleting}
         size="lg"

@@ -7,6 +7,7 @@ import Drawer from "@/components/Drawer";
 import AppLayout from "@/layouts/app-layout";
 import PageMeta from "@/components/PageMeta";
 import PageHeader from "@/components/Pageheader";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type Role = {
   id: number;
@@ -31,6 +32,8 @@ type RolesPageProps = {
 };
 
 export default function Roles({ roles, permissions }: RolesPageProps) {
+  const { t } = useLanguageContext();
+
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
@@ -49,7 +52,7 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
   // Drawer handlers
   const handleOpenDrawer = useCallback((role?: Role) => {
     setEditingRole(role ?? null);
-    setFormData({ 
+    setFormData({
       name: role?.name ?? ""
     });
     setSelectedPermissions(role?.permissions ?? []);
@@ -69,11 +72,11 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
-    const url = editingRole 
-      ? `/roles/${editingRole.id}` 
+
+    const url = editingRole
+      ? `/roles/${editingRole.id}`
       : "/roles";
-    
+
     const method = editingRole ? "put" : "post";
 
     router[method](url, {
@@ -134,7 +137,7 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
     () => [
       {
         accessorKey: "name",
-        header: "Role Name",
+        header: t('settings.roles.columns.roleName'),
         cell: ({ getValue }) => (
           <span className="font-medium text-default-800">{getValue<string>()}</span>
         ),
@@ -142,37 +145,37 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
       },
       {
         accessorKey: "permissions_count",
-        header: "Permissions",
+        header: t('settings.roles.columns.permissions'),
         cell: ({ row }) => (
           <Badge variant="info">
-            {row.original.permissions_count} permissions
+            {row.original.permissions_count} {t('settings.roles.permissionsCount')}
           </Badge>
         ),
         enableSorting: true
       },
       {
         accessorKey: "users_count",
-        header: "Users",
+        header: t('settings.roles.columns.users'),
         cell: ({ row }) => (
-          <span className="text-default-600">{row.original.users_count} users</span>
+          <span className="text-default-600">{row.original.users_count} {t('settings.roles.usersCount')}</span>
         ),
         enableSorting: true
       },
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<Role>[]>(
     () => [
       {
-        label: "Edit",
+        label: t('table.edit'),
         value: "edit",
         onSelect: (role) => {
           handleOpenDrawer(role);
         }
       },
       {
-        label: "Delete",
+        label: t('table.delete'),
         value: "delete",
         onSelect: (role) => {
           handleOpenDeleteDialog(role);
@@ -180,14 +183,14 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
         condition: (role) => role.name !== "Super Admin"
       },
     ],
-    [handleOpenDrawer, handleOpenDeleteDialog]
+    [handleOpenDrawer, handleOpenDeleteDialog, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title="Roles" />
+      <PageMeta title={t('settings.roles.title')} />
       <main>
-        <PageHeader title="Roles" />
+        <PageHeader title={t('settings.roles.title')} />
         <div className="space-y-6">
           <DataTable<Role>
             data={roles}
@@ -199,16 +202,16 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
               total: roles.length
             }}
             searchValue=""
-            onSearchChange={() => {}}
-            onPageChange={() => {}}
-            onPerPageChange={() => {}}
+            onSearchChange={() => { }}
+            onPageChange={() => { }}
+            onPerPageChange={() => { }}
             renderCreate={({ isBusy }) => (
               <button
                 onClick={() => handleOpenDrawer()}
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Create Role
+                {t('settings.roles.createRole')}
               </button>
             )}
             isLoading={false}
@@ -220,7 +223,7 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        title={editingRole ? "Edit Role" : "Create Role"}
+        title={editingRole ? t('settings.roles.editRole') : t('settings.roles.createRole')}
         size="lg"
         placement="right"
         footer={
@@ -231,7 +234,7 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
               onClick={handleCloseDrawer}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('settings.roles.buttons.cancel')}
             </button>
             <button
               type="submit"
@@ -242,10 +245,10 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  {t('settings.roles.buttons.processing')}
                 </span>
               ) : (
-                editingRole ? "Update Role" : "Create Role"
+                editingRole ? t('settings.roles.buttons.update') : t('settings.roles.buttons.create')
               )}
             </button>
           </>
@@ -254,12 +257,12 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
         <form id="role-form" onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Role Name <span className="text-danger">*</span>
+              {t('settings.roles.form.roleName')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter role name"
+              placeholder={t('settings.roles.form.enterRoleName')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               disabled={isSubmitting}
@@ -272,7 +275,7 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-3">
-              Permissions
+              {t('settings.roles.form.permissions')}
             </label>
             <div className="space-y-4">
               {Object.entries(permissions).map(([group, perms]) => (
@@ -315,10 +318,10 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
           }
         }}
         onConfirm={handleConfirmDelete}
-        title="Confirm Delete"
-        description={`Are you sure you want to delete the role "${deletingRole?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('settings.roles.confirmDeleteTitle')}
+        description={`${t('settings.roles.confirmDelete')} "${deletingRole?.name}"? ${t('settings.roles.actionCannotBeUndone')}`}
+        confirmText={t('settings.roles.delete')}
+        cancelText={t('settings.roles.buttons.cancel')}
         confirmVariant="danger"
         isLoading={isDeleting}
         size="lg"
@@ -326,4 +329,3 @@ export default function Roles({ roles, permissions }: RolesPageProps) {
     </AppLayout>
   );
 }
-

@@ -10,6 +10,7 @@ import PageHeader from "@/components/Pageheader";
 import PageMeta from "@/components/PageMeta";
 import TextEditor from "@/components/TextEditor";
 import { BookOpen } from "lucide-react";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type TypeOption = {
   id: number;
@@ -47,6 +48,8 @@ type KbPageProps = {
 };
 
 export default function Index({ knowledge_base, filters, types = [] }: KbPageProps) {
+  const { t } = useLanguageContext();
+
   const safeKb: KbPaginator = {
     data: knowledge_base?.data ?? [],
     current_page: knowledge_base?.current_page ?? 1,
@@ -64,25 +67,25 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingKb, setEditingKb] = useState<KbRecord | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingKb, setDeletingKb] = useState<KbRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Bulk delete dialog state
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [bulkDeleteIds, setBulkDeleteIds] = useState<number[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Form state
-  const [formData, setFormData] = useState({ 
-    title: "", 
+  const [formData, setFormData] = useState({
+    title: "",
     type_id: "",
     details: ""
   });
@@ -100,7 +103,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
   // Drawer handlers
   const handleOpenDrawer = useCallback((kb?: KbRecord) => {
     setEditingKb(kb ?? null);
-    setFormData({ 
+    setFormData({
       title: kb?.title ?? "",
       type_id: kb?.type_id?.toString() ?? "",
       details: kb?.details ?? ""
@@ -120,11 +123,11 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
-    const url = editingKb 
-      ? `/knowledge_base/${editingKb.id}` 
+
+    const url = editingKb
+      ? `/knowledge_base/${editingKb.id}`
       : "/knowledge_base";
-    
+
     const method = editingKb ? "put" : "post";
 
     router[method](url, formData, {
@@ -206,7 +209,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.page !== safeKb.current_page ||
         query.perPage !== safeKb.per_page ||
@@ -248,7 +251,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
     () => [
       {
         accessorKey: "title",
-        header: "Title",
+        header: t('table.title'),
         cell: ({ getValue }) => (
           <span className="font-medium text-default-800">{getValue<string>()}</span>
         ),
@@ -256,7 +259,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
       },
       {
         accessorKey: "type",
-        header: "Type",
+        header: t('table.type'),
         cell: ({ getValue }) => {
           const type = getValue<string>();
           return type ? (
@@ -270,33 +273,33 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
         enableSorting: true
       }
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<KbRecord>[]>(
     () => [
       {
-        label: "Edit",
+        label: t('table.edit'),
         value: "edit",
         onSelect: (kb) => {
           handleOpenDrawer(kb);
         }
       },
       {
-        label: "Delete",
+        label: t('table.delete'),
         value: "delete",
         onSelect: (kb) => {
           handleOpenDeleteDialog(kb);
         }
       },
     ],
-    [handleOpenDrawer, handleOpenDeleteDialog]
+    [handleOpenDrawer, handleOpenDeleteDialog, t]
   );
 
   const bulkActions = useMemo<DataTableBulkAction<KbRecord>[]>(
     () => [
       {
-        label: "Delete selection",
+        label: t('table.deleteSelection'),
         value: "delete",
         onSelect: async (selectedRows) => {
           const ids = selectedRows.map(row => row.id);
@@ -304,20 +307,20 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
         }
       }
     ],
-    [handleOpenBulkDeleteDialog]
+    [handleOpenBulkDeleteDialog, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title="Knowledge Base" />
+      <PageMeta title={t('kb.title')} />
       <main>
-        <PageHeader 
-          title="Knowledge Base" 
-          subtitle="Manage knowledge base articles"
+        <PageHeader
+          title={t('kb.title')}
+          subtitle={t('kb.subtitle')}
           icon={BookOpen}
           count={safeKb.total}
         />
-        
+
         <div className="space-y-6">
           <DataTable<KbRecord>
             data={safeKb.data}
@@ -345,7 +348,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Create Article
+                {t('kb.createArticle')}
               </button>
             )}
             rowActions={rowActions}
@@ -358,7 +361,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
       <Drawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        title={editingKb ? "Edit Article" : "Create Article"}
+        title={editingKb ? t('kb.editArticle') : t('kb.createArticle')}
         size="xl"
         placement="right"
         footer={
@@ -369,7 +372,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
               onClick={handleCloseDrawer}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -380,10 +383,10 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  {t('table.processing')}
                 </span>
               ) : (
-                editingKb ? "Update" : "Create"
+                editingKb ? t('table.update') : t('table.create')
               )}
             </button>
           </>
@@ -392,12 +395,12 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
         <form id="kb-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Title <span className="text-danger">*</span>
+              {t('kb.articleTitle')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="title"
-              placeholder="Enter article title"
+              placeholder={t('kb.enterTitle')}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               disabled={isSubmitting}
@@ -413,7 +416,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
             <Combobox
               label={
                 <>
-                  Type <span className="text-danger">*</span>
+                  {t('table.type')} <span className="text-danger">*</span>
                 </>
               }
               options={typeOptions}
@@ -425,7 +428,7 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
               onChange={(option) =>
                 setFormData({ ...formData, type_id: option?.value?.toString() || '' })
               }
-              placeholder="Select a type"
+              placeholder={t('kb.selectType')}
               disabled={isSubmitting}
               isClearable
               isSearchable
@@ -435,12 +438,12 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Content <span className="text-danger">*</span>
+              {t('kb.content')} <span className="text-danger">*</span>
             </label>
             <input type="hidden" name="details" value={formData.details} />
             <TextEditor
               initialValue={formData.details}
-              placeholder="Enter article content..."
+              placeholder={t('kb.enterContent')}
               onChange={(content) => setFormData({ ...formData, details: content })}
               showToolbar={true}
               className="min-h-[300px]"
@@ -461,10 +464,10 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
           }
         }}
         onConfirm={handleConfirmDelete}
-        title="Confirm Delete"
-        description={`Are you sure you want to delete "${deletingKb?.title}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('table.confirmDelete')}
+        description={`${t('kb.confirmDelete')} "${deletingKb?.title}"`}
+        confirmText={t('table.delete')}
+        cancelText={t('common.cancel')}
         confirmVariant="danger"
         isLoading={isDeleting}
         size="lg"
@@ -479,10 +482,10 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
           }
         }}
         onConfirm={handleConfirmBulkDelete}
-        title="Confirm Bulk Delete"
-        description={`Are you sure you want to delete ${bulkDeleteIds.length} article(s)? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('table.confirmBulkDelete')}
+        description={`${t('kb.confirmBulkDelete')} (${bulkDeleteIds.length})`}
+        confirmText={t('table.delete')}
+        cancelText={t('common.cancel')}
         confirmVariant="danger"
         isLoading={isBulkDeleting}
         size="lg"
@@ -490,4 +493,3 @@ export default function Index({ knowledge_base, filters, types = [] }: KbPagePro
     </AppLayout>
   );
 }
-

@@ -6,6 +6,7 @@ import InputError from '@/components/input-error';
 import Combobox, { SelectOption } from '@/components/Combobox';
 import PageHeader from '@/components/Pageheader';
 import { Mail } from 'lucide-react';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type SmtpSettingsPageProps = {
   settings: {
@@ -20,6 +21,8 @@ type SmtpSettingsPageProps = {
 };
 
 export default function Index({ settings }: SmtpSettingsPageProps) {
+  const { t } = useLanguageContext();
+
   const { data, setData, processing, errors } = useForm<{
     smtp_host: string;
     smtp_port: string;
@@ -46,7 +49,7 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     router.put('/settings/smtp', {
       ...data,
     });
@@ -54,11 +57,11 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
 
   return (
     <AppLayout>
-      <PageMeta title="SMTP Settings" />
+      <PageMeta title={t('settings.smtp.title')} />
       <main className="max-w-4xl">
-        <PageHeader 
-          title="SMTP Settings" 
-          subtitle="Configure email server settings"
+        <PageHeader
+          title={t('settings.smtp.title')}
+          subtitle={t('settings.smtp.subtitle')}
           icon={Mail}
         />
 
@@ -66,14 +69,14 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
           {/* Server Configuration */}
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Server Configuration</h6>
+              <h6 className="card-title">{t('settings.smtp.serverConfig')}</h6>
             </div>
             <div className="card-body">
               <div className="space-y-6">
                 {/* SMTP Host */}
                 <div>
                   <label className="block font-medium text-default-900 text-sm mb-2">
-                    SMTP Host <span className="text-danger">*</span>
+                    {t('settings.smtp.smtpHost')} <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
@@ -86,7 +89,7 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
                   />
                   <InputError message={errors.smtp_host} />
                   <p className="text-default-500 text-xs mt-1">
-                    The hostname of your SMTP server
+                    {t('settings.smtp.smtpHostHint')}
                   </p>
                 </div>
 
@@ -94,7 +97,7 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      SMTP Port <span className="text-danger">*</span>
+                      {t('settings.smtp.smtpPort')} <span className="text-danger">*</span>
                     </label>
                     <input
                       type="number"
@@ -109,24 +112,24 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
                     />
                     <InputError message={errors.smtp_port} />
                     <p className="text-default-500 text-xs mt-1">
-                      Common ports: 25, 465 (SSL), 587 (TLS)
+                      {t('settings.smtp.smtpPortHint')}
                     </p>
                   </div>
 
                   <div>
                     <input type="hidden" name="smtp_security" value={data.smtp_security} />
                     <Combobox
-                      label="Security"
+                      label={t('settings.smtp.security')}
                       options={securityOptions}
                       value={securityOptions.find(opt => String(opt.value) === data.smtp_security) || null}
                       onChange={(option) => setData('smtp_security', option?.value?.toString() || '')}
-                      placeholder="Select security protocol"
+                      placeholder={t('settings.smtp.selectSecurityProtocol')}
                       disabled={processing}
                       isClearable
                       error={errors.smtp_security}
                     />
                     <p className="text-default-500 text-xs mt-1">
-                      Encryption protocol for secure connection
+                      {t('settings.smtp.securityHint')}
                     </p>
                   </div>
                 </div>
@@ -137,7 +140,7 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
           {/* Sender Information */}
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Sender Information</h6>
+              <h6 className="card-title">{t('settings.smtp.senderInfo')}</h6>
             </div>
             <div className="card-body">
               <div className="space-y-6">
@@ -145,7 +148,7 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      From Name <span className="text-danger">*</span>
+                      {t('settings.smtp.fromName')} <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
@@ -158,13 +161,13 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
                     />
                     <InputError message={errors.smtp_from_name} />
                     <p className="text-default-500 text-xs mt-1">
-                      The name that appears in the "From" field
+                      {t('settings.smtp.fromNameHint')}
                     </p>
                   </div>
 
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      From Email <span className="text-danger">*</span>
+                      {t('settings.smtp.fromEmail')} <span className="text-danger">*</span>
                     </label>
                     <input
                       type="email"
@@ -177,7 +180,7 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
                     />
                     <InputError message={errors.smtp_from_email} />
                     <p className="text-default-500 text-xs mt-1">
-                      The email address that appears in the "From" field
+                      {t('settings.smtp.fromEmailHint')}
                     </p>
                   </div>
                 </div>
@@ -188,7 +191,7 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
           {/* Authentication */}
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Authentication</h6>
+              <h6 className="card-title">{t('settings.smtp.authentication')}</h6>
             </div>
             <div className="card-body">
               <div className="space-y-6">
@@ -196,41 +199,41 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Username
+                      {t('settings.smtp.username')}
                     </label>
                     <input
                       type="text"
                       name="smtp_username"
                       value={data.smtp_username}
                       onChange={(e) => setData('smtp_username', e.target.value)}
-                      placeholder="Enter SMTP username"
+                      placeholder={t('settings.smtp.enterUsername')}
                       disabled={processing}
                       className="form-input"
                       autoComplete="off"
                     />
                     <InputError message={errors.smtp_username} />
                     <p className="text-default-500 text-xs mt-1">
-                      Your SMTP account username
+                      {t('settings.smtp.usernameHint')}
                     </p>
                   </div>
 
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Password
+                      {t('settings.smtp.password')}
                     </label>
                     <input
                       type="password"
                       name="smtp_password"
                       value={data.smtp_password}
                       onChange={(e) => setData('smtp_password', e.target.value)}
-                      placeholder="Enter SMTP password"
+                      placeholder={t('settings.smtp.enterPassword')}
                       disabled={processing}
                       className="form-input"
                       autoComplete="new-password"
                     />
                     <InputError message={errors.smtp_password} />
                     <p className="text-default-500 text-xs mt-1">
-                      Your SMTP account password
+                      {t('settings.smtp.passwordHint')}
                     </p>
                   </div>
                 </div>
@@ -240,22 +243,22 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
 
           {/* Information Banner */}
           <div className="bg-info-50 border border-info-200 rounded-lg p-4">
-            <h4 className="font-semibold text-info-900 mb-2">Common SMTP Providers</h4>
+            <h4 className="font-semibold text-info-900 mb-2">{t('settings.smtp.commonProviders')}</h4>
             <div className="text-info-700 text-sm space-y-2">
               <div>
-                <strong>Gmail:</strong> smtp.gmail.com, Port 587 (TLS) or 465 (SSL)
+                <strong>{t('settings.smtp.gmail')}:</strong> smtp.gmail.com, Port 587 (TLS) or 465 (SSL)
               </div>
               <div>
-                <strong>Outlook:</strong> smtp-mail.outlook.com, Port 587 (TLS)
+                <strong>{t('settings.smtp.outlook')}:</strong> smtp-mail.outlook.com, Port 587 (TLS)
               </div>
               <div>
-                <strong>SendGrid:</strong> smtp.sendgrid.net, Port 587 (TLS)
+                <strong>{t('settings.smtp.sendgrid')}:</strong> smtp.sendgrid.net, Port 587 (TLS)
               </div>
               <div>
-                <strong>Mailgun:</strong> smtp.mailgun.org, Port 587 (TLS)
+                <strong>{t('settings.smtp.mailgun')}:</strong> smtp.mailgun.org, Port 587 (TLS)
               </div>
               <p className="mt-2 text-xs">
-                Note: For Gmail, you may need to use an App Password instead of your regular password.
+                {t('settings.smtp.gmailNote')}
               </p>
             </div>
           </div>
@@ -270,10 +273,10 @@ export default function Index({ settings }: SmtpSettingsPageProps) {
               {processing ? (
                 <span className="flex items-center gap-2">
                   <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                  Saving...
+                  {t('settings.smtp.saving')}
                 </span>
               ) : (
-                'Save SMTP Settings'
+                t('settings.smtp.saveSmtpSettings')
               )}
             </button>
           </div>

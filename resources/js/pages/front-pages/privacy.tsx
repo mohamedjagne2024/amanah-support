@@ -4,6 +4,7 @@ import { Shield } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
 import TextEditor from '@/components/TextEditor';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type PageData = {
   title: string;
@@ -27,6 +28,7 @@ const defaultPageData: PageData = {
 };
 
 export default function Privacy({ title, page }: PrivacyPageProps) {
+  const { t } = useLanguageContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const initialData = useMemo(() => {
     if (!page?.html) return defaultPageData;
@@ -61,13 +63,13 @@ export default function Privacy({ title, page }: PrivacyPageProps) {
 
   return (
     <AppLayout>
-      <PageMeta title="Privacy Policy Settings" />
+      <PageMeta title={t('frontPages.privacy.title')} />
       <main className="pb-24">
         <form onSubmit={handleSubmit}>
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-default-900">Privacy Policy Settings</h1>
-            <p className="text-default-500 mt-1">Configure your privacy policy page content</p>
+            <h1 className="text-2xl font-bold text-default-900">{t('frontPages.privacy.title')}</h1>
+            <p className="text-default-500 mt-1">{t('frontPages.privacy.subtitle')}</p>
           </div>
 
           <div className="space-y-6 max-w-5xl">
@@ -78,13 +80,13 @@ export default function Privacy({ title, page }: PrivacyPageProps) {
                   <Shield className="size-5 text-primary" />
                 </div>
                 <div>
-                  <h6 className="card-title">Page Content</h6>
-                  <p className="text-sm text-default-500">Privacy policy title and content</p>
+                  <h6 className="card-title">{t('frontPages.privacy.pageContent')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.privacy.pageContentDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Page Title</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.privacy.pageTitle')}</label>
                   <input
                     type="text"
                     value={data.title}
@@ -95,9 +97,9 @@ export default function Privacy({ title, page }: PrivacyPageProps) {
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Page Content</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.privacy.pageContent')}</label>
                   <TextEditor
-                    placeholder="Enter your privacy policy content..."
+                    placeholder={t('frontPages.privacy.enterContent')}
                     onChange={(content) => setData('content', content)}
                     showToolbar={true}
                     className="min-h-[400px]"
@@ -117,7 +119,7 @@ export default function Privacy({ title, page }: PrivacyPageProps) {
                 className="btn border-default-200 text-default-700"
                 disabled={isSubmitting}
               >
-                Reset
+                {t('frontPages.reset')}
               </button>
               <button
                 type="submit"
@@ -127,10 +129,10 @@ export default function Privacy({ title, page }: PrivacyPageProps) {
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                    Saving...
+                    {t('frontPages.saving')}
                   </span>
                 ) : (
-                  'Save Changes'
+                  t('frontPages.saveChanges')
                 )}
               </button>
             </div>
@@ -140,4 +142,3 @@ export default function Privacy({ title, page }: PrivacyPageProps) {
     </AppLayout>
   );
 }
-

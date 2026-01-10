@@ -1,7 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { 
-  Search, 
+import {
+  Search,
   MessageSquare,
   Paperclip,
   Send,
@@ -14,6 +14,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
 import { useChatMessageListener } from '@/hooks/usePusher';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type Creator = {
   id: number;
@@ -153,7 +154,7 @@ const Avatar = ({ name, profilePicture, className = '' }: { name: string; profil
   const getColorClass = (name: string) => {
     const colors = [
       'bg-primary',
-      'bg-success', 
+      'bg-success',
       'bg-info',
       'bg-warning',
       'bg-danger',
@@ -167,8 +168,8 @@ const Avatar = ({ name, profilePicture, className = '' }: { name: string; profil
 
   if (profilePicture) {
     return (
-      <img 
-        src={profilePicture} 
+      <img
+        src={profilePicture}
         alt={name}
         className={`size-10 rounded-full object-cover ${className}`}
       />
@@ -183,44 +184,45 @@ const Avatar = ({ name, profilePicture, className = '' }: { name: string; profil
 };
 
 // Format relative time
-const formatRelativeTime = (dateString: string) => {
+const formatRelativeTime = (dateString: string, t: (key: string) => string) => {
   const date = new Date(dateString);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
-  
+
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
   const months = Math.floor(diff / 2592000000);
-  
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes} Minutes Ago`;
-  if (hours < 24) return `${hours} Hours Ago`;
-  if (days < 30) return `${days} Days Ago`;
-  return `${months} Months Ago`;
+
+  if (minutes < 1) return t('chat.justNow');
+  if (minutes < 60) return `${minutes} ${t('chat.minutesAgo')}`;
+  if (hours < 24) return `${hours} ${t('chat.hoursAgo')}`;
+  if (days < 30) return `${days} ${t('chat.daysAgo')}`;
+  return `${months} ${t('chat.monthsAgo')}`;
 };
 
 // Format message time
-const formatMessageTime = (dateString: string) => {
+const formatMessageTime = (dateString: string, t: (key: string) => string) => {
   const date = new Date(dateString);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
-  
-  const timeStr = date.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
+
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
     minute: '2-digit',
-    hour12: true 
+    hour12: true
   }).toLowerCase();
-  
+
   if (isToday) {
-    return `Today ${timeStr}`;
+    return `${t('chat.today')} ${timeStr}`;
   }
-  
+
   const dayStr = date.toLocaleDateString('en-US', { weekday: 'long' });
   return `${dayStr} ${timeStr}`;
 };
 
 export default function Index({ title, chat, conversations, filters }: ChatPageProps) {
+  const { t } = useLanguageContext();
   const [searchValue, setSearchValue] = useState(filters?.search || '');
   const [replyContent, setReplyContent] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -299,13 +301,13 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
 
   const handleSendMessage = async () => {
     if ((!replyContent.trim() && attachments.length === 0) || !chat || isSending) return;
-    
+
     setIsSending(true);
     try {
       const formData = new FormData();
       formData.append('conversation_id', chat.id.toString());
       formData.append('message', replyContent);
-      
+
       attachments.forEach((file) => {
         formData.append('files[]', file);
       });
@@ -317,7 +319,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
         },
         body: formData,
       });
-      
+
       if (response.ok) {
         const newMessage = await response.json();
         // Add to local state with deduplication check
@@ -366,14 +368,14 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
 
   return (
     <AppLayout>
-      <PageMeta title={title || 'Chat'} />
+      <PageMeta title={t('chat.title')} />
       <main className="h-[calc(100vh-130px)]">
         <div className="flex h-full gap-0">
           {/* Left Sidebar - Conversation List */}
           <div className="w-[340px] flex flex-col bg-card border-r border-default-200 shrink-0">
             {/* Header */}
             <div className="p-4 border-b border-default-200">
-              <h1 className="text-xl font-semibold text-default-900 mb-1">Manage Conversations</h1>
+              <h1 className="text-xl font-semibold text-default-900 mb-1">{t('chat.manageConversations')}</h1>
             </div>
 
             {/* Filter & Search */}
@@ -383,11 +385,11 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                   type="text"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder="Search conversations..."
+                  placeholder={t('chat.searchConversations')}
                   className="form-input pr-10"
                 />
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-default-400 hover:text-default-600"
                 >
                   <Search className="size-4" />
@@ -399,21 +401,20 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
             <div className="flex-1 overflow-y-auto">
               {safeConversations.data.length === 0 ? (
                 <div className="p-4 text-center text-default-500">
-                  No conversations found
+                  {t('chat.noConversations')}
                 </div>
               ) : (
                 <div className="divide-y divide-default-100">
                   {safeConversations.data.map((conversation) => {
                     const isActive = chat?.id === conversation.id;
                     const creatorName = getCreatorName(conversation.creator);
-                    
+
                     return (
                       <Link
                         key={conversation.id}
                         href={`/chat/${conversation.id}`}
-                        className={`flex items-start gap-3 p-4 hover:bg-default-50 transition-colors cursor-pointer ${
-                          isActive ? 'bg-primary/5 border-l-2 border-l-primary' : ''
-                        }`}
+                        className={`flex items-start gap-3 p-4 hover:bg-default-50 transition-colors cursor-pointer ${isActive ? 'bg-primary/5 border-l-2 border-l-primary' : ''
+                          }`}
                       >
                         <Avatar name={creatorName} profilePicture={conversation.creator?.profile_picture_url} />
                         <div className="flex-1 min-w-0">
@@ -422,7 +423,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                               {creatorName}
                             </h3>
                             <span className="text-xs text-default-500 whitespace-nowrap">
-                              {formatRelativeTime(conversation.updated_at)}
+                              {formatRelativeTime(conversation.updated_at, t)}
                             </span>
                           </div>
                           <p className="text-sm text-default-600 truncate">
@@ -451,7 +452,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                   onClick={handleLoadMore}
                   className="w-full text-center text-primary font-medium text-sm hover:underline"
                 >
-                  Load More Conversations
+                  {t('chat.loadMore')}
                 </button>
               </div>
             )}
@@ -474,23 +475,23 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                         </span>
                       </div>
                       <p className="text-sm text-default-600">
-                        {chat.title || 'No subject'}
+                        {chat.title || t('chat.noSubject')}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button 
+                      <button
                         type="button"
                         className="btn btn-sm border border-default-200 bg-transparent text-default-600 hover:bg-default-100"
                       >
                         <Copy className="size-4" />
                       </button>
-                      <button 
+                      <button
                         type="button"
                         className="btn btn-sm border border-default-200 bg-transparent text-danger hover:bg-danger/10"
                       >
                         <Trash2 className="size-4" />
                       </button>
-                      <button 
+                      <button
                         type="button"
                         className="btn btn-sm border border-default-200 bg-transparent text-default-600 hover:bg-default-100"
                       >
@@ -506,7 +507,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                     const isAgent = isAgentMessage(message);
                     const senderName = getMessageSenderName(message);
                     const senderProfilePicture = getMessageSenderProfilePicture(message);
-                    
+
                     return (
                       <div
                         key={message.id}
@@ -514,11 +515,10 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                       >
                         <div className={`max-w-[70%] ${isAgent ? 'order-1' : ''}`}>
                           <div
-                            className={`rounded-2xl px-4 py-3 ${
-                              isAgent
+                            className={`rounded-2xl px-4 py-3 ${isAgent
                                 ? 'bg-primary text-white rounded-br-md'
                                 : 'bg-card border border-default-200 text-default-800 rounded-bl-md'
-                            }`}
+                              }`}
                           >
                             <div className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.message }} />
                             {/* Attachments */}
@@ -530,11 +530,10 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                                     href={attachment.url || attachment.path}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
-                                      isAgent 
-                                        ? 'bg-white/10 hover:bg-white/20 text-white' 
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isAgent
+                                        ? 'bg-white/10 hover:bg-white/20 text-white'
                                         : 'bg-default-50 hover:bg-default-100 text-primary'
-                                    } transition-colors`}
+                                      } transition-colors`}
                                   >
                                     <FileText className="size-4" />
                                     <span className="flex-1 truncate">{attachment.name}</span>
@@ -545,7 +544,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                           </div>
                           <div className={`flex items-center gap-2 mt-1 ${isAgent ? 'justify-end' : 'justify-start'}`}>
                             <span className="text-xs text-default-500">
-                              {formatMessageTime(message.updated_at)}
+                              {formatMessageTime(message.updated_at, t)}
                             </span>
                             {isAgent && (
                               <Avatar name={senderName} profilePicture={senderProfilePicture} className="size-6 text-xs" />
@@ -561,16 +560,16 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                 {/* Reply Area */}
                 <div className="bg-card border-t border-default-200 p-4">
                   <div className="mb-3">
-                    <label className="block font-medium text-default-900 text-sm">Reply</label>
+                    <label className="block font-medium text-default-900 text-sm">{t('chat.reply')}</label>
                   </div>
-                  
+
                   {/* Selected Attachments Preview */}
                   {attachments.length > 0 && (
                     <div className="mb-3 p-3 border border-default-200 rounded-lg bg-default-50">
                       <div className="flex flex-wrap gap-2">
                         {attachments.map((file, index) => (
-                          <div 
-                            key={index} 
+                          <div
+                            key={index}
                             className="flex items-center gap-2 px-3 py-2 bg-white border border-default-200 rounded-lg text-sm"
                           >
                             <FileText className="size-4 text-default-500" />
@@ -593,7 +592,7 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                     <textarea
                       value={replyContent}
                       onChange={(e) => setReplyContent(e.target.value)}
-                      placeholder="Type your message..."
+                      placeholder={t('chat.typeMessage')}
                       className="form-input w-full min-h-[120px] resize-none pr-12"
                       rows={4}
                     />
@@ -605,11 +604,11 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                       onChange={handleFileChange}
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
                     />
-                    <button 
+                    <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="absolute right-3 top-3 p-2 rounded-lg text-default-400 hover:text-default-600 hover:bg-default-100 transition-colors"
-                      title="Attach files"
+                      title={t('chat.attachFiles')}
                     >
                       <Paperclip className="size-5" />
                     </button>
@@ -626,12 +625,12 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                       {isSending ? (
                         <>
                           <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin me-2" />
-                          Sending...
+                          {t('chat.sending')}
                         </>
                       ) : (
                         <>
                           <Send className="size-4 me-2" />
-                          Send
+                          {t('chat.send')}
                         </>
                       )}
                     </button>
@@ -646,10 +645,10 @@ export default function Index({ title, chat, conversations, filters }: ChatPageP
                     <MessageSquare className="size-10 text-default-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-default-900 mb-2">
-                    Select a Conversation
+                    {t('chat.selectConversation')}
                   </h3>
                   <p className="text-default-600 text-sm">
-                    Choose a conversation from the list to start chatting
+                    {t('chat.selectConversationDescription')}
                   </p>
                 </div>
               </div>

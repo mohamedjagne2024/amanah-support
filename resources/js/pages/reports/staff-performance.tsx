@@ -1,10 +1,11 @@
 import { router } from "@inertiajs/react";
 import { useCallback, useMemo, useState } from "react";
-import { Download, Printer, ChevronDown } from "lucide-react";
+import { Printer, ChevronDown } from "lucide-react";
 import { Menu, MenuButton, MenuItem, MenuItems, Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
 import AppLayout from "@/layouts/app-layout";
 import PageMeta from "@/components/PageMeta";
 import ComboboxComponent, { SelectOption } from "@/components/Combobox";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type RecentActivity = {
   type: "ticket" | "comment" | "message";
@@ -88,6 +89,7 @@ export default function StaffPerformance({
   reportData,
   filters,
 }: StaffPerformancePageProps) {
+  const { t } = useLanguageContext();
   const [isLoading, setIsLoading] = useState(false);
 
   // Local filter state
@@ -104,7 +106,7 @@ export default function StaffPerformance({
   );
 
   // Get filter label helper
-  const getStaffLabel = (value: string) => 
+  const getStaffLabel = (value: string) =>
     staffMembers.find((s) => String(s.id) === value)?.name || "All";
 
   // Check if any filters are applied
@@ -170,7 +172,7 @@ export default function StaffPerformance({
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Staff Performance Report</title>
+          <title>${t('reports.staffPerformance.title')}</title>
           ${stylesheetLinks}
           ${styleTags}
           <style>
@@ -213,18 +215,18 @@ export default function StaffPerformance({
     `);
     printWindow.document.close();
 
-    printWindow.onafterprint = function() {
+    printWindow.onafterprint = function () {
       printWindow.close();
     };
 
-    printWindow.onload = function() {
-      setTimeout(function() {
+    printWindow.onload = function () {
+      setTimeout(function () {
         printWindow.focus();
         printWindow.print();
       }, 500);
     };
 
-    setTimeout(function() {
+    setTimeout(function () {
       if (!printWindow.closed && printWindow.document.readyState === 'complete') {
         printWindow.focus();
         printWindow.print();
@@ -257,31 +259,31 @@ export default function StaffPerformance({
     if (filters.date_from && filters.date_to) {
       return `${new Date(filters.date_from).toLocaleDateString()} - ${new Date(filters.date_to).toLocaleDateString()}`;
     }
-    if (filters.date_from) return `From ${new Date(filters.date_from).toLocaleDateString()}`;
-    if (filters.date_to) return `To ${new Date(filters.date_to).toLocaleDateString()}`;
-    return "All Time";
+    if (filters.date_from) return `${t('reports.staffPerformance.from')} ${new Date(filters.date_from).toLocaleDateString()}`;
+    if (filters.date_to) return `${t('reports.staffPerformance.to')} ${new Date(filters.date_to).toLocaleDateString()}`;
+    return t('reports.staffPerformance.allTime');
   };
 
   const generatedAt = new Date().toLocaleString();
 
   return (
     <AppLayout>
-      <PageMeta title="Staff Performance Report" />
+      <PageMeta title={t('reports.staffPerformance.title')} />
       <main>
         {/* Page Header & Filters - Hidden on print */}
         <Disclosure as="div" className="mb-4 print:hidden" defaultOpen={!!hasFilters}>
           {({ open }) => (
             <>
               <div className="flex items-center md:justify-between flex-wrap gap-2 mb-4">
-                <h4 className="text-default-900 text-lg font-semibold">Staff Performance Report</h4>
+                <h4 className="text-default-900 text-lg font-semibold">{t('reports.staffPerformance.title')}</h4>
                 <div className="flex items-center gap-3">
                   <DisclosureButton className="btn border btn-outline-dashed border-primary text-primary hover:bg-primary/10 btn-sm">
                     <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
-                    Filters {hasFilters && <span className="text-primary text-xs">(Applied)</span>}
+                    {t('reports.staffPerformance.filters')} {hasFilters && <span className="text-primary text-xs">({t('reports.staffPerformance.applied')})</span>}
                   </DisclosureButton>
                   <Menu as="div" className="relative inline-flex">
                     <MenuButton className="btn border btn-outline-dashed border-primary text-primary hover:bg-primary/10 btn-sm">
-                      Actions
+                      {t('reports.staffPerformance.actions')}
                     </MenuButton>
                     <MenuItems
                       anchor="bottom end"
@@ -291,11 +293,10 @@ export default function StaffPerformance({
                         {({ focus }) => (
                           <button
                             onClick={handlePrint}
-                            className={`w-full text-left flex items-center gap-2 py-1.5 font-medium px-3 text-default-500 rounded cursor-pointer ${
-                              focus ? "bg-default-150" : ""
-                            }`}
+                            className={`w-full text-left flex items-center gap-2 py-1.5 font-medium px-3 text-default-500 rounded cursor-pointer ${focus ? "bg-default-150" : ""
+                              }`}
                           >
-                            <Printer className="size-4" /> Print
+                            <Printer className="size-4" /> {t('reports.staffPerformance.print')}
                           </button>
                         )}
                       </MenuItem>
@@ -309,18 +310,18 @@ export default function StaffPerformance({
                 <div className="card-body">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-default-700 mb-1.5">Staff Member</label>
+                      <label className="block text-sm font-medium text-default-700 mb-1.5">{t('reports.staffPerformance.staffMember')}</label>
                       <ComboboxComponent
                         options={staffOptions}
                         value={staffOptions.find((opt) => opt.value === localFilters.staff_id) || null}
                         onChange={(val) => setLocalFilters((prev) => ({ ...prev, staff_id: val ? String((val as SelectOption).value) : "" }))}
-                        placeholder="Select staff member"
+                        placeholder={t('reports.staffPerformance.selectStaff')}
                         isClearable
                         inputClassName="form-input form-input-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-default-700 mb-1.5">From Date</label>
+                      <label className="block text-sm font-medium text-default-700 mb-1.5">{t('reports.staffPerformance.fromDate')}</label>
                       <input
                         type="date"
                         value={localFilters.date_from}
@@ -329,7 +330,7 @@ export default function StaffPerformance({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-default-700 mb-1.5">To Date</label>
+                      <label className="block text-sm font-medium text-default-700 mb-1.5">{t('reports.staffPerformance.toDate')}</label>
                       <input
                         type="date"
                         value={localFilters.date_to}
@@ -345,7 +346,7 @@ export default function StaffPerformance({
                         className="btn btn-sm bg-transparent border border-default-300 text-default-700 hover:bg-default-100"
                         disabled={isLoading}
                       >
-                        Clear
+                        {t('reports.staffPerformance.clear')}
                       </button>
                     )}
                     <button
@@ -356,10 +357,10 @@ export default function StaffPerformance({
                       {isLoading ? (
                         <span className="inline-flex items-center gap-2">
                           <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Applying...
+                          {t('reports.staffPerformance.applying')}
                         </span>
                       ) : (
-                        "Apply Filters"
+                        t('reports.staffPerformance.applyFilters')
                       )}
                     </button>
                   </div>
@@ -376,20 +377,20 @@ export default function StaffPerformance({
             <div className="flex justify-between items-start w-full">
               {/* Logo */}
               <div className="flex-shrink-0">
-                <img 
-                  src="/assets/images/logo-dark.png" 
-                  alt="Company Logo" 
+                <img
+                  src="/assets/images/logo-dark.png"
+                  alt="Company Logo"
                   className="h-20 w-auto object-contain"
                 />
               </div>
-              
+
               {/* Report Title */}
               <div className="text-right">
                 <h1 className="text-4xl font-bold text-primary tracking-wide">
-                  STAFF PERFORMANCE REPORT
+                  {t('reports.staffPerformance.title').toUpperCase()}
                 </h1>
                 <p className="text-sm text-default-600 mt-1">
-                  Generated: {generatedAt}
+                  {t('reports.staffPerformance.generated')}: {generatedAt}
                 </p>
               </div>
             </div>
@@ -408,14 +409,14 @@ export default function StaffPerformance({
                     {reportData.staff.title} • {reportData.staff.email}
                   </p>
                 </div>
-                
+
                 {/* Total Summary Box */}
                 <div className="text-right">
-                  <p className="text-sm text-default-500 mb-1">Period</p>
+                  <p className="text-sm text-default-500 mb-1">{t('reports.staffPerformance.period')}</p>
                   <p className="text-xl font-bold text-default-900">
                     {formatDateRange()}
                   </p>
-                  <p className="text-sm text-default-500 mt-1">{reportData.summary.tickets_assigned} Total Tickets Assigned</p>
+                  <p className="text-sm text-default-500 mt-1">{reportData.summary.tickets_assigned} {t('reports.staffPerformance.totalTicketsAssigned')}</p>
                 </div>
               </div>
             </div>
@@ -427,13 +428,13 @@ export default function StaffPerformance({
             {hasFilters && (
               <div className="mb-6">
                 <p className="text-sm font-medium text-default-600 mb-3">
-                  Filter Criteria
+                  {t('reports.staffPerformance.filterCriteria')}
                 </p>
                 <div className="p-3 bg-default-50 rounded-lg border border-default-200">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {filters.staff_id && (
                       <div>
-                        <span className="text-xs text-default-500">Staff Member:</span>
+                        <span className="text-xs text-default-500">{t('reports.staffPerformance.staffMember')}:</span>
                         <span className="text-sm font-medium text-default-800 ml-2">
                           {getStaffLabel(String(filters.staff_id))}
                         </span>
@@ -441,7 +442,7 @@ export default function StaffPerformance({
                     )}
                     {filters.date_from && (
                       <div>
-                        <span className="text-xs text-default-500">From:</span>
+                        <span className="text-xs text-default-500">{t('reports.staffPerformance.from')}:</span>
                         <span className="text-sm font-medium text-default-800 ml-2">
                           {new Date(filters.date_from).toLocaleDateString()}
                         </span>
@@ -449,7 +450,7 @@ export default function StaffPerformance({
                     )}
                     {filters.date_to && (
                       <div>
-                        <span className="text-xs text-default-500">To:</span>
+                        <span className="text-xs text-default-500">{t('reports.staffPerformance.to')}:</span>
                         <span className="text-sm font-medium text-default-800 ml-2">
                           {new Date(filters.date_to).toLocaleDateString()}
                         </span>
@@ -463,7 +464,7 @@ export default function StaffPerformance({
             {/* No Staff Selected */}
             {!reportData ? (
               <div className="text-center py-12 text-default-500 border border-default-200 rounded-lg">
-                Select a staff member to generate the performance report
+                {t('reports.staffPerformance.selectStaffPrompt')}
               </div>
             ) : (
               <div className="border border-default-200 rounded-lg overflow-hidden">
@@ -473,13 +474,13 @@ export default function StaffPerformance({
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary">Tickets</span>
+                          <span className="font-semibold text-primary">{t('reports.staffPerformance.tickets')}</span>
                           <div className="flex gap-6 text-sm">
                             <span className="text-primary">
-                              <span className="font-medium">Total Assigned:</span> {reportData.summary.tickets_assigned}
+                              <span className="font-medium">{t('reports.staffPerformance.totalAssigned')}:</span> {reportData.summary.tickets_assigned}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">Resolution Rate:</span> {reportData.performance.resolution_rate}%
+                              <span className="font-medium">{t('reports.staffPerformance.resolutionRate')}:</span> {reportData.performance.resolution_rate}%
                             </span>
                           </div>
                         </div>
@@ -488,23 +489,23 @@ export default function StaffPerformance({
 
                     {/* Tickets Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Metric</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
-                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">Metric</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.staffPerformance.metric')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.count')}</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.metric')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.count')}</th>
                     </tr>
 
                     {/* Tickets Data */}
                     <tr className="border-t border-default-100 hover:bg-default-50/50">
-                      <td className="px-6 py-2 text-sm text-default-700">Tickets Created</td>
+                      <td className="px-6 py-2 text-sm text-default-700">{t('reports.staffPerformance.ticketsCreated')}</td>
                       <td className="px-4 py-2 text-sm text-default-900 text-center font-semibold">{reportData.summary.tickets_created}</td>
-                      <td className="px-4 py-2 text-sm text-default-700">Tickets Assigned</td>
+                      <td className="px-4 py-2 text-sm text-default-700">{t('reports.staffPerformance.ticketsAssigned')}</td>
                       <td className="px-4 py-2 text-sm text-default-900 text-center font-semibold">{reportData.summary.tickets_assigned}</td>
                     </tr>
                     <tr className="border-t border-default-100 hover:bg-default-50/50">
-                      <td className="px-6 py-2 text-sm text-default-700">Tickets Open</td>
+                      <td className="px-6 py-2 text-sm text-default-700">{t('reports.staffPerformance.ticketsOpen')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-yellow-600">{reportData.summary.tickets_open}</td>
-                      <td className="px-4 py-2 text-sm text-default-700">Tickets Closed</td>
+                      <td className="px-4 py-2 text-sm text-default-700">{t('reports.staffPerformance.ticketsClosed')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-green-600">{reportData.summary.tickets_closed}</td>
                     </tr>
 
@@ -515,13 +516,13 @@ export default function StaffPerformance({
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary">Comments (Ticket Replies)</span>
+                          <span className="font-semibold text-primary">{t('reports.staffPerformance.comments')}</span>
                           <div className="flex gap-6 text-sm">
                             <span className="text-primary">
-                              <span className="font-medium">Total:</span> {reportData.summary.total_comments}
+                              <span className="font-medium">{t('reports.staffPerformance.total')}:</span> {reportData.summary.total_comments}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">Avg per Ticket:</span> {reportData.summary.avg_comments_per_ticket}
+                              <span className="font-medium">{t('reports.staffPerformance.avgPerTicket')}:</span> {reportData.summary.avg_comments_per_ticket}
                             </span>
                           </div>
                         </div>
@@ -535,10 +536,10 @@ export default function StaffPerformance({
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary">Messages</span>
+                          <span className="font-semibold text-primary">{t('reports.staffPerformance.messages')}</span>
                           <div className="flex gap-6 text-sm">
                             <span className="text-primary">
-                              <span className="font-medium">Total Sent:</span> {reportData.summary.total_messages}
+                              <span className="font-medium">{t('reports.staffPerformance.totalSent')}:</span> {reportData.summary.total_messages}
                             </span>
                           </div>
                         </div>
@@ -552,13 +553,13 @@ export default function StaffPerformance({
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary">Conversations</span>
+                          <span className="font-semibold text-primary">{t('reports.staffPerformance.conversations')}</span>
                           <div className="flex gap-6 text-sm">
                             <span className="text-primary">
-                              <span className="font-medium">Participated:</span> {reportData.summary.conversations_participated}
+                              <span className="font-medium">{t('reports.staffPerformance.participated')}:</span> {reportData.summary.conversations_participated}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">Public Widget:</span> {reportData.summary.public_conversations}
+                              <span className="font-medium">{t('reports.staffPerformance.publicWidget')}:</span> {reportData.summary.public_conversations}
                             </span>
                           </div>
                         </div>
@@ -572,16 +573,16 @@ export default function StaffPerformance({
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary">Mentions</span>
+                          <span className="font-semibold text-primary">{t('reports.staffPerformance.mentions')}</span>
                           <div className="flex gap-6 text-sm">
                             <span className="text-primary">
-                              <span className="font-medium">Total:</span> {reportData.summary.total_mentions}
+                              <span className="font-medium">{t('reports.staffPerformance.total')}:</span> {reportData.summary.total_mentions}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">In Comments:</span> {reportData.summary.mentions_in_comments}
+                              <span className="font-medium">{t('reports.staffPerformance.inComments')}:</span> {reportData.summary.mentions_in_comments}
                             </span>
                             <span className="text-primary">
-                              <span className="font-medium">In Messages:</span> {reportData.summary.mentions_in_messages}
+                              <span className="font-medium">{t('reports.staffPerformance.inMessages')}:</span> {reportData.summary.mentions_in_messages}
                             </span>
                           </div>
                         </div>
@@ -594,29 +595,29 @@ export default function StaffPerformance({
                     {/* PERFORMANCE METRICS SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Performance Metrics</span>
+                        <span className="font-semibold text-primary">{t('reports.staffPerformance.performanceMetrics')}</span>
                       </td>
                     </tr>
 
                     {/* Performance Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Metric</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Value</th>
-                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">Metric</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Value</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.staffPerformance.metric')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.value')}</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.metric')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.value')}</th>
                     </tr>
 
                     {/* Performance Data */}
                     <tr className="border-t border-default-100 hover:bg-default-50/50">
-                      <td className="px-6 py-2 text-sm text-default-700">Avg. Response Time</td>
+                      <td className="px-6 py-2 text-sm text-default-700">{t('reports.staffPerformance.avgResponseTime')}</td>
                       <td className="px-4 py-2 text-sm text-default-900 text-center font-semibold">{formatHours(reportData.performance.avg_response_time_hours)}</td>
-                      <td className="px-4 py-2 text-sm text-default-700">Avg. Resolution Time</td>
+                      <td className="px-4 py-2 text-sm text-default-700">{t('reports.staffPerformance.avgResolutionTime')}</td>
                       <td className="px-4 py-2 text-sm text-default-900 text-center font-semibold">{formatHours(reportData.performance.avg_resolution_time_hours)}</td>
                     </tr>
                     <tr className="border-t border-default-100 hover:bg-default-50/50">
-                      <td className="px-6 py-2 text-sm text-default-700">Resolution Rate</td>
+                      <td className="px-6 py-2 text-sm text-default-700">{t('reports.staffPerformance.resolutionRate')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-green-600">{reportData.performance.resolution_rate}%</td>
-                      <td className="px-4 py-2 text-sm text-default-700">Satisfaction Score</td>
+                      <td className="px-4 py-2 text-sm text-default-700">{t('reports.staffPerformance.satisfactionScore')}</td>
                       <td className="px-4 py-2 text-sm text-center font-semibold text-amber-600">
                         {reportData.performance.satisfaction_score > 0 ? `${reportData.performance.satisfaction_score}/5` : 'N/A'}
                       </td>
@@ -628,15 +629,15 @@ export default function StaffPerformance({
                     {/* TICKETS BY STATUS SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Tickets by Status</span>
+                        <span className="font-semibold text-primary">{t('reports.staffPerformance.ticketsByStatus')}</span>
                       </td>
                     </tr>
 
                     {/* Status Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Status</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>Percentage</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.staffPerformance.status')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.count')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>{t('reports.staffPerformance.percentage')}</th>
                     </tr>
 
                     {/* Status Data */}
@@ -654,7 +655,7 @@ export default function StaffPerformance({
                       })
                     ) : (
                       <tr className="border-t border-default-100">
-                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">No data available</td>
+                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">{t('reports.staffPerformance.noDataAvailable')}</td>
                       </tr>
                     )}
 
@@ -664,15 +665,15 @@ export default function StaffPerformance({
                     {/* TICKETS BY PRIORITY SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Tickets by Priority</span>
+                        <span className="font-semibold text-primary">{t('reports.staffPerformance.ticketsByPriority')}</span>
                       </td>
                     </tr>
 
                     {/* Priority Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Priority</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Count</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>Percentage</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.staffPerformance.priority')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.count')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2" colSpan={2}>{t('reports.staffPerformance.percentage')}</th>
                     </tr>
 
                     {/* Priority Data */}
@@ -690,7 +691,7 @@ export default function StaffPerformance({
                       })
                     ) : (
                       <tr className="border-t border-default-100">
-                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">No data available</td>
+                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">{t('reports.staffPerformance.noDataAvailable')}</td>
                       </tr>
                     )}
 
@@ -700,16 +701,16 @@ export default function StaffPerformance({
                     {/* RECENT ACTIVITY SECTION */}
                     <tr className="bg-primary/10">
                       <td colSpan={4} className="px-4 py-3">
-                        <span className="font-semibold text-primary">Recent Activity (Last 20)</span>
+                        <span className="font-semibold text-primary">{t('reports.staffPerformance.recentActivity')}</span>
                       </td>
                     </tr>
 
                     {/* Activity Header */}
                     <tr className="bg-default-50 border-t border-default-100">
-                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">Date/Time</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Type</th>
-                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">Description</th>
-                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">Reference</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-6 py-2">{t('reports.staffPerformance.dateTime')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.type')}</th>
+                      <th className="text-left text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.description')}</th>
+                      <th className="text-center text-xs font-medium text-default-600 px-4 py-2">{t('reports.staffPerformance.reference')}</th>
                     </tr>
 
                     {/* Activity Data */}
@@ -735,7 +736,7 @@ export default function StaffPerformance({
                       ))
                     ) : (
                       <tr className="border-t border-default-100">
-                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">No recent activity</td>
+                        <td colSpan={4} className="px-6 py-3 text-sm text-default-500 text-center">{t('reports.staffPerformance.noRecentActivity')}</td>
                       </tr>
                     )}
 
@@ -743,19 +744,19 @@ export default function StaffPerformance({
                     <tr className="bg-default-200 border-t-2 border-default-400">
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-default-800">SUMMARY TOTALS</span>
+                          <span className="font-bold text-default-800">{t('reports.staffPerformance.summaryTotals')}</span>
                           <div className="flex gap-8">
                             <span className="font-bold text-default-800">
-                              Tickets: {reportData.summary.tickets_assigned}
+                              {t('reports.staffPerformance.tickets')}: {reportData.summary.tickets_assigned}
                             </span>
                             <span className="font-bold text-default-800">
-                              Comments: {reportData.summary.total_comments}
+                              {t('reports.staffPerformance.comments')}: {reportData.summary.total_comments}
                             </span>
                             <span className="font-bold text-default-800">
-                              Messages: {reportData.summary.total_messages}
+                              {t('reports.staffPerformance.messages')}: {reportData.summary.total_messages}
                             </span>
                             <span className="font-bold text-default-800">
-                              Resolution: {reportData.performance.resolution_rate}%
+                              {t('reports.staffPerformance.resolution')}: {reportData.performance.resolution_rate}%
                             </span>
                           </div>
                         </div>
@@ -771,16 +772,16 @@ export default function StaffPerformance({
           <div className="card-footer !py-3.5 !px-8 print:border-none print:px-0 flex-col gap-4">
             {/* Page Number */}
             <div className="text-center text-sm text-default-500">
-              Page 1 of 1
+              {t('reports.staffPerformance.pageOf')}
             </div>
-            
+
             {/* Footer Info */}
             <div className="flex justify-between items-center w-full">
               <span className="text-xs text-default-500">
-                Generated: {generatedAt}
+                {t('reports.staffPerformance.generated')}: {generatedAt}
               </span>
               <span className="text-xs text-default-500">
-                Amanah Support System - Staff Performance Report
+                {t('reports.staffPerformance.systemFooter')}
               </span>
             </div>
           </div>

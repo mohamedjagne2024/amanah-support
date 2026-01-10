@@ -3,12 +3,15 @@ import {
   createContext,
   use,
   useCallback,
-  useEffect,
   useMemo,
-  useState,
   type ReactNode,
 } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
+
+// Static imports for all locales - translations are immediately available
+import enTranslations from '../locales/en.json';
+import soTranslations from '../locales/so.json';
+import arTranslations from '../locales/ar.json';
 
 export type LanguageType = 'en' | 'so' | 'ar';
 
@@ -23,6 +26,13 @@ type LanguageContextType = {
 };
 
 const RTL_LANGUAGES: LanguageType[] = ['ar'];
+
+// Pre-loaded translations map - no async loading needed
+const translationsMap: Record<LanguageType, Translations> = {
+  en: enTranslations,
+  so: soTranslations,
+  ar: arTranslations,
+};
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
@@ -63,29 +73,10 @@ const LanguageProvider = ({ children }: { children: ReactNode }) => {
     'en'
   );
 
-  const [translations, setTranslations] = useState<Translations>({});
-  const [isLoading, setIsLoading] = useState(true);
-
   const isRTL = RTL_LANGUAGES.includes(language);
 
-  // Load translations based on selected language
-  useEffect(() => {
-    setIsLoading(true);
-    import(`../locales/${language}.json`)
-      .then((module) => {
-        setTranslations(module.default);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error(`Failed to load translations for ${language}:`, error);
-        // Fallback to English if language file doesn't exist
-        import(`../locales/en.json`)
-          .then((module) => {
-            setTranslations(module.default);
-            setIsLoading(false);
-          });
-      });
-  }, [language]);
+  // Get translations synchronously from pre-loaded map
+  const translations = translationsMap[language] || translationsMap.en;
 
   const setLanguage = useCallback(
     (lang: LanguageType) => {
@@ -98,12 +89,9 @@ const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   const t = useCallback(
     (key: string): string => {
-      if (isLoading || !translations) {
-        return key;
-      }
       return getNestedValue(translations, key);
     },
-    [translations, isLoading]
+    [translations]
   );
 
   const value = useMemo(
@@ -125,4 +113,3 @@ const LanguageProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export default LanguageProvider;
-

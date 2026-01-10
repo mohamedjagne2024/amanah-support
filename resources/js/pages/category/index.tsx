@@ -8,6 +8,7 @@ import AppLayout from "@/layouts/app-layout";
 import PageHeader from "@/components/Pageheader";
 import PageMeta from "@/components/PageMeta";
 import { FolderTree } from "lucide-react";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 
 type CategoryRecord = {
@@ -38,6 +39,8 @@ type CategoryPageProps = {
 };
 
 export default function Index({ categories, filters }: CategoryPageProps) {
+  const { t } = useLanguageContext();
+
   const safeCategories: CategoryPaginator = {
     data: categories?.data ?? [],
     current_page: categories?.current_page ?? 1,
@@ -55,33 +58,33 @@ export default function Index({ categories, filters }: CategoryPageProps) {
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryRecord | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<CategoryRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Bulk delete dialog state
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [bulkDeleteIds, setBulkDeleteIds] = useState<number[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Form state
-  const [formData, setFormData] = useState({ 
-    name: "", 
-    color: "" 
+  const [formData, setFormData] = useState({
+    name: "",
+    color: ""
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Drawer handlers
   const handleOpenDrawer = useCallback((category?: CategoryRecord) => {
     setEditingCategory(category ?? null);
-    setFormData({ 
+    setFormData({
       name: category?.name ?? "",
       color: category?.color ?? "",
     });
@@ -100,11 +103,11 @@ export default function Index({ categories, filters }: CategoryPageProps) {
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
-    const url = editingCategory 
-      ? `/settings/categories/${editingCategory.id}` 
+
+    const url = editingCategory
+      ? `/settings/categories/${editingCategory.id}`
       : "/settings/categories";
-    
+
     const method = editingCategory ? "put" : "post";
 
     // Convert empty strings to null for nullable fields
@@ -192,7 +195,7 @@ export default function Index({ categories, filters }: CategoryPageProps) {
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.page !== safeCategories.current_page ||
         query.perPage !== safeCategories.per_page ||
@@ -234,7 +237,7 @@ export default function Index({ categories, filters }: CategoryPageProps) {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: t('settings.categories.name'),
         cell: ({ getValue }) => (
           <span className="font-medium text-default-800">
             {getValue<string>()}
@@ -243,33 +246,33 @@ export default function Index({ categories, filters }: CategoryPageProps) {
         enableSorting: true
       }
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<CategoryRecord>[]>(
     () => [
       {
-        label: "Edit",
+        label: t('table.edit'),
         value: "edit",
         onSelect: (category) => {
           handleOpenDrawer(category);
         }
       },
       {
-        label: "Delete",
+        label: t('table.delete'),
         value: "delete",
         onSelect: (category) => {
           handleOpenDeleteDialog(category);
         }
       },
     ],
-    [handleOpenDrawer, handleOpenDeleteDialog]
+    [handleOpenDrawer, handleOpenDeleteDialog, t]
   );
 
   const bulkActions = useMemo<DataTableBulkAction<CategoryRecord>[]>(
     () => [
       {
-        label: "Delete selection",
+        label: t('settings.categories.deleteSelection'),
         value: "delete",
         onSelect: async (selectedRows) => {
           const ids = selectedRows.map(row => row.id);
@@ -277,20 +280,20 @@ export default function Index({ categories, filters }: CategoryPageProps) {
         }
       }
     ],
-    [handleOpenBulkDeleteDialog]
+    [handleOpenBulkDeleteDialog, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title="Categories" />
+      <PageMeta title={t('settings.categories.title')} />
       <main>
-        <PageHeader 
-          title="Categories" 
-          subtitle="Manage ticket categories"
+        <PageHeader
+          title={t('settings.categories.title')}
+          subtitle={t('settings.categories.subtitle')}
           icon={FolderTree}
           count={safeCategories.total}
         />
-        
+
         <div className="space-y-6">
           <DataTable<CategoryRecord>
             data={safeCategories.data}
@@ -318,7 +321,7 @@ export default function Index({ categories, filters }: CategoryPageProps) {
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Create Category
+                {t('settings.categories.createCategory')}
               </button>
             )}
             rowActions={rowActions}
@@ -331,7 +334,7 @@ export default function Index({ categories, filters }: CategoryPageProps) {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        title={editingCategory ? "Edit Category" : "Create Category"}
+        title={editingCategory ? t('settings.categories.editCategory') : t('settings.categories.createCategory')}
         size="lg"
         placement="right"
         footer={
@@ -342,7 +345,7 @@ export default function Index({ categories, filters }: CategoryPageProps) {
               onClick={handleCloseDrawer}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('settings.categories.cancel')}
             </button>
             <button
               type="submit"
@@ -353,10 +356,10 @@ export default function Index({ categories, filters }: CategoryPageProps) {
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  {t('settings.categories.processing')}
                 </span>
               ) : (
-                editingCategory ? "Update" : "Create"
+                editingCategory ? t('settings.categories.update') : t('settings.categories.create')
               )}
             </button>
           </>
@@ -365,12 +368,12 @@ export default function Index({ categories, filters }: CategoryPageProps) {
         <form id="category-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Category Name <span className="text-danger">*</span>
+              {t('settings.categories.categoryName')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter category name"
+              placeholder={t('settings.categories.enterCategoryName')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               disabled={isSubmitting}
@@ -383,7 +386,7 @@ export default function Index({ categories, filters }: CategoryPageProps) {
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Color
+              {t('settings.categories.color')}
             </label>
             <input
               type="text"
@@ -398,7 +401,7 @@ export default function Index({ categories, filters }: CategoryPageProps) {
               <p className="text-danger text-sm mt-1">{formErrors.color}</p>
             )}
             <p className="text-default-500 text-xs mt-1">
-              Optional color for visual identification
+              {t('settings.categories.colorHint')}
             </p>
           </div>
         </form>
@@ -413,10 +416,10 @@ export default function Index({ categories, filters }: CategoryPageProps) {
           }
         }}
         onConfirm={handleConfirmDelete}
-        title="Confirm Delete"
-        description={`Are you sure you want to delete the category "${deletingCategory?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('settings.categories.confirmDeleteTitle')}
+        description={`${t('settings.categories.confirmDelete')} "${deletingCategory?.name}"? ${t('settings.categories.actionCannotBeUndone')}`}
+        confirmText={t('settings.categories.delete')}
+        cancelText={t('settings.categories.cancel')}
         confirmVariant="danger"
         isLoading={isDeleting}
         size="lg"
@@ -431,10 +434,10 @@ export default function Index({ categories, filters }: CategoryPageProps) {
           }
         }}
         onConfirm={handleConfirmBulkDelete}
-        title="Confirm Bulk Delete"
-        description={`Are you sure you want to delete ${bulkDeleteIds.length} category(ies)? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('settings.categories.confirmBulkDeleteTitle')}
+        description={`${t('settings.categories.confirmBulkDelete')} ${bulkDeleteIds.length} ${t('settings.categories.categories')}? ${t('settings.categories.actionCannotBeUndone')}`}
+        confirmText={t('settings.categories.delete')}
+        cancelText={t('settings.categories.cancel')}
         confirmVariant="danger"
         isLoading={isBulkDeleting}
         size="lg"

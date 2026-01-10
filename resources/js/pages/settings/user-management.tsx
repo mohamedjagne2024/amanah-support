@@ -6,6 +6,7 @@ import Drawer from "@/components/Drawer";
 import AppLayout from "@/layouts/app-layout";
 import PageMeta from "@/components/PageMeta";
 import PageHeader from "@/components/Pageheader";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type User = {
   id: number;
@@ -61,6 +62,8 @@ type UserManagementPageProps = {
 };
 
 export default function UserManagement({ users, roles, permissions, regions, countries, filters }: UserManagementPageProps) {
+  const { t } = useLanguageContext();
+
   const safeFilters = {
     search: filters?.search ?? "",
     sort_by: filters?.sort_by ?? null,
@@ -68,7 +71,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Edit drawer state (Manage Roles & Permissions)
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -129,7 +132,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
     router.post(
       `/settings/users/${editingUser.id}/roles-and-permissions`,
-      { 
+      {
         roles: selectedRoles,
         permissions: selectedPermissions,
       },
@@ -201,12 +204,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
   }, [editingUserForUpdate, editFormData, handleCloseEditUserDrawer, isUpdating]);
 
   const handleDeleteUser = useCallback((user: User) => {
-    if (!confirm(`Are you sure you want to delete ${user.name}?`)) return;
+    if (!confirm(`${t('settings.userManagement.deleteConfirm')} ${user.name}?`)) return;
 
     router.delete(`/settings/users/${user.id}`, {
       preserveScroll: true,
     });
-  }, []);
+  }, [t]);
 
   // Create drawer handlers
   const handleOpenCreateDrawer = useCallback(() => {
@@ -297,7 +300,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction,
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.sort_by !== safeFilters.sort_by ||
         query.sort_direction !== safeFilters.sort_direction;
@@ -341,13 +344,13 @@ export default function UserManagement({ users, roles, permissions, regions, cou
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: t('settings.userManagement.columns.name'),
         cell: ({ getValue, row }) => (
           <div className="flex items-center gap-3">
             {row.original.profile_picture_url ? (
-              <img 
-                src={row.original.profile_picture_url} 
-                alt={getValue<string>()} 
+              <img
+                src={row.original.profile_picture_url}
+                alt={getValue<string>()}
                 className="size-10 rounded-full object-cover"
               />
             ) : (
@@ -367,7 +370,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
       },
       {
         accessorKey: "phone",
-        header: "Phone",
+        header: t('settings.userManagement.columns.phone'),
         cell: ({ getValue }) => (
           <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
         ),
@@ -375,7 +378,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
       },
       {
         accessorKey: "region",
-        header: "Region",
+        header: t('settings.userManagement.columns.region'),
         cell: ({ getValue }) => (
           <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
         ),
@@ -383,7 +386,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
       },
       {
         accessorKey: "country",
-        header: "Country",
+        header: t('settings.userManagement.columns.country'),
         cell: ({ getValue }) => (
           <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
         ),
@@ -391,11 +394,11 @@ export default function UserManagement({ users, roles, permissions, regions, cou
       },
       {
         accessorKey: "roles",
-        header: "Roles",
+        header: t('settings.userManagement.columns.roles'),
         cell: ({ getValue }) => {
           const userRoles = getValue<string[]>();
           if (userRoles.length === 0) {
-            return <span className="text-default-400">No roles</span>;
+            return <span className="text-default-400">{t('settings.userManagement.noRoles')}</span>;
           }
           return (
             <div className="flex flex-wrap gap-1">
@@ -411,59 +414,59 @@ export default function UserManagement({ users, roles, permissions, regions, cou
       },
       {
         accessorKey: "permissions",
-        header: "Permissions",
+        header: t('settings.userManagement.columns.permissions'),
         cell: ({ getValue }) => {
           const userPermissions = getValue<string[]>();
           return (
-            <span className="text-default-600">{userPermissions.length} permissions</span>
+            <span className="text-default-600">{userPermissions.length} {t('settings.userManagement.permissionsCount')}</span>
           );
         },
         enableSorting: false,
       },
       {
         accessorKey: "created_at",
-        header: "Created",
+        header: t('settings.userManagement.columns.created'),
         cell: ({ getValue }) => (
           <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
         ),
         enableSorting: true,
       },
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<User>[]>(
     () => [
       {
-        label: "Edit User",
+        label: t('settings.userManagement.editUser'),
         value: "edit-user",
         onSelect: (user) => {
           handleOpenEditUserDrawer(user);
         }
       },
       {
-        label: "Manage Roles & Permissions",
+        label: t('settings.userManagement.manageRolesAndPermissions'),
         value: "edit",
         onSelect: (user) => {
           handleOpenEditDrawer(user);
         }
       },
       {
-        label: "Delete User",
+        label: t('settings.userManagement.deleteUser'),
         value: "delete",
         onSelect: (user) => {
           handleDeleteUser(user);
         }
       },
     ],
-    [handleOpenEditDrawer, handleOpenEditUserDrawer, handleDeleteUser]
+    [handleOpenEditDrawer, handleOpenEditUserDrawer, handleDeleteUser, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title="User Management" />
+      <PageMeta title={t('settings.userManagement.title')} />
       <main>
-        <PageHeader title="User Management" />
+        <PageHeader title={t('settings.userManagement.title')} />
         <div className="space-y-6">
           <DataTable<User>
             data={users}
@@ -491,7 +494,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
                 // If currently ascending, switch to descending
                 if (safeFilters.sort_direction === 'asc') {
                   submitQuery({ sort_by: sortBy, sort_direction: 'desc' });
-                } 
+                }
                 // If currently descending, reset sorting (third click)
                 else if (safeFilters.sort_direction === 'desc') {
                   submitQuery({ sort_by: null, sort_direction: null });
@@ -505,15 +508,15 @@ export default function UserManagement({ users, roles, permissions, regions, cou
                 submitQuery({ sort_by: sortBy, sort_direction: 'asc' });
               }
             }}
-            onPageChange={() => {}}
-            onPerPageChange={() => {}}
+            onPageChange={() => { }}
+            onPerPageChange={() => { }}
             renderCreate={({ isBusy }) => (
               <button
                 onClick={handleOpenCreateDrawer}
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Create User
+                {t('settings.userManagement.createUser')}
               </button>
             )}
             isLoading={isLoading}
@@ -525,7 +528,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
       <Drawer
         isOpen={isEditDrawerOpen}
         onClose={handleCloseEditDrawer}
-        title="Manage Roles & Permissions"
+        title={t('settings.userManagement.manageRolesAndPermissions')}
         size="lg"
         placement="right"
         footer={
@@ -536,7 +539,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               onClick={handleCloseEditDrawer}
               disabled={isSaving}
             >
-              Cancel
+              {t('settings.userManagement.buttons.cancel')}
             </button>
             <button
               type="button"
@@ -547,10 +550,10 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               {isSaving ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
+                  {t('settings.userManagement.buttons.saving')}
                 </span>
               ) : (
-                "Save Changes"
+                t('settings.userManagement.buttons.saveChanges')
               )}
             </button>
           </>
@@ -566,7 +569,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
           {/* Roles Section */}
           <div>
             <label className="block font-medium text-default-900 text-sm mb-3">
-              Roles
+              {t('settings.userManagement.form.roles')}
             </label>
             <div className="space-y-2">
               {roles.filter(role => role.name.toLowerCase() !== 'contact').map((role) => (
@@ -590,7 +593,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
           {/* Direct Permissions Section */}
           <div>
             <label className="block font-medium text-default-900 text-sm mb-3">
-              Direct Permissions
+              {t('settings.userManagement.form.directPermissions')}
             </label>
             <div className="space-y-4">
               {Object.entries(permissions).map(([group, perms]) => (
@@ -628,7 +631,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
       <Drawer
         isOpen={isCreateDrawerOpen}
         onClose={handleCloseCreateDrawer}
-        title="Create New User"
+        title={t('settings.userManagement.createUser')}
         size="lg"
         placement="right"
         footer={
@@ -639,7 +642,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               onClick={handleCloseCreateDrawer}
               disabled={isCreating}
             >
-              Cancel
+              {t('settings.userManagement.buttons.cancel')}
             </button>
             <button
               type="submit"
@@ -650,10 +653,10 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               {isCreating ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating...
+                  {t('settings.userManagement.buttons.creating')}
                 </span>
               ) : (
-                "Create User"
+                t('settings.userManagement.buttons.createUser')
               )}
             </button>
           </>
@@ -662,12 +665,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
         <form id="create-user-form" onSubmit={handleCreateUser} className="space-y-4">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Name <span className="text-danger">*</span>
+              {t('settings.userManagement.form.name')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter user name"
+              placeholder={t('settings.userManagement.form.enterUserName')}
               value={createFormData.name}
               onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
               disabled={isCreating}
@@ -680,12 +683,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Email <span className="text-danger">*</span>
+              {t('settings.userManagement.form.email')} <span className="text-danger">*</span>
             </label>
             <input
               type="email"
               name="email"
-              placeholder="Enter email address"
+              placeholder={t('settings.userManagement.form.enterEmail')}
               value={createFormData.email}
               onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
               disabled={isCreating}
@@ -698,12 +701,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Password <span className="text-default-500 text-xs">(optional - auto-generated if empty)</span>
+              {t('settings.userManagement.form.password')} <span className="text-default-500 text-xs">{t('settings.userManagement.form.passwordOptional')}</span>
             </label>
             <input
               type="password"
               name="password"
-              placeholder="Enter password (optional)"
+              placeholder={t('settings.userManagement.form.enterPassword')}
               value={createFormData.password}
               onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
               disabled={isCreating}
@@ -716,12 +719,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Confirm Password
+              {t('settings.userManagement.form.confirmPassword')}
             </label>
             <input
               type="password"
               name="password_confirmation"
-              placeholder="Confirm password"
+              placeholder={t('settings.userManagement.form.confirmPasswordPlaceholder')}
               value={createFormData.password_confirmation}
               onChange={(e) => setCreateFormData({ ...createFormData, password_confirmation: e.target.value })}
               disabled={isCreating}
@@ -734,12 +737,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Phone
+              {t('settings.userManagement.form.phone')}
             </label>
             <input
               type="tel"
               name="phone"
-              placeholder="Enter phone number (optional)"
+              placeholder={t('settings.userManagement.form.enterPhone')}
               value={createFormData.phone}
               onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
               disabled={isCreating}
@@ -752,7 +755,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Region
+              {t('settings.userManagement.form.region')}
             </label>
             <select
               name="region_id"
@@ -761,7 +764,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               disabled={isCreating}
               className={`form-input w-full ${createFormErrors.region_id ? 'border-danger focus:ring-danger' : ''}`}
             >
-              <option value="">Select region (optional)</option>
+              <option value="">{t('settings.userManagement.form.selectRegion')}</option>
               {regions.map((region) => (
                 <option key={region.id} value={region.id}>{region.name}</option>
               ))}
@@ -773,7 +776,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Country
+              {t('settings.userManagement.form.country')}
             </label>
             <select
               name="country_id"
@@ -782,7 +785,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               disabled={isCreating}
               className={`form-input w-full ${createFormErrors.country_id ? 'border-danger focus:ring-danger' : ''}`}
             >
-              <option value="">Select country (optional)</option>
+              <option value="">{t('settings.userManagement.form.selectCountry')}</option>
               {countries.map((country) => (
                 <option key={country.id} value={country.id}>{country.name}</option>
               ))}
@@ -795,7 +798,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
           {/* Roles Section */}
           <div>
             <label className="block font-medium text-default-900 text-sm mb-3">
-              Roles
+              {t('settings.userManagement.form.roles')}
             </label>
             <div className="space-y-2 max-h-48 overflow-y-auto border border-default-200 rounded-lg p-3">
               {roles.filter(role => role.name.toLowerCase() !== 'contact').map((role) => (
@@ -825,7 +828,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
       <Drawer
         isOpen={isEditUserDrawerOpen}
         onClose={handleCloseEditUserDrawer}
-        title="Edit User"
+        title={t('settings.userManagement.editUser')}
         size="lg"
         placement="right"
         footer={
@@ -836,7 +839,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               onClick={handleCloseEditUserDrawer}
               disabled={isUpdating}
             >
-              Cancel
+              {t('settings.userManagement.buttons.cancel')}
             </button>
             <button
               type="submit"
@@ -847,10 +850,10 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               {isUpdating ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
+                  {t('settings.userManagement.buttons.saving')}
                 </span>
               ) : (
-                "Save Changes"
+                t('settings.userManagement.buttons.saveChanges')
               )}
             </button>
           </>
@@ -865,12 +868,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Name <span className="text-danger">*</span>
+              {t('settings.userManagement.form.name')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter user name"
+              placeholder={t('settings.userManagement.form.enterUserName')}
               value={editFormData.name}
               onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
               disabled={isUpdating}
@@ -883,12 +886,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Email <span className="text-danger">*</span>
+              {t('settings.userManagement.form.email')} <span className="text-danger">*</span>
             </label>
             <input
               type="email"
               name="email"
-              placeholder="Enter email address"
+              placeholder={t('settings.userManagement.form.enterEmail')}
               value={editFormData.email}
               onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
               disabled={isUpdating}
@@ -901,12 +904,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              New Password <span className="text-default-500 text-xs">(leave blank to keep current)</span>
+              {t('settings.userManagement.form.newPassword')} <span className="text-default-500 text-xs">{t('settings.userManagement.form.leaveBlankKeepCurrent')}</span>
             </label>
             <input
               type="password"
               name="password"
-              placeholder="Enter new password"
+              placeholder={t('settings.userManagement.form.enterNewPassword')}
               value={editFormData.password}
               onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
               disabled={isUpdating}
@@ -919,12 +922,12 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Phone
+              {t('settings.userManagement.form.phone')}
             </label>
             <input
               type="tel"
               name="phone"
-              placeholder="Enter phone number (optional)"
+              placeholder={t('settings.userManagement.form.enterPhone')}
               value={editFormData.phone}
               onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
               disabled={isUpdating}
@@ -937,7 +940,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Region
+              {t('settings.userManagement.form.region')}
             </label>
             <select
               name="region_id"
@@ -946,7 +949,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               disabled={isUpdating}
               className={`form-input w-full ${editFormErrors.region_id ? 'border-danger focus:ring-danger' : ''}`}
             >
-              <option value="">Select region (optional)</option>
+              <option value="">{t('settings.userManagement.form.selectRegion')}</option>
               {regions.map((region) => (
                 <option key={region.id} value={region.id}>{region.name}</option>
               ))}
@@ -958,7 +961,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Country
+              {t('settings.userManagement.form.country')}
             </label>
             <select
               name="country_id"
@@ -967,7 +970,7 @@ export default function UserManagement({ users, roles, permissions, regions, cou
               disabled={isUpdating}
               className={`form-input w-full ${editFormErrors.country_id ? 'border-danger focus:ring-danger' : ''}`}
             >
-              <option value="">Select country (optional)</option>
+              <option value="">{t('settings.userManagement.form.selectCountry')}</option>
               {countries.map((country) => (
                 <option key={country.id} value={country.id}>{country.name}</option>
               ))}
@@ -981,4 +984,3 @@ export default function UserManagement({ users, roles, permissions, regions, cou
     </AppLayout>
   );
 }
-

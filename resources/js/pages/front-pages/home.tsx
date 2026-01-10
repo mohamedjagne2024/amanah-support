@@ -14,6 +14,7 @@ import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
 import Combobox, { SelectOption } from '@/components/Combobox';
 import TextEditor from '@/components/TextEditor';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type HeroButton = {
   text: string;
@@ -148,18 +149,19 @@ const iconOptions: SelectOption[] = [
   { label: 'Home', value: 'home' },
 ];
 
-const tabs = [
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'hero', label: 'Hero Section', icon: HomeIcon },
-  { id: 'features', label: 'Features', icon: Star },
-  { id: 'stats', label: 'Stats', icon: BarChart3 },
-  { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
-];
-
 export default function Home({ title, page }: HomePageProps) {
+  const { t } = useLanguageContext();
   const [activeTab, setActiveTab] = useState('settings');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const tabs = [
+    { id: 'settings', label: t('frontPages.home.tabs.settings'), icon: Settings },
+    { id: 'hero', label: t('frontPages.home.tabs.hero'), icon: HomeIcon },
+    { id: 'features', label: t('frontPages.home.tabs.features'), icon: Star },
+    { id: 'stats', label: t('frontPages.home.tabs.stats'), icon: BarChart3 },
+    { id: 'testimonials', label: t('frontPages.home.tabs.testimonials'), icon: MessageSquare },
+  ];
 
   const initialData = useMemo(() => {
     if (!page?.html) return defaultPageData;
@@ -328,28 +330,28 @@ export default function Home({ title, page }: HomePageProps) {
       {/* Page Settings Card */}
       <div className="card">
         <div className="card-header">
-          <h6 className="card-title">Page Settings</h6>
-          <p className="text-sm text-default-500 mt-1">Configure page behavior and ticket submission options</p>
+          <h6 className="card-title">{t('frontPages.home.pageSettings')}</h6>
+          <p className="text-sm text-default-500 mt-1">{t('frontPages.home.pageSettingsDescription')}</p>
         </div>
         <div className="card-body space-y-6">
           {/* Ticket Section Card */}
           <div className="border border-default-200 rounded-lg p-4 space-y-4">
-            <h6 className="font-semibold text-default-900">Ticket Section</h6>
+            <h6 className="font-semibold text-default-900">{t('frontPages.home.ticketSection')}</h6>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block font-medium text-default-900 text-sm mb-2">Badge Text</label>
+                <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.badgeText')}</label>
                 <input
                   type="text"
                   value={data.settings.badge_text}
                   onChange={(e) => setData('settings', { ...data.settings, badge_text: e.target.value })}
-                  placeholder="Enter badge text"
+                  placeholder={t('frontPages.home.enterBadgeText')}
                   className="form-input"
                   disabled={processing}
                 />
               </div>
               <div>
-                <label className="block font-medium text-default-900 text-sm mb-2">Section Title</label>
+                <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionTitle')}</label>
                 <input
                   type="text"
                   value={data.settings.section_title}
@@ -362,9 +364,9 @@ export default function Home({ title, page }: HomePageProps) {
             </div>
 
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Subtitle</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionSubtitle')}</label>
               <TextEditor
-                placeholder="Enter section subtitle..."
+                placeholder={t('frontPages.home.enterSectionSubtitle')}
                 onChange={(content) => setData('settings', { ...data.settings, section_subtitle: content })}
                 showToolbar={true}
                 className="min-h-[100px]"
@@ -374,18 +376,18 @@ export default function Home({ title, page }: HomePageProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block font-medium text-default-900 text-sm mb-2">Form Header Title</label>
+                <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.formHeaderTitle')}</label>
                 <input
                   type="text"
                   value={data.settings.form_header_title}
                   onChange={(e) => setData('settings', { ...data.settings, form_header_title: e.target.value })}
-                  placeholder="Enter form header title"
+                  placeholder={t('frontPages.home.enterFormHeaderTitle')}
                   className="form-input"
                   disabled={processing}
                 />
               </div>
               <div>
-                <label className="block font-medium text-default-900 text-sm mb-2">Submit Button Label</label>
+                <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.submitButtonLabel')}</label>
                 <input
                   type="text"
                   value={data.settings.submit_button_label}
@@ -398,9 +400,9 @@ export default function Home({ title, page }: HomePageProps) {
             </div>
 
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Form Header Subtitle</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.formHeaderSubtitle')}</label>
               <TextEditor
-                placeholder="Enter form header subtitle..."
+                placeholder={t('frontPages.home.enterFormHeaderSubtitle')}
                 onChange={(content) => setData('settings', { ...data.settings, form_header_subtitle: content })}
                 showToolbar={true}
                 className="min-h-[100px]"
@@ -410,8 +412,8 @@ export default function Home({ title, page }: HomePageProps) {
 
             <div className="flex items-center justify-between p-4 bg-default-50 rounded-lg border border-default-200">
               <div>
-                <p className="font-medium text-default-900">Enable Ticket Section</p>
-                <p className="text-sm text-default-500">Show ticket submission form on the homepage</p>
+                <p className="font-medium text-default-900">{t('frontPages.home.enableTicketSection')}</p>
+                <p className="text-sm text-default-500">{t('frontPages.home.showTicketForm')}</p>
               </div>
               <button
                 type="button"
@@ -438,8 +440,8 @@ export default function Home({ title, page }: HomePageProps) {
       <div className="card">
         <div className="card-header flex items-center justify-between">
           <div>
-            <h6 className="card-title">Hero Section</h6>
-            <p className="text-sm text-default-500 mt-1">Main banner section with title, description, and call-to-action buttons</p>
+            <h6 className="card-title">{t('frontPages.home.heroSection')}</h6>
+            <p className="text-sm text-default-500 mt-1">{t('frontPages.home.heroSectionDescription')}</p>
           </div>
           <button
             type="button"
@@ -457,7 +459,7 @@ export default function Home({ title, page }: HomePageProps) {
         <div className="card-body space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Hero Title</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.heroTitle')}</label>
               <input
                 type="text"
                 value={data.hero.title}
@@ -466,10 +468,10 @@ export default function Home({ title, page }: HomePageProps) {
                 className="form-input"
                 disabled={processing}
               />
-              <p className="text-xs text-default-500 mt-1">Use &lt;span&gt; tags to highlight text</p>
+              <p className="text-xs text-default-500 mt-1">{t('frontPages.home.heroTitleHint')}</p>
             </div>
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Hero Badge Text</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.heroBadgeText')}</label>
               <input
                 type="text"
                 value={data.hero.badge_text}
@@ -482,9 +484,9 @@ export default function Home({ title, page }: HomePageProps) {
           </div>
 
           <div>
-            <label className="block font-medium text-default-900 text-sm mb-2">Hero Description</label>
+            <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.heroDescription')}</label>
             <TextEditor
-              placeholder="Enter hero description..."
+              placeholder={t('frontPages.home.enterHeroDescription')}
               onChange={(content) => setData('hero', { ...data.hero, description: content })}
               showToolbar={true}
               className="min-h-[120px]"
@@ -495,14 +497,14 @@ export default function Home({ title, page }: HomePageProps) {
           {/* Trust Indicators */}
           <div className="border border-default-200 rounded-lg p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h6 className="font-semibold text-default-900">Trust Indicators</h6>
+              <h6 className="font-semibold text-default-900">{t('frontPages.home.trustIndicators')}</h6>
               <button
                 type="button"
                 onClick={handleAddTrustIndicator}
                 className="btn btn-sm bg-primary text-white"
                 disabled={processing}
               >
-                <Plus className="size-4 mr-1" /> Add Item
+                <Plus className="size-4 mr-1" /> {t('frontPages.home.addItem')}
               </button>
             </div>
             <div className="space-y-2">
@@ -532,14 +534,14 @@ export default function Home({ title, page }: HomePageProps) {
           {/* Call-to-Action Buttons */}
           <div className="border border-default-200 rounded-lg p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h6 className="font-semibold text-default-900">Call-to-Action Buttons</h6>
+              <h6 className="font-semibold text-default-900">{t('frontPages.home.callToActionButtons')}</h6>
               <button
                 type="button"
                 onClick={handleAddButton}
                 className="btn btn-sm bg-primary text-white"
                 disabled={processing}
               >
-                <Plus className="size-4 mr-1" /> Add Button
+                <Plus className="size-4 mr-1" /> {t('frontPages.home.addButton')}
               </button>
             </div>
             <div className="space-y-4">
@@ -547,7 +549,7 @@ export default function Home({ title, page }: HomePageProps) {
                 <div key={index} className="flex items-start gap-4 p-3 bg-default-50 rounded-lg border border-default-200">
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-medium text-default-900 text-sm mb-2">Button Text</label>
+                      <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.buttonText')}</label>
                       <input
                         type="text"
                         value={button.text}
@@ -558,7 +560,7 @@ export default function Home({ title, page }: HomePageProps) {
                       />
                     </div>
                     <div>
-                      <label className="block font-medium text-default-900 text-sm mb-2">Button Link</label>
+                      <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.buttonLink')}</label>
                       <input
                         type="text"
                         value={button.link}
@@ -578,7 +580,7 @@ export default function Home({ title, page }: HomePageProps) {
                         className="size-4 rounded border-default-300 text-primary focus:ring-primary"
                         disabled={processing}
                       />
-                      <span className="text-sm text-default-700">Open in new tab</span>
+                      <span className="text-sm text-default-700">{t('frontPages.home.openInNewTab')}</span>
                     </label>
                     <button
                       type="button"
@@ -596,7 +598,7 @@ export default function Home({ title, page }: HomePageProps) {
 
           {/* Hero Image */}
           <div className="border border-default-200 rounded-lg p-4 space-y-4">
-            <h6 className="font-semibold text-default-900">Hero Image</h6>
+            <h6 className="font-semibold text-default-900">{t('frontPages.home.heroImage')}</h6>
             <input
               ref={fileInputRef}
               type="file"
@@ -611,7 +613,7 @@ export default function Home({ title, page }: HomePageProps) {
               className="btn btn-sm bg-default-100 text-default-700 hover:bg-default-200"
               disabled={processing}
             >
-              <ImageIcon className="size-4 mr-2" /> Change Image
+              <ImageIcon className="size-4 mr-2" /> {t('frontPages.home.changeImage')}
             </button>
             {data.hero.image && (
               <div className="relative">
@@ -641,8 +643,8 @@ export default function Home({ title, page }: HomePageProps) {
       <div className="card">
         <div className="card-header flex items-center justify-between">
           <div>
-            <h6 className="card-title">Features Section</h6>
-            <p className="text-sm text-default-500 mt-1">Showcase your Amanah Support features and benefits</p>
+            <h6 className="card-title">{t('frontPages.home.featuresSection')}</h6>
+            <p className="text-sm text-default-500 mt-1">{t('frontPages.home.featuresSectionDescription')}</p>
           </div>
           <button
             type="button"
@@ -660,7 +662,7 @@ export default function Home({ title, page }: HomePageProps) {
         <div className="card-body space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Tagline</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionTagline')}</label>
               <input
                 type="text"
                 value={data.features.tagline}
@@ -671,7 +673,7 @@ export default function Home({ title, page }: HomePageProps) {
               />
             </div>
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Title</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionTitle')}</label>
               <input
                 type="text"
                 value={data.features.title}
@@ -682,7 +684,7 @@ export default function Home({ title, page }: HomePageProps) {
               />
             </div>
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Description</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionDescription')}</label>
               <textarea
                 value={data.features.description}
                 onChange={(e) => setData('features', { ...data.features, description: e.target.value })}
@@ -696,14 +698,14 @@ export default function Home({ title, page }: HomePageProps) {
           {/* Feature List */}
           <div className="border border-default-200 rounded-lg p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h6 className="font-semibold text-default-900">Feature List</h6>
+              <h6 className="font-semibold text-default-900">{t('frontPages.home.featureList')}</h6>
               <button
                 type="button"
                 onClick={handleAddFeature}
                 className="btn btn-sm bg-primary text-white"
                 disabled={processing}
               >
-                <Plus className="size-4 mr-1" /> Add Feature
+                <Plus className="size-4 mr-1" /> {t('frontPages.home.addFeature')}
               </button>
             </div>
             <div className="space-y-4">
@@ -712,18 +714,18 @@ export default function Home({ title, page }: HomePageProps) {
                   <div className="flex items-start gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1">
                       <div className="md:col-span-2">
-                        <label className="block font-medium text-default-900 text-sm mb-2">Icon</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.icon')}</label>
                         <Combobox
                           options={iconOptions}
                           value={iconOptions.find(opt => opt.value === feature.icon) || null}
                           onChange={(option) => handleFeatureChange(index, 'icon', option?.value?.toString() || 'ticket')}
-                          placeholder="Select icon"
+                          placeholder={t('frontPages.home.selectIcon')}
                           disabled={processing}
                           isSearchable
                         />
                       </div>
                       <div className="md:col-span-3">
-                        <label className="block font-medium text-default-900 text-sm mb-2">Feature Title</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.featureTitle')}</label>
                         <input
                           type="text"
                           value={feature.title}
@@ -734,7 +736,7 @@ export default function Home({ title, page }: HomePageProps) {
                         />
                       </div>
                       <div className="md:col-span-6">
-                        <label className="block font-medium text-default-900 text-sm mb-2">Feature Description</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.featureDescription')}</label>
                         <textarea
                           value={feature.description}
                           onChange={(e) => handleFeatureChange(index, 'description', e.target.value)}
@@ -768,8 +770,8 @@ export default function Home({ title, page }: HomePageProps) {
       <div className="card">
         <div className="card-header flex items-center justify-between">
           <div>
-            <h6 className="card-title">Stats Section</h6>
-            <p className="text-sm text-default-500 mt-1">Showcase key metrics of your Amanah Support</p>
+            <h6 className="card-title">{t('frontPages.home.statsSection')}</h6>
+            <p className="text-sm text-default-500 mt-1">{t('frontPages.home.statsSectionDescription')}</p>
           </div>
           <button
             type="button"
@@ -787,7 +789,7 @@ export default function Home({ title, page }: HomePageProps) {
         <div className="card-body space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Tagline</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionTagline')}</label>
               <input
                 type="text"
                 value={data.stats.tagline}
@@ -798,7 +800,7 @@ export default function Home({ title, page }: HomePageProps) {
               />
             </div>
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Title</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionTitle')}</label>
               <input
                 type="text"
                 value={data.stats.title}
@@ -809,7 +811,7 @@ export default function Home({ title, page }: HomePageProps) {
               />
             </div>
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Description</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionDescription')}</label>
               <textarea
                 value={data.stats.description}
                 onChange={(e) => setData('stats', { ...data.stats, description: e.target.value })}
@@ -823,14 +825,14 @@ export default function Home({ title, page }: HomePageProps) {
           {/* Stats List */}
           <div className="border border-default-200 rounded-lg p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h6 className="font-semibold text-default-900">Stats List</h6>
+              <h6 className="font-semibold text-default-900">{t('frontPages.home.statsList')}</h6>
               <button
                 type="button"
                 onClick={handleAddStat}
                 className="btn btn-sm bg-primary text-white"
                 disabled={processing}
               >
-                <Plus className="size-4 mr-1" /> Add Stat
+                <Plus className="size-4 mr-1" /> {t('frontPages.home.addStat')}
               </button>
             </div>
             <div className="space-y-4">
@@ -839,7 +841,7 @@ export default function Home({ title, page }: HomePageProps) {
                   <div className="flex items-start gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                       <div>
-                        <label className="block font-medium text-default-900 text-sm mb-2">Label</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.label')}</label>
                         <input
                           type="text"
                           value={stat.label}
@@ -850,7 +852,7 @@ export default function Home({ title, page }: HomePageProps) {
                         />
                       </div>
                       <div>
-                        <label className="block font-medium text-default-900 text-sm mb-2">Value</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.value')}</label>
                         <input
                           type="text"
                           value={stat.value}
@@ -861,12 +863,12 @@ export default function Home({ title, page }: HomePageProps) {
                         />
                       </div>
                       <div>
-                        <label className="block font-medium text-default-900 text-sm mb-2">Icon</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.icon')}</label>
                         <Combobox
                           options={iconOptions}
                           value={iconOptions.find(opt => opt.value === stat.icon) || null}
                           onChange={(option) => handleStatChange(index, 'icon', option?.value?.toString() || '')}
-                          placeholder="Select icon"
+                          placeholder={t('frontPages.home.selectIcon')}
                           disabled={processing}
                           isSearchable
                           isClearable
@@ -897,8 +899,8 @@ export default function Home({ title, page }: HomePageProps) {
       <div className="card">
         <div className="card-header flex items-center justify-between">
           <div>
-            <h6 className="card-title">Testimonials Section</h6>
-            <p className="text-sm text-default-500 mt-1">Showcase customer feedback and ratings</p>
+            <h6 className="card-title">{t('frontPages.home.testimonialsSection')}</h6>
+            <p className="text-sm text-default-500 mt-1">{t('frontPages.home.testimonialsSectionDescription')}</p>
           </div>
           <button
             type="button"
@@ -916,7 +918,7 @@ export default function Home({ title, page }: HomePageProps) {
         <div className="card-body space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Tagline</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionTagline')}</label>
               <input
                 type="text"
                 value={data.testimonials.tagline}
@@ -927,7 +929,7 @@ export default function Home({ title, page }: HomePageProps) {
               />
             </div>
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Title</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionTitle')}</label>
               <input
                 type="text"
                 value={data.testimonials.title}
@@ -938,7 +940,7 @@ export default function Home({ title, page }: HomePageProps) {
               />
             </div>
             <div>
-              <label className="block font-medium text-default-900 text-sm mb-2">Section Description</label>
+              <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.sectionDescription')}</label>
               <textarea
                 value={data.testimonials.description}
                 onChange={(e) => setData('testimonials', { ...data.testimonials, description: e.target.value })}
@@ -952,14 +954,14 @@ export default function Home({ title, page }: HomePageProps) {
           {/* Testimonials List */}
           <div className="border border-default-200 rounded-lg p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h6 className="font-semibold text-default-900">Testimonials</h6>
+              <h6 className="font-semibold text-default-900">{t('frontPages.home.testimonials')}</h6>
               <button
                 type="button"
                 onClick={handleAddTestimonial}
                 className="btn btn-sm bg-primary text-white"
                 disabled={processing}
               >
-                <Plus className="size-4 mr-1" /> Add Testimonial
+                <Plus className="size-4 mr-1" /> {t('frontPages.home.addTestimonial')}
               </button>
             </div>
             <div className="space-y-4">
@@ -968,7 +970,7 @@ export default function Home({ title, page }: HomePageProps) {
                   <div className="flex items-start gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1">
                       <div className="md:col-span-2">
-                        <label className="block font-medium text-default-900 text-sm mb-2">Name</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.name')}</label>
                         <input
                           type="text"
                           value={testimonial.name}
@@ -979,7 +981,7 @@ export default function Home({ title, page }: HomePageProps) {
                         />
                       </div>
                       <div className="md:col-span-2">
-                        <label className="block font-medium text-default-900 text-sm mb-2">Company</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.company')}</label>
                         <input
                           type="text"
                           value={testimonial.company}
@@ -990,7 +992,7 @@ export default function Home({ title, page }: HomePageProps) {
                         />
                       </div>
                       <div className="md:col-span-6">
-                        <label className="block font-medium text-default-900 text-sm mb-2">Content</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.content')}</label>
                         <textarea
                           value={testimonial.content}
                           onChange={(e) => handleTestimonialChange(index, 'content', e.target.value)}
@@ -1000,7 +1002,7 @@ export default function Home({ title, page }: HomePageProps) {
                         />
                       </div>
                       <div className="md:col-span-1">
-                        <label className="block font-medium text-default-900 text-sm mb-2">Rating (1-5)</label>
+                        <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.home.rating')}</label>
                         <input
                           type="number"
                           value={testimonial.rating}
@@ -1049,7 +1051,7 @@ export default function Home({ title, page }: HomePageProps) {
 
   return (
     <AppLayout>
-      <PageMeta title="Home Page Settings" />
+      <PageMeta title={t('frontPages.home.title')} />
       <main className="pb-8">
         <form onSubmit={handleSubmit}>
           {/* Tabs Navigation */}
@@ -1082,7 +1084,7 @@ export default function Home({ title, page }: HomePageProps) {
           <div className="px-6 py-4 max-w-5xl">
             <div className="flex items-center justify-between">
               <p className="text-sm text-default-500">
-                Changes are saved automatically when you submit the form
+                {t('frontPages.changesSavedMessage')}
               </p>
               <div className="flex items-center gap-3">
                 <button
@@ -1091,7 +1093,7 @@ export default function Home({ title, page }: HomePageProps) {
                   className="btn border-default-200 text-default-700"
                   disabled={isSubmitting}
                 >
-                  Reset
+                  {t('frontPages.reset')}
                 </button>
                 <button
                   type="submit"
@@ -1101,10 +1103,10 @@ export default function Home({ title, page }: HomePageProps) {
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
                       <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                      Saving...
+                      {t('frontPages.saving')}
                     </span>
                   ) : (
-                    'Save Changes'
+                    t('frontPages.saveChanges')
                   )}
                 </button>
               </div>
@@ -1115,4 +1117,3 @@ export default function Home({ title, page }: HomePageProps) {
     </AppLayout>
   );
 }
-

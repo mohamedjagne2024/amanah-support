@@ -5,6 +5,7 @@ import PageMeta from '@/components/PageMeta';
 import InputError from '@/components/input-error';
 import Combobox, { SelectOption } from '@/components/Combobox';
 import PageHeader from '@/components/Pageheader';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type CurrencyOption = {
   label: string;
@@ -52,6 +53,8 @@ type GeneralSettingsPageProps = {
 };
 
 export default function General({ settings, currencies, users }: GeneralSettingsPageProps) {
+  const { t } = useLanguageContext();
+
   const { data, setData, put, processing, errors } = useForm<{
     timezone: string;
     date_format: string;
@@ -112,38 +115,38 @@ export default function General({ settings, currencies, users }: GeneralSettings
   const emailNotificationItems = [
     {
       key: 'ticket_by_contact' as keyof EmailNotificationsType,
-      title: 'Create ticket by new contact',
-      description: 'Configure email notification settings',
+      title: t('settings.general.ticketByContact'),
+      description: t('settings.general.configureEmailSettings'),
     },
     {
       key: 'ticket_from_dashboard' as keyof EmailNotificationsType,
-      title: 'Create ticket from dashboard',
-      description: 'Configure email notification settings',
+      title: t('settings.general.ticketFromDashboard'),
+      description: t('settings.general.configureEmailSettings'),
     },
     {
       key: 'first_comment' as keyof EmailNotificationsType,
-      title: 'Notification for the first comment',
-      description: 'Configure email notification settings',
+      title: t('settings.general.firstComment'),
+      description: t('settings.general.configureEmailSettings'),
     },
     {
       key: 'user_assigned' as keyof EmailNotificationsType,
-      title: 'User got assigned for a task',
-      description: 'Configure email notification settings',
+      title: t('settings.general.userAssigned'),
+      description: t('settings.general.configureEmailSettings'),
     },
     {
       key: 'status_priority_changes' as keyof EmailNotificationsType,
-      title: 'Status or priority changes',
-      description: 'Configure email notification settings',
+      title: t('settings.general.statusPriorityChanges'),
+      description: t('settings.general.configureEmailSettings'),
     },
     {
       key: 'ticket_resolved' as keyof EmailNotificationsType,
-      title: 'Ticket marked as resolved',
-      description: 'Send email when a ticket is resolved',
+      title: t('settings.general.ticketResolved'),
+      description: t('settings.general.sendEmailResolved'),
     },
     {
       key: 'new_user' as keyof EmailNotificationsType,
-      title: 'Create a new user',
-      description: 'Configure email notification settings',
+      title: t('settings.general.newUser'),
+      description: t('settings.general.configureEmailSettings'),
     },
   ];
 
@@ -230,14 +233,14 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
   return (
     <AppLayout>
-      <PageMeta title="General Settings" />
+      <PageMeta title={t('settings.general.title')} />
       <main className="max-w-4xl">
-        <PageHeader title="General Settings" />
+        <PageHeader title={t('settings.general.title')} />
 
         <form onSubmit={handleSubmit} className="space-y-6 pb-8">
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Regional Settings</h6>
+              <h6 className="card-title">{t('settings.general.regionalSettings')}</h6>
             </div>
             <div className="card-body">
               <div className="space-y-6">
@@ -245,11 +248,11 @@ export default function General({ settings, currencies, users }: GeneralSettings
                 <div className="w-full md:w-1/2">
                   <input type="hidden" name="timezone" value={data.timezone} />
                   <Combobox
-                    label="Timezone"
+                    label={t('settings.general.timezone')}
                     options={timezoneOptions}
                     value={timezoneOptions.find(opt => String(opt.value) === data.timezone) || null}
                     onChange={(option) => setData('timezone', option?.value?.toString() || '')}
-                    placeholder="Select timezone"
+                    placeholder={t('settings.general.selectTimezone')}
                     disabled={processing}
                     isClearable
                     isSearchable
@@ -262,11 +265,11 @@ export default function General({ settings, currencies, users }: GeneralSettings
                   <div>
                     <input type="hidden" name="date_format" value={data.date_format} />
                     <Combobox
-                      label="Date Format"
+                      label={t('settings.general.dateFormat')}
                       options={dateFormatOptions}
                       value={dateFormatOptions.find(opt => String(opt.value) === data.date_format) || null}
                       onChange={(option) => setData('date_format', option?.value?.toString() || '')}
-                      placeholder="Select date format"
+                      placeholder={t('settings.general.selectDateFormat')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -277,11 +280,11 @@ export default function General({ settings, currencies, users }: GeneralSettings
                   <div>
                     <input type="hidden" name="time_format" value={data.time_format} />
                     <Combobox
-                      label="Time Format"
+                      label={t('settings.general.timeFormat')}
                       options={timeFormatOptions}
                       value={timeFormatOptions.find(opt => String(opt.value) === data.time_format) || null}
                       onChange={(option) => setData('time_format', option?.value?.toString() || '')}
-                      placeholder="Select time format"
+                      placeholder={t('settings.general.selectTimeFormat')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -295,7 +298,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Currency Settings</h6>
+              <h6 className="card-title">{t('settings.general.currencySettings')}</h6>
             </div>
             <div className="card-body">
               <div className="space-y-6">
@@ -304,11 +307,11 @@ export default function General({ settings, currencies, users }: GeneralSettings
                   <div>
                     <input type="hidden" name="currency_position" value={data.currency_position} />
                     <Combobox
-                      label="Currency Position"
+                      label={t('settings.general.currencyPosition')}
                       options={currencyPositionOptions}
                       value={currencyPositionOptions.find(opt => String(opt.value) === data.currency_position) || null}
                       onChange={(option) => setData('currency_position', option?.value?.toString() || '')}
-                      placeholder="Select currency position"
+                      placeholder={t('settings.general.selectCurrencyPosition')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -319,11 +322,11 @@ export default function General({ settings, currencies, users }: GeneralSettings
                   <div>
                     <input type="hidden" name="currency" value={data.currency} />
                     <Combobox
-                      label="Currency"
+                      label={t('settings.general.currency')}
                       options={currencyOptions}
                       value={currencyOptions.find(opt => String(opt.value) === data.currency) || null}
                       onChange={(option) => setData('currency', option?.value?.toString() || '')}
-                      placeholder="Select currency"
+                      placeholder={t('settings.general.selectCurrency')}
                       disabled={processing}
                       isClearable
                       isSearchable
@@ -336,7 +339,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Thousand Separator
+                      {t('settings.general.thousandSeparator')}
                     </label>
                     <input
                       type="text"
@@ -353,7 +356,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Decimal Separator
+                      {t('settings.general.decimalSeparator')}
                     </label>
                     <input
                       type="text"
@@ -370,7 +373,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      Decimal Places
+                      {t('settings.general.decimalPlaces')}
                     </label>
                     <input
                       type="number"
@@ -392,9 +395,9 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Ticket Field Configuration</h6>
+              <h6 className="card-title">{t('settings.general.ticketFieldConfig')}</h6>
               <p className="text-sm text-default-600 mt-1">
-                Select which fields should be required when creating a new ticket
+                {t('settings.general.ticketFieldConfigDescription')}
               </p>
             </div>
             <div className="card-body">
@@ -413,7 +416,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     htmlFor="field_region"
                     className="ml-3 block text-sm font-medium text-default-900"
                   >
-                    Region
+                    {t('settings.general.region')}
                   </label>
                 </div>
 
@@ -431,7 +434,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     htmlFor="field_category"
                     className="ml-3 block text-sm font-medium text-default-900"
                   >
-                    Category
+                    {t('settings.general.category')}
                   </label>
                 </div>
 
@@ -449,7 +452,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     htmlFor="field_sub_category"
                     className="ml-3 block text-sm font-medium text-default-900"
                   >
-                    Sub Category
+                    {t('settings.general.subCategory')}
                   </label>
                 </div>
 
@@ -467,7 +470,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     htmlFor="field_ticket_type"
                     className="ml-3 block text-sm font-medium text-default-900"
                   >
-                    Ticket Type
+                    {t('settings.general.ticketType')}
                   </label>
                 </div>
 
@@ -485,7 +488,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     htmlFor="field_assigned_to"
                     className="ml-3 block text-sm font-medium text-default-900"
                   >
-                    Assigned To
+                    {t('settings.general.assignedTo')}
                   </label>
                 </div>
               </div>
@@ -495,9 +498,9 @@ export default function General({ settings, currencies, users }: GeneralSettings
           {/* Email Notifications Section */}
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Email Notifications</h6>
+              <h6 className="card-title">{t('settings.general.emailNotifications')}</h6>
               <p className="text-sm text-default-600 mt-1">
-                Configure email notification for different actions
+                {t('settings.general.emailNotificationsDescription')}
               </p>
             </div>
             <div className="card-body">
@@ -548,7 +551,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                           : 'text-default-500'
                           }`}
                       >
-                        {data.email_notifications[item.key] ? 'Enabled' : 'Disabled'}
+                        {data.email_notifications[item.key] ? t('settings.general.enabled') : t('settings.general.disabled')}
                       </span>
                     </div>
                   </div>
@@ -560,9 +563,9 @@ export default function General({ settings, currencies, users }: GeneralSettings
           {/* Ticket Automation Settings */}
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Ticket Automation Settings</h6>
+              <h6 className="card-title">{t('settings.general.ticketAutomation')}</h6>
               <p className="text-sm text-default-600 mt-1">
-                Configure automatic ticket escalation and closure settings
+                {t('settings.general.ticketAutomationDescription')}
               </p>
             </div>
             <div className="card-body">
@@ -570,7 +573,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                 {/* Max Time to Escalate */}
                 <div>
                   <label className="block font-medium text-default-900 text-sm mb-2">
-                    Max Time to Escalate the Ticket
+                    {t('settings.general.maxTimeEscalate')}
                   </label>
                   <div className="flex items-center">
                     <span className="inline-block">
@@ -580,9 +583,9 @@ export default function General({ settings, currencies, users }: GeneralSettings
                         disabled={processing}
                         className="form-input !rounded-s-none !border-s-0"
                       >
-                        <option value="minutes">Minutes</option>
-                        <option value="hours">Hours</option>
-                        <option value="days">Days</option>
+                        <option value="minutes">{t('settings.general.minutes')}</option>
+                        <option value="hours">{t('settings.general.hours')}</option>
+                        <option value="days">{t('settings.general.days')}</option>
                       </select>
                     </span>
                     <input
@@ -601,7 +604,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
                 {/* Max Time to Autoclose */}
                 <div>
                   <label className="block font-medium text-default-900 text-sm mb-2">
-                    Max Time to Autoclose the Ticket
+                    {t('settings.general.maxTimeAutoclose')}
                   </label>
                   <div className="flex items-center">
                     <span className="inline-block">
@@ -611,9 +614,9 @@ export default function General({ settings, currencies, users }: GeneralSettings
                         disabled={processing}
                         className="form-input !rounded-s-none !border-s-0"
                       >
-                        <option value="minutes">Minutes</option>
-                        <option value="hours">Hours</option>
-                        <option value="days">Days</option>
+                        <option value="minutes">{t('settings.general.minutes')}</option>
+                        <option value="hours">{t('settings.general.hours')}</option>
+                        <option value="days">{t('settings.general.days')}</option>
                       </select>
                     </span>
                     <input
@@ -635,9 +638,9 @@ export default function General({ settings, currencies, users }: GeneralSettings
           {/* Google Cloud Storage Configuration Section */}
           <div className="card">
             <div className="card-header">
-              <h6 className="card-title">Google Cloud Storage Configuration</h6>
+              <h6 className="card-title">{t('settings.general.gcsConfig')}</h6>
               <p className="text-sm text-default-600 mt-1">
-                Configure Google Cloud Storage settings for file uploads
+                {t('settings.general.gcsConfigDescription')}
               </p>
             </div>
             <div className="card-body">
@@ -646,14 +649,14 @@ export default function General({ settings, currencies, users }: GeneralSettings
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      GCS Project ID
+                      {t('settings.general.gcsProjectId')}
                     </label>
                     <input
                       type="text"
                       name="gcs_project_id"
                       value={data.gcs_project_id}
                       onChange={(e) => setData('gcs_project_id', e.target.value)}
-                      placeholder="Enter GCS project ID"
+                      placeholder={t('settings.general.enterGcsProjectId')}
                       disabled={processing}
                       className="form-input"
                     />
@@ -662,14 +665,14 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      GCS Bucket
+                      {t('settings.general.gcsBucket')}
                     </label>
                     <input
                       type="text"
                       name="gcs_bucket"
                       value={data.gcs_bucket}
                       onChange={(e) => setData('gcs_bucket', e.target.value)}
-                      placeholder="Enter GCS bucket name"
+                      placeholder={t('settings.general.enterGcsBucket')}
                       disabled={processing}
                       className="form-input"
                     />
@@ -680,14 +683,14 @@ export default function General({ settings, currencies, users }: GeneralSettings
                 {/* GCS Key File Path - Full Width */}
                 <div>
                   <label className="block font-medium text-default-900 text-sm mb-2">
-                    GCS Key File Path
+                    {t('settings.general.gcsKeyFilePath')}
                   </label>
                   <input
                     type="text"
                     name="gcs_key_file_path"
                     value={data.gcs_key_file_path}
                     onChange={(e) => setData('gcs_key_file_path', e.target.value)}
-                    placeholder="Enter path to GCS key file (e.g., /path/to/service-account.json)"
+                    placeholder={t('settings.general.enterGcsKeyFilePath')}
                     disabled={processing}
                     className="form-input"
                   />
@@ -698,14 +701,14 @@ export default function General({ settings, currencies, users }: GeneralSettings
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      GCS Path Prefix
+                      {t('settings.general.gcsPathPrefix')}
                     </label>
                     <input
                       type="text"
                       name="gcs_path_prefix"
                       value={data.gcs_path_prefix}
                       onChange={(e) => setData('gcs_path_prefix', e.target.value)}
-                      placeholder="Enter path prefix (optional)"
+                      placeholder={t('settings.general.enterGcsPathPrefix')}
                       disabled={processing}
                       className="form-input"
                     />
@@ -714,14 +717,14 @@ export default function General({ settings, currencies, users }: GeneralSettings
 
                   <div>
                     <label className="block font-medium text-default-900 text-sm mb-2">
-                      GCS API URI
+                      {t('settings.general.gcsApiUri')}
                     </label>
                     <input
                       type="url"
                       name="gcs_api_uri"
                       value={data.gcs_api_uri}
                       onChange={(e) => setData('gcs_api_uri', e.target.value)}
-                      placeholder="Enter GCS API URI (optional)"
+                      placeholder={t('settings.general.enterGcsApiUri')}
                       disabled={processing}
                       className="form-input"
                     />
@@ -742,10 +745,10 @@ export default function General({ settings, currencies, users }: GeneralSettings
               {processing ? (
                 <span className="flex items-center gap-2">
                   <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                  Saving...
+                  {t('settings.general.saving')}
                 </span>
               ) : (
-                'Save Settings'
+                t('settings.general.saveSettings')
               )}
             </button>
           </div>
@@ -754,4 +757,3 @@ export default function General({ settings, currencies, users }: GeneralSettings
     </AppLayout>
   );
 }
-

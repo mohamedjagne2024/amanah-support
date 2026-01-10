@@ -10,6 +10,7 @@ import PageHeader from "@/components/Pageheader";
 import PageMeta from "@/components/PageMeta";
 import TextEditor from "@/components/TextEditor";
 import { HelpCircle, Check, X } from "lucide-react";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type FaqRecord = {
   id: number;
@@ -40,6 +41,8 @@ type FaqPageProps = {
 };
 
 export default function Index({ faqs, filters }: FaqPageProps) {
+  const { t } = useLanguageContext();
+
   const safeFaqs: FaqPaginator = {
     data: faqs?.data ?? [],
     current_page: faqs?.current_page ?? 1,
@@ -57,25 +60,25 @@ export default function Index({ faqs, filters }: FaqPageProps) {
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FaqRecord | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingFaq, setDeletingFaq] = useState<FaqRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Bulk delete dialog state
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [bulkDeleteIds, setBulkDeleteIds] = useState<number[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Form state
-  const [formData, setFormData] = useState({ 
-    name: "", 
+  const [formData, setFormData] = useState({
+    name: "",
     status: true,
     details: ""
   });
@@ -84,7 +87,7 @@ export default function Index({ faqs, filters }: FaqPageProps) {
   // Drawer handlers
   const handleOpenDrawer = useCallback((faq?: FaqRecord) => {
     setEditingFaq(faq ?? null);
-    setFormData({ 
+    setFormData({
       name: faq?.name ?? "",
       status: faq?.status ?? true,
       details: faq?.details ?? ""
@@ -104,11 +107,11 @@ export default function Index({ faqs, filters }: FaqPageProps) {
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
-    const url = editingFaq 
-      ? `/faqs/${editingFaq.id}` 
+
+    const url = editingFaq
+      ? `/faqs/${editingFaq.id}`
       : "/faqs";
-    
+
     const method = editingFaq ? "put" : "post";
 
     router[method](url, formData, {
@@ -190,7 +193,7 @@ export default function Index({ faqs, filters }: FaqPageProps) {
         sort_direction: partial.sort_direction !== undefined ? partial.sort_direction : safeFilters.sort_direction
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.page !== safeFaqs.current_page ||
         query.perPage !== safeFaqs.per_page ||
@@ -232,7 +235,7 @@ export default function Index({ faqs, filters }: FaqPageProps) {
     () => [
       {
         accessorKey: "name",
-        header: "Question",
+        header: t('faq.question'),
         cell: ({ getValue }) => (
           <span className="font-medium text-default-800">{getValue<string>()}</span>
         ),
@@ -240,50 +243,49 @@ export default function Index({ faqs, filters }: FaqPageProps) {
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: t('table.status'),
         cell: ({ getValue }) => {
           const status = getValue<boolean>();
           return (
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-              status 
-                ? 'bg-success/10 text-success' 
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status
+                ? 'bg-success/10 text-success'
                 : 'bg-default-100 text-default-500'
-            }`}>
+              }`}>
               {status ? <Check className="size-3" /> : <X className="size-3" />}
-              {status ? 'Active' : 'Inactive'}
+              {status ? t('faq.active') : t('faq.inactive')}
             </span>
           );
         },
         enableSorting: true
       }
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<FaqRecord>[]>(
     () => [
       {
-        label: "Edit",
+        label: t('table.edit'),
         value: "edit",
         onSelect: (faq) => {
           handleOpenDrawer(faq);
         }
       },
       {
-        label: "Delete",
+        label: t('table.delete'),
         value: "delete",
         onSelect: (faq) => {
           handleOpenDeleteDialog(faq);
         }
       },
     ],
-    [handleOpenDrawer, handleOpenDeleteDialog]
+    [handleOpenDrawer, handleOpenDeleteDialog, t]
   );
 
   const bulkActions = useMemo<DataTableBulkAction<FaqRecord>[]>(
     () => [
       {
-        label: "Delete selection",
+        label: t('table.deleteSelection'),
         value: "delete",
         onSelect: async (selectedRows) => {
           const ids = selectedRows.map(row => row.id);
@@ -291,20 +293,20 @@ export default function Index({ faqs, filters }: FaqPageProps) {
         }
       }
     ],
-    [handleOpenBulkDeleteDialog]
+    [handleOpenBulkDeleteDialog, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title="FAQs" />
+      <PageMeta title={t('faq.title')} />
       <main>
-        <PageHeader 
-          title="FAQs" 
-          subtitle="Manage frequently asked questions"
+        <PageHeader
+          title={t('faq.title')}
+          subtitle={t('faq.subtitle')}
           icon={HelpCircle}
           count={safeFaqs.total}
         />
-        
+
         <div className="space-y-6">
           <DataTable<FaqRecord>
             data={safeFaqs.data}
@@ -332,7 +334,7 @@ export default function Index({ faqs, filters }: FaqPageProps) {
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Create FAQ
+                {t('faq.createFaq')}
               </button>
             )}
             rowActions={rowActions}
@@ -345,7 +347,7 @@ export default function Index({ faqs, filters }: FaqPageProps) {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        title={editingFaq ? "Edit FAQ" : "Create FAQ"}
+        title={editingFaq ? t('faq.editFaq') : t('faq.createFaq')}
         size="xl"
         placement="right"
         footer={
@@ -356,7 +358,7 @@ export default function Index({ faqs, filters }: FaqPageProps) {
               onClick={handleCloseDrawer}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -367,10 +369,10 @@ export default function Index({ faqs, filters }: FaqPageProps) {
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  {t('table.processing')}
                 </span>
               ) : (
-                editingFaq ? "Update" : "Create"
+                editingFaq ? t('table.update') : t('table.create')
               )}
             </button>
           </>
@@ -379,12 +381,12 @@ export default function Index({ faqs, filters }: FaqPageProps) {
         <form id="faq-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Question <span className="text-danger">*</span>
+              {t('faq.question')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter the FAQ question"
+              placeholder={t('faq.enterQuestion')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               disabled={isSubmitting}
@@ -397,24 +399,24 @@ export default function Index({ faqs, filters }: FaqPageProps) {
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Status
+              {t('table.status')}
             </label>
             <Switch
               checked={formData.status}
               onChange={(checked) => setFormData({ ...formData, status: checked })}
               disabled={isSubmitting}
-              label={formData.status ? 'Active' : 'Inactive'}
+              label={formData.status ? t('faq.active') : t('faq.inactive')}
             />
           </div>
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Answer <span className="text-danger">*</span>
+              {t('faq.answer')} <span className="text-danger">*</span>
             </label>
             <input type="hidden" name="details" value={formData.details} />
             <TextEditor
               initialValue={formData.details}
-              placeholder="Enter the FAQ answer..."
+              placeholder={t('faq.enterAnswer')}
               onChange={(content) => setFormData({ ...formData, details: content })}
               showToolbar={true}
               className="min-h-[200px]"
@@ -435,10 +437,10 @@ export default function Index({ faqs, filters }: FaqPageProps) {
           }
         }}
         onConfirm={handleConfirmDelete}
-        title="Confirm Delete"
-        description={`Are you sure you want to delete the FAQ "${deletingFaq?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('table.confirmDelete')}
+        description={`${t('faq.confirmDelete')} "${deletingFaq?.name}"`}
+        confirmText={t('table.delete')}
+        cancelText={t('common.cancel')}
         confirmVariant="danger"
         isLoading={isDeleting}
         size="lg"
@@ -453,10 +455,10 @@ export default function Index({ faqs, filters }: FaqPageProps) {
           }
         }}
         onConfirm={handleConfirmBulkDelete}
-        title="Confirm Bulk Delete"
-        description={`Are you sure you want to delete ${bulkDeleteIds.length} FAQ(s)? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('table.confirmBulkDelete')}
+        description={`${t('faq.confirmBulkDelete')} (${bulkDeleteIds.length})`}
+        confirmText={t('table.delete')}
+        cancelText={t('common.cancel')}
         confirmVariant="danger"
         isLoading={isBulkDeleting}
         size="lg"
@@ -464,4 +466,3 @@ export default function Index({ faqs, filters }: FaqPageProps) {
     </AppLayout>
   );
 }
-

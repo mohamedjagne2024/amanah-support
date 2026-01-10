@@ -6,6 +6,7 @@ import Drawer from "@/components/Drawer";
 import AppLayout from "@/layouts/app-layout";
 import PageMeta from "@/components/PageMeta";
 import PageHeader from "@/components/Pageheader";
+import { useLanguageContext } from "@/context/useLanguageContext";
 
 type Organization = {
   id: number;
@@ -53,6 +54,7 @@ type OrganizationManagementPageProps = {
 };
 
 export default function OrganizationManagement({ title, organizations, countries, filters }: OrganizationManagementPageProps) {
+  const { t } = useLanguageContext();
   const safeFilters = {
     search: filters?.search ?? "",
     sort_by: filters?.sort_by ?? null,
@@ -60,7 +62,7 @@ export default function OrganizationManagement({ title, organizations, countries
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Edit drawer state
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState<Organization | null>(null);
@@ -203,12 +205,12 @@ export default function OrganizationManagement({ title, organizations, countries
   }, [createFormData, handleCloseCreateDrawer]);
 
   const handleDeleteOrganization = useCallback((organization: Organization) => {
-    if (!confirm(`Are you sure you want to delete ${organization.name}?`)) return;
+    if (!confirm(`${t('organizations.deleteConfirm')} ${organization.name}?`)) return;
 
     router.delete(`/organizations/${organization.id}`, {
       preserveScroll: true,
     });
-  }, []);
+  }, [t]);
 
   const submitQuery = useCallback(
     (partial: Partial<{ search: string; sort_by: string | null; sort_direction: 'asc' | 'desc' | null; page: number; per_page: number }>) => {
@@ -220,7 +222,7 @@ export default function OrganizationManagement({ title, organizations, countries
         per_page: partial.per_page ?? organizations.per_page,
       };
 
-      const hasChanged = 
+      const hasChanged =
         query.search !== (safeFilters.search ?? "") ||
         query.page !== organizations.current_page ||
         query.per_page !== organizations.per_page ||
@@ -256,7 +258,7 @@ export default function OrganizationManagement({ title, organizations, countries
     () => [
       {
         accessorKey: "name",
-        header: "Organization",
+        header: t('organizations.columns.organization'),
         cell: ({ getValue, row }) => (
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -276,7 +278,7 @@ export default function OrganizationManagement({ title, organizations, countries
       },
       {
         accessorKey: "phone",
-        header: "Phone",
+        header: t('organizations.columns.phone'),
         cell: ({ getValue }) => (
           <span className="text-default-600">{getValue<string | null>() || '-'}</span>
         ),
@@ -284,7 +286,7 @@ export default function OrganizationManagement({ title, organizations, countries
       },
       {
         accessorKey: "city",
-        header: "Location",
+        header: t('organizations.columns.location'),
         cell: ({ getValue, row }) => {
           const city = getValue<string | null>();
           const region = row.original.region;
@@ -298,12 +300,12 @@ export default function OrganizationManagement({ title, organizations, countries
       },
       {
         accessorKey: "contacts_count",
-        header: "Contacts",
+        header: t('organizations.columns.contacts'),
         cell: ({ getValue }) => {
           const count = getValue<number>();
           return (
             <Badge variant={count > 0 ? "info" : "default"}>
-              {count} {count === 1 ? 'contact' : 'contacts'}
+              {count} {count === 1 ? t('organizations.contact') : t('organizations.contacts')}
             </Badge>
           );
         },
@@ -311,41 +313,41 @@ export default function OrganizationManagement({ title, organizations, countries
       },
       {
         accessorKey: "created_at",
-        header: "Created",
+        header: t('organizations.columns.created'),
         cell: ({ getValue }) => (
           <span className="text-default-600 text-sm">{getValue<string | null>() || '-'}</span>
         ),
         enableSorting: true,
       },
     ],
-    []
+    [t]
   );
 
   const rowActions = useMemo<DataTableRowAction<Organization>[]>(
     () => [
       {
-        label: "Edit Organization",
+        label: t('organizations.editOrganization'),
         value: "edit",
         onSelect: (organization) => {
           handleOpenEditDrawer(organization);
         }
       },
       {
-        label: "Delete Organization",
+        label: t('common.delete'),
         value: "delete",
         onSelect: (organization) => {
           handleDeleteOrganization(organization);
         }
       },
     ],
-    [handleOpenEditDrawer, handleDeleteOrganization]
+    [handleOpenEditDrawer, handleDeleteOrganization, t]
   );
 
   return (
     <AppLayout>
-      <PageMeta title={title || "Organizations"} />
+      <PageMeta title={t('organizations.title')} />
       <main>
-        <PageHeader title={title || "Organizations"} />
+        <PageHeader title={t('organizations.title')} />
         <div className="space-y-6">
           <DataTable<Organization>
             data={organizations.data}
@@ -388,7 +390,7 @@ export default function OrganizationManagement({ title, organizations, countries
                 disabled={isBusy}
                 className="btn bg-primary text-white disabled:cursor-not-allowed btn-sm"
               >
-                Add Organization
+                {t('organizations.addOrganization')}
               </button>
             )}
             isLoading={isLoading}
@@ -401,7 +403,7 @@ export default function OrganizationManagement({ title, organizations, countries
       <Drawer
         isOpen={isEditDrawerOpen}
         onClose={handleCloseEditDrawer}
-        title="Edit Organization"
+        title={t('organizations.editOrganization')}
         size="lg"
         placement="right"
         footer={
@@ -412,7 +414,7 @@ export default function OrganizationManagement({ title, organizations, countries
               onClick={handleCloseEditDrawer}
               disabled={isSaving}
             >
-              Cancel
+              {t('organizations.buttons.cancel')}
             </button>
             <button
               type="submit"
@@ -423,10 +425,10 @@ export default function OrganizationManagement({ title, organizations, countries
               {isSaving ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
+                  {t('organizations.buttons.saving')}
                 </span>
               ) : (
-                "Save Changes"
+                t('organizations.buttons.saveChanges')
               )}
             </button>
           </>
@@ -442,18 +444,18 @@ export default function OrganizationManagement({ title, organizations, countries
             </div>
             <div>
               <div className="font-semibold text-default-900">{editingOrganization?.name}</div>
-              <div className="text-sm text-default-600">{editingOrganization?.email || 'No email'}</div>
+              <div className="text-sm text-default-600">{editingOrganization?.email || t('organizations.noEmail')}</div>
             </div>
           </div>
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Organization Name <span className="text-danger">*</span>
+              {t('organizations.form.organizationName')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter organization name"
+              placeholder={t('organizations.form.enterName')}
               value={editFormData.name}
               onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
               disabled={isSaving}
@@ -466,12 +468,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Email
+              {t('organizations.form.email')}
             </label>
             <input
               type="email"
               name="email"
-              placeholder="Enter email address"
+              placeholder={t('organizations.form.enterEmail')}
               value={editFormData.email}
               onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
               disabled={isSaving}
@@ -484,12 +486,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Phone
+              {t('organizations.form.phone')}
             </label>
             <input
               type="tel"
               name="phone"
-              placeholder="Enter phone number"
+              placeholder={t('organizations.form.enterPhone')}
               value={editFormData.phone}
               onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
               disabled={isSaving}
@@ -502,12 +504,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Address
+              {t('organizations.form.address')}
             </label>
             <input
               type="text"
               name="address"
-              placeholder="Enter street address"
+              placeholder={t('organizations.form.enterAddress')}
               value={editFormData.address}
               onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
               disabled={isSaving}
@@ -521,12 +523,12 @@ export default function OrganizationManagement({ title, organizations, countries
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                City
+                {t('organizations.form.city')}
               </label>
               <input
                 type="text"
                 name="city"
-                placeholder="Enter city"
+                placeholder={t('organizations.form.enterCity')}
                 value={editFormData.city}
                 onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
                 disabled={isSaving}
@@ -539,12 +541,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                Region / State
+                {t('organizations.form.regionState')}
               </label>
               <input
                 type="text"
                 name="region"
-                placeholder="Enter region"
+                placeholder={t('organizations.form.enterRegion')}
                 value={editFormData.region}
                 onChange={(e) => setEditFormData({ ...editFormData, region: e.target.value })}
                 disabled={isSaving}
@@ -559,7 +561,7 @@ export default function OrganizationManagement({ title, organizations, countries
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                Country
+                {t('organizations.form.country')}
               </label>
               <select
                 name="country"
@@ -568,7 +570,7 @@ export default function OrganizationManagement({ title, organizations, countries
                 disabled={isSaving}
                 className={`form-input w-full ${editFormErrors.country ? 'border-danger focus:ring-danger' : ''}`}
               >
-                <option value="">Select country</option>
+                <option value="">{t('organizations.form.selectCountry')}</option>
                 {countries.map((country) => (
                   <option key={country.id} value={country.code || country.name.substring(0, 2).toUpperCase()}>
                     {country.name}
@@ -582,12 +584,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                Postal Code
+                {t('organizations.form.postalCode')}
               </label>
               <input
                 type="text"
                 name="postal_code"
-                placeholder="Enter postal code"
+                placeholder={t('organizations.form.enterPostalCode')}
                 value={editFormData.postal_code}
                 onChange={(e) => setEditFormData({ ...editFormData, postal_code: e.target.value })}
                 disabled={isSaving}
@@ -605,7 +607,7 @@ export default function OrganizationManagement({ title, organizations, countries
       <Drawer
         isOpen={isCreateDrawerOpen}
         onClose={handleCloseCreateDrawer}
-        title="Add New Organization"
+        title={t('organizations.addNewOrganization')}
         size="lg"
         placement="right"
         footer={
@@ -616,7 +618,7 @@ export default function OrganizationManagement({ title, organizations, countries
               onClick={handleCloseCreateDrawer}
               disabled={isCreating}
             >
-              Cancel
+              {t('organizations.buttons.cancel')}
             </button>
             <button
               type="submit"
@@ -627,10 +629,10 @@ export default function OrganizationManagement({ title, organizations, countries
               {isCreating ? (
                 <span className="inline-flex items-center gap-2">
                   <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating...
+                  {t('organizations.buttons.creating')}
                 </span>
               ) : (
-                  "Add Organization"
+                t('organizations.buttons.addOrganization')
               )}
             </button>
           </>
@@ -639,12 +641,12 @@ export default function OrganizationManagement({ title, organizations, countries
         <form id="create-organization-form" onSubmit={handleCreateOrganization} className="space-y-4">
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Organization Name <span className="text-danger">*</span>
+              {t('organizations.form.organizationName')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Enter organization name"
+              placeholder={t('organizations.form.enterName')}
               value={createFormData.name}
               onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
               disabled={isCreating}
@@ -657,12 +659,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Email
+              {t('organizations.form.email')}
             </label>
             <input
               type="email"
               name="email"
-              placeholder="Enter email address"
+              placeholder={t('organizations.form.enterEmail')}
               value={createFormData.email}
               onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
               disabled={isCreating}
@@ -675,12 +677,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Phone
+              {t('organizations.form.phone')}
             </label>
             <input
               type="tel"
               name="phone"
-              placeholder="Enter phone number"
+              placeholder={t('organizations.form.enterPhone')}
               value={createFormData.phone}
               onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
               disabled={isCreating}
@@ -693,12 +695,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
           <div>
             <label className="block font-medium text-default-900 text-sm mb-2">
-              Address
+              {t('organizations.form.address')}
             </label>
             <input
               type="text"
               name="address"
-              placeholder="Enter street address"
+              placeholder={t('organizations.form.enterAddress')}
               value={createFormData.address}
               onChange={(e) => setCreateFormData({ ...createFormData, address: e.target.value })}
               disabled={isCreating}
@@ -712,12 +714,12 @@ export default function OrganizationManagement({ title, organizations, countries
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                City
+                {t('organizations.form.city')}
               </label>
               <input
                 type="text"
                 name="city"
-                placeholder="Enter city"
+                placeholder={t('organizations.form.enterCity')}
                 value={createFormData.city}
                 onChange={(e) => setCreateFormData({ ...createFormData, city: e.target.value })}
                 disabled={isCreating}
@@ -730,12 +732,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                Region / State
+                {t('organizations.form.regionState')}
               </label>
               <input
                 type="text"
                 name="region"
-                placeholder="Enter region"
+                placeholder={t('organizations.form.enterRegion')}
                 value={createFormData.region}
                 onChange={(e) => setCreateFormData({ ...createFormData, region: e.target.value })}
                 disabled={isCreating}
@@ -750,7 +752,7 @@ export default function OrganizationManagement({ title, organizations, countries
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                Country
+                {t('organizations.form.country')}
               </label>
               <select
                 name="country"
@@ -759,7 +761,7 @@ export default function OrganizationManagement({ title, organizations, countries
                 disabled={isCreating}
                 className={`form-input w-full ${createFormErrors.country ? 'border-danger focus:ring-danger' : ''}`}
               >
-                <option value="">Select country</option>
+                <option value="">{t('organizations.form.selectCountry')}</option>
                 {countries.map((country) => (
                   <option key={country.id} value={country.code || country.name.substring(0, 2).toUpperCase()}>
                     {country.name}
@@ -773,12 +775,12 @@ export default function OrganizationManagement({ title, organizations, countries
 
             <div>
               <label className="block font-medium text-default-900 text-sm mb-2">
-                Postal Code
+                {t('organizations.form.postalCode')}
               </label>
               <input
                 type="text"
                 name="postal_code"
-                placeholder="Enter postal code"
+                placeholder={t('organizations.form.enterPostalCode')}
                 value={createFormData.postal_code}
                 onChange={(e) => setCreateFormData({ ...createFormData, postal_code: e.target.value })}
                 disabled={isCreating}

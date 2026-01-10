@@ -4,6 +4,7 @@ import { FileText } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
 import TextEditor from '@/components/TextEditor';
+import { useLanguageContext } from '@/context/useLanguageContext';
 
 type PageData = {
   title: string;
@@ -27,6 +28,7 @@ const defaultPageData: PageData = {
 };
 
 export default function Terms({ title, page }: TermsPageProps) {
+  const { t } = useLanguageContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const initialData = useMemo(() => {
     if (!page?.html) return defaultPageData;
@@ -61,13 +63,13 @@ export default function Terms({ title, page }: TermsPageProps) {
 
   return (
     <AppLayout>
-      <PageMeta title="Terms of Service Settings" />
+      <PageMeta title={t('frontPages.terms.title')} />
       <main className="pb-24">
         <form onSubmit={handleSubmit}>
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-default-900">Terms of Service Settings</h1>
-            <p className="text-default-500 mt-1">Configure your terms of service page content</p>
+            <h1 className="text-2xl font-bold text-default-900">{t('frontPages.terms.title')}</h1>
+            <p className="text-default-500 mt-1">{t('frontPages.terms.subtitle')}</p>
           </div>
 
           <div className="space-y-6 max-w-5xl">
@@ -78,13 +80,13 @@ export default function Terms({ title, page }: TermsPageProps) {
                   <FileText className="size-5 text-primary" />
                 </div>
                 <div>
-                  <h6 className="card-title">Page Content</h6>
-                  <p className="text-sm text-default-500">Terms of service title and content</p>
+                  <h6 className="card-title">{t('frontPages.terms.pageContent')}</h6>
+                  <p className="text-sm text-default-500">{t('frontPages.terms.pageContentDescription')}</p>
                 </div>
               </div>
               <div className="card-body space-y-4">
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Page Title</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.terms.pageTitle')}</label>
                   <input
                     type="text"
                     value={data.title}
@@ -95,9 +97,9 @@ export default function Terms({ title, page }: TermsPageProps) {
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-default-900 text-sm mb-2">Page Content</label>
+                  <label className="block font-medium text-default-900 text-sm mb-2">{t('frontPages.terms.pageContent')}</label>
                   <TextEditor
-                    placeholder="Enter your terms of service content..."
+                    placeholder={t('frontPages.terms.enterContent')}
                     onChange={(content) => setData('content', content)}
                     showToolbar={true}
                     className="min-h-[400px]"
@@ -117,7 +119,7 @@ export default function Terms({ title, page }: TermsPageProps) {
                 className="btn border-default-200 text-default-700"
                 disabled={isSubmitting}
               >
-                Reset
+                {t('frontPages.reset')}
               </button>
               <button
                 type="submit"
@@ -127,10 +129,10 @@ export default function Terms({ title, page }: TermsPageProps) {
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <div className="inline-block border-2 border-white rounded-full size-4 animate-spin border-s-transparent" />
-                    Saving...
+                    {t('frontPages.saving')}
                   </span>
                 ) : (
-                  'Save Changes'
+                  t('frontPages.saveChanges')
                 )}
               </button>
             </div>
@@ -140,4 +142,3 @@ export default function Terms({ title, page }: TermsPageProps) {
     </AppLayout>
   );
 }
-
