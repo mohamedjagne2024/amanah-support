@@ -1,5 +1,6 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 import {
   Calendar,
   Mail,
@@ -14,18 +15,17 @@ import {
   MapPin,
   FolderOpen,
   MessageSquare,
-  Paperclip,
-  Send,
   CheckCircle,
   XCircle,
   FileText,
   Star,
-  X
+  Plus
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import PageMeta from '@/components/PageMeta';
 import Breadcrumb from '@/components/Breadcrumb';
-import { useChatMessageListener } from '@/hooks/usePusher';
+import TextEditor from '@/components/TextEditor';
+import { useTicketCommentListener } from '@/hooks/usePusher';
 import { useLanguageContext } from '@/context/useLanguageContext';
 
 type AttachmentType = {
@@ -121,7 +121,7 @@ type ViewTicketPageProps = {
   title: string;
   ticket: TicketData;
   attachments: AttachmentType[];
-  replies: ReplyType[];
+  comments: ReplyType[];
   activities: ActivityType[];
   auth: {
     user: {
@@ -135,39 +135,41 @@ export default function View({
   title,
   ticket,
   attachments,
-  replies: initialReplies,
+  comments: initialComments,
   activities,
   auth,
 }: ViewTicketPageProps) {
   const { t } = useLanguageContext();
-  const [replyContent, setReplyContent] = useState('');
+  const [showNewComment, setShowNewComment] = useState(false);
+  const [commentText, setCommentText] = useState('');
   const [replyAttachments, setReplyAttachments] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
-  const [replies, setReplies] = useState<ReplyType[]>(initialReplies || []);
+  const [localComments, setLocalComments] = useState<ReplyType[]>(initialComments || []);
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [resolutionDetails, setResolutionDetails] = useState('');
   const [isResolving, setIsResolving] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Sync replies when initialReplies changes
+  // Sync comments when initialComments changes
   useEffect(() => {
-    setReplies(initialReplies || []);
-  }, [initialReplies]);
+    setLocalComments(initialComments || []);
+  }, [initialComments]);
 
-  // Scroll to bottom when replies change
+  // Scroll to bottom when comments change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [replies]);
+  }, [localComments]);
 
-  // Listen for real-time reply updates via Pusher
-  useChatMessageListener(ticket?.id || null, (newReply) => {
-    setReplies(prev => {
-      const exists = prev.some(reply => reply.id === newReply.id);
+  // Listen for real-time comment updates via Pusher
+  useTicketCommentListener(ticket.id, (newComment) => {
+    setLocalComments(prev => {
+      const exists = prev.some(comment => comment.id === newComment.id);
       if (exists) return prev;
-      return [...prev, newReply as unknown as ReplyType];
+      return [...prev, newComment as unknown as ReplyType];
     });
   });
 
@@ -244,41 +246,34 @@ export default function View({
     setReplyAttachments(updated);
   };
 
-  const handleSendReply = async () => {
-    if ((!replyContent.trim() && replyAttachments.length === 0) || isSending) return;
+  const handleCommentChange = (content: string) => {
+    setCommentText(content);
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim() || isSending) return;
 
     setIsSending(true);
     try {
-      const formData = new FormData();
-      formData.append('ticket_id', ticket.id.toString());
-      formData.append('details', replyContent);
-
-      replyAttachments.forEach((file) => {
-        formData.append('files[]', file);
+      const response = await axios.post(`/tickets/${ticket.id}/comment`, {
+        comment: commentText,
       });
 
-      const response = await fetch(`/tickets/${ticket.uid}/reply`, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const newReply = await response.json();
-        setReplies(prev => {
-          const exists = prev.some(reply => reply.id === newReply.id);
+      // Add the comment to local state immediately
+      if (response.data.comment) {
+        setLocalComments((prev) => {
+          const exists = prev.some((c) => c.id === response.data.comment.id);
           if (exists) return prev;
-          return [...prev, newReply];
+          return [...prev, response.data.comment];
         });
-        setReplyContent('');
-        setReplyAttachments([]);
-      } else {
-        console.error('Failed to send reply:', response.status, response.statusText);
       }
-    } catch (error) {
-      console.error('Failed to send reply:', error);
+
+      setCommentText('');
+      setEditorKey(prev => prev + 1);
+      setShowNewComment(false);
+    } catch {
+      // Error handling - comment failed to submit
     } finally {
       setIsSending(false);
     }
@@ -458,173 +453,112 @@ export default function View({
               </div>
             </div>
 
-            {/* Replies/Discussion Card */}
+            {/* Conversations Card */}
             <div className="card">
               <div className="card-header flex items-center justify-between">
                 <h6 className="card-title flex items-center gap-2">
                   <MessageSquare className="size-4" />
-                  {t('ticket.reply')} ({replies.length})
+                  {t('ticket.reply')} ({localComments.length})
                 </h6>
+                {!ticket.closed && (
+                  <button
+                    onClick={() => setShowNewComment(true)}
+                    className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
+                  >
+                    <Plus className="size-4 me-1" />
+                    {t('ticket.newReply')}
+                  </button>
+                )}
               </div>
               <div className="card-body">
-                {/* Replies List */}
-                {replies.length > 0 ? (
-                  <div className="space-y-4 mb-6 max-h-[500px] overflow-y-auto">
-                    {replies.map((reply) => {
-                      const isAgent = isAgentReply(reply);
-                      const userName = getReplyUserName(reply);
-                      const userProfilePicture = getReplyUserProfilePicture(reply);
-
-                      return (
-                        <div
-                          key={reply.id}
-                          className={`flex ${isAgent ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div className={`max-w-[80%] ${isAgent ? 'order-1' : ''}`}>
-                            <div className={`flex items-start gap-3 ${isAgent ? 'flex-row-reverse' : ''}`}>
-                              <Avatar
-                                name={userName}
-                                profilePicture={userProfilePicture}
-                                className="size-8 shrink-0"
-                              />
-                              <div className="flex-1">
-                                <div className={`flex items-center gap-2 mb-1 ${isAgent ? 'justify-end' : ''}`}>
-                                  <span className="font-medium text-default-900 text-sm">
-                                    {userName}
-                                  </span>
-                                  <span className="text-xs text-default-500">
-                                    {reply.created_at}
-                                  </span>
-                                </div>
-                                <div
-                                  className={`rounded-2xl px-4 py-3 ${isAgent
-                                      ? 'bg-primary text-white rounded-tr-md'
-                                      : 'bg-default-100 text-default-800 rounded-tl-md'
-                                    }`}
-                                >
-                                  <div
-                                    className="text-sm [&_p]:mb-0"
-                                    dangerouslySetInnerHTML={{ __html: reply.details }}
-                                  />
-
-                                  {/* Reply Attachments */}
-                                  {reply.attachments && reply.attachments.length > 0 && (
-                                    <div className="mt-3 space-y-2">
-                                      {reply.attachments.map((attachment) => (
-                                        <a
-                                          key={attachment.id}
-                                          href={attachment.url || attachment.path}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isAgent
-                                              ? 'bg-white/10 hover:bg-white/20 text-white'
-                                              : 'bg-white hover:bg-default-50 text-primary border border-default-200'
-                                            } transition-colors`}
-                                        >
-                                          <FileText className="size-4" />
-                                          <span className="flex-1 truncate">{attachment.name}</span>
-                                        </a>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div ref={messagesEndRef} />
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-default-400">
-                    <MessageSquare className="size-12 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm font-medium">
+                {showNewComment ? (
+                  <form onSubmit={handleSubmitComment} className="space-y-4">
+                    <TextEditor
+                      key={editorKey}
+                      placeholder={t('ticket.writeMessage')}
+                      onChange={handleCommentChange}
+                      showToolbar={true}
+                      className="min-h-[150px]"
+                    />
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowNewComment(false)}
+                        className="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSending || !commentText.trim()}
+                        className="btn bg-primary text-white btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSending ? t('chat.sending') : t('ticket.sendMessage')}
+                      </button>
+                    </div>
+                  </form>
+                ) : localComments.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="size-16 mx-auto mb-4 rounded-full bg-default-100 flex items-center justify-center">
+                      <MessageSquare className="size-8 text-default-400" />
+                    </div>
+                    <h6 className="text-default-900 font-medium mb-1">
                       {ticket.closed ? t('ticket.noRepliesClosed') : t('ticket.noRepliesYet')}
+                    </h6>
+                    <p className="text-default-500 text-sm mb-4">
+                      {ticket.closed ? '' : t('ticket.noRepliesDescription')}
                     </p>
                     {!ticket.closed && (
-                      <p className="text-xs mt-1">{t('ticket.noRepliesDescription')}</p>
+                      <button
+                        onClick={() => setShowNewComment(true)}
+                        className="btn btn-sm bg-transparent btn-outline-dashed border-primary text-primary hover:bg-primary/10"
+                      >
+                        <Plus className="size-4 me-1" />
+                        {t('ticket.newReply')}
+                      </button>
                     )}
                   </div>
-                )}
-
-                {/* Reply Input - Only show if ticket is not closed */}
-                {!ticket.closed && (
-                  <div className="border-t border-default-200 pt-4">
-                    <label className="block font-medium text-default-900 text-sm mb-2">
-                      {t('ticket.newReply')}
-                    </label>
-
-                    {/* Selected Attachments Preview */}
-                    {replyAttachments.length > 0 && (
-                      <div className="mb-3 p-3 border border-default-200 rounded-lg bg-default-50">
-                        <div className="flex flex-wrap gap-2">
-                          {replyAttachments.map((file, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2 px-3 py-2 bg-white border border-default-200 rounded-lg text-sm"
-                            >
-                              <FileText className="size-4 text-default-500" />
-                              <span className="truncate max-w-[200px]">{file.name}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveFile(index)}
-                                className="text-default-400 hover:text-danger transition-colors"
-                              >
-                                <X className="size-4" />
-                              </button>
-                            </div>
-                          ))}
+                ) : (
+                  <div className="space-y-4">
+                    {localComments.map((comment: ReplyType) => (
+                      <div key={comment.id} className="flex gap-3 p-4 bg-default-50 rounded-lg">
+                        {comment.user?.profile_picture_url ? (
+                          <img
+                            src={comment.user.profile_picture_url}
+                            alt={comment.user.name || 'User'}
+                            className="size-10 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm uppercase shrink-0">
+                            {comment.user?.name?.charAt(0) || 'U'}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-default-900">
+                              {comment.user?.name || 'Unknown User'}
+                            </span>
+                            <span className="text-xs text-default-400">
+                              {comment.created_at}
+                            </span>
+                          </div>
+                          <div
+                            className="text-sm text-default-600 prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: comment.details }}
+                          />
                         </div>
                       </div>
+                    ))}
+                    {!ticket.closed && (
+                      <button
+                        onClick={() => setShowNewComment(true)}
+                        className="w-full btn btn-sm bg-transparent text-default-600 border border-dashed border-default-300 hover:bg-primary/10 hover:text-primary"
+                      >
+                        <Plus className="size-4 me-1" />
+                        {t('ticket.addReply')}
+                      </button>
                     )}
-
-                    <div className="relative">
-                      <textarea
-                        value={replyContent}
-                        onChange={(e) => setReplyContent(e.target.value)}
-                        placeholder={t('ticket.writeMessage')}
-                        className="form-input w-full min-h-[100px] resize-none pr-12"
-                        rows={3}
-                      />
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        className="hidden"
-                        multiple
-                        onChange={handleFileChange}
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute right-3 top-3 p-2 rounded-lg text-default-400 hover:text-default-600 hover:bg-default-100 transition-colors"
-                        title={t('ticket.attachFiles')}
-                      >
-                        <Paperclip className="size-5" />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-end mt-3">
-                      <button
-                        type="button"
-                        onClick={handleSendReply}
-                        disabled={(!replyContent.trim() && replyAttachments.length === 0) || isSending}
-                        className="btn bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSending ? (
-                          <>
-                            <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin me-2" />
-                            {t('chat.sending')}
-                          </>
-                        ) : (
-                          <>
-                            <Send className="size-4 me-2" />
-                            {t('ticket.sendMessage')}
-                          </>
-                        )}
-                      </button>
-                    </div>
+                    <div ref={messagesEndRef} />
                   </div>
                 )}
               </div>

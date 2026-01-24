@@ -21,11 +21,11 @@ class DatabaseSeeder extends Seeder
             EmailTemplateSeeder::class,
             FrontPageSeeder::class,
             CategorySeeder::class,
-            PrioritySeeder::class,
-            StatusSeeder::class,
-            DepartmentSeeder::class,
             TypeSeeder::class,
             UserSeeder::class,
+            RegionSeeder::class,
+            KnowledgeBaseSeeder::class,
+            FaqSeeder::class,
         ]);
     }
 }
