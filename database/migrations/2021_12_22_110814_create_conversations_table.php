@@ -21,6 +21,7 @@ class CreateConversationsTable extends Migration
             $table->string('title', 100)->nullable();
             $table->integer('region_id')->nullable()->index();
             $table->integer('contact_id')->index();
+            $table->tinyInteger('is_ai')->default(0);
             $table->timestamps();
         });
     }

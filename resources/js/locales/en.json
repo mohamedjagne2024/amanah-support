@@ -180,6 +180,7 @@
   },
   "chatWidget": {
     "welcomeToSupport": "Welcome to Support",
+    "connectWithSupport": "Connect with Live Support",
     "provideDetailsToStart": "Please provide your details to start chatting with our team.",
     "fullName": "Full Name",
     "fullNameRequired": "Full name is required",
@@ -215,7 +216,16 @@
     "minimizeChat": "Minimize chat",
     "closeChat": "Close chat",
     "attachFile": "Attach file",
-    "sendMessage": "Send message"
+    "sendMessage": "Send message",
+    "aiAssistantTitle": "AI Assistant",
+    "aiAssistantSubtitle": "Ask me anything about our services",
+    "aiAssistant": "AI Assistant",
+    "aiWelcomeMessage": "Hello! I'm your AI assistant. I can answer questions about our services, policies, and procedures. How can I help you today?",
+    "aiErrorMessage": "I'm sorry, I couldn't process your request. Please try again or chat with our live support team.",
+    "aiTyping": "Thinking...",
+    "askAiPlaceholder": "Ask a question...",
+    "registering": "Registering...",
+    "backToAiChat": "Back to AI Assistant"
   },
   "kb": {
     "title": "Knowledge Base",
@@ -685,7 +695,11 @@
       "gcsApiUri": "GCS API URI",
       "enterGcsApiUri": "Enter GCS API URI (optional)",
       "saving": "Saving...",
-      "saveSettings": "Save Settings"
+      "saveSettings": "Save Settings",
+      "geminiApiKey": "Gemini API Key",
+      "geminiConfig": "Gemini Configuration",
+      "geminiConfigDescription": "Configure Gemini settings for ticket responses",
+      "enterGeminiApiKey": "Enter Gemini API Key"
     },
     "regions": {
       "title": "Regions",

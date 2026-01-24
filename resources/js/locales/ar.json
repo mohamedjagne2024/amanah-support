@@ -180,6 +180,7 @@
   },
   "chatWidget": {
     "welcomeToSupport": "مرحبًا بك في الدعم",
+    "connectWithSupport": "الاتصال بالدعم المباشر",
     "provideDetailsToStart": "يرجى تقديم بياناتك لبدء الدردشة مع فريقنا.",
     "fullName": "الاسم الكامل",
     "fullNameRequired": "الاسم الكامل مطلوب",
@@ -215,7 +216,16 @@
     "minimizeChat": "تصغير الدردشة",
     "closeChat": "إغلاق الدردشة",
     "attachFile": "إرفاق ملف",
-    "sendMessage": "إرسال رسالة"
+    "sendMessage": "إرسال رسالة",
+    "aiAssistantTitle": "المساعد الذكي",
+    "aiAssistantSubtitle": "اسألني أي شيء عن خدماتنا",
+    "aiAssistant": "المساعد الذكي",
+    "aiWelcomeMessage": "مرحباً! أنا مساعدك الذكي. يمكنني الإجابة على أسئلتك حول خدماتنا وسياساتنا وإجراءاتنا. كيف يمكنني مساعدتك اليوم؟",
+    "aiErrorMessage": "عذراً، لم أتمكن من معالجة طلبك. يرجى المحاولة مرة أخرى أو التحدث مع فريق الدعم المباشر.",
+    "aiTyping": "جارٍ التفكير...",
+    "askAiPlaceholder": "اطرح سؤالاً...",
+    "registering": "جاري التسجيل...",
+    "backToAiChat": "العودة للمساعد الذكي"
   },
   "kb": {
     "title": "قاعدة المعرفة",
@@ -685,7 +695,9 @@
       "gcsApiUri": "رابط API لـ GCS",
       "enterGcsApiUri": "أدخل رابط API لـ GCS (اختياري)",
       "saving": "جاري الحفظ...",
-      "saveSettings": "حفظ الإعدادات"
+      "saveSettings": "حفظ الإعدادات",
+      "geminiApiKey": "مفتاح API لـ Gemini",
+      "geminiConfig": "إعدادات Gemini"
     },
     "regions": {
       "title": "المناطق",
@@ -705,7 +717,9 @@
       "create": "إنشاء",
       "deleteSelection": "حذف المحدد",
       "confirmDeleteTitle": "تأكيد الحذف",
-      "confirmBulkDeleteTitle": "تأكيد الحذف الجماعي"
+      "confirmBulkDeleteTitle": "تأكيد الحذف الجماعي",
+      "geminiConfigDescription": "إعداد Gemini للردود على التذاكر",
+      "enterGeminiApiKey": "أدخل مفتاح API لـ Gemini"
     },
     "categories": {
       "title": "الفئات",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
 import {
   MessageCircle,
@@ -7,11 +7,10 @@ import {
   Minimize2,
   Paperclip,
   FileText,
-  ChevronDown,
-  ChevronRight,
-  HelpCircle,
   User as UserIcon,
-  ArrowLeft
+  ArrowLeft,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 import type { SharedData, Auth } from '@/types';
 import { useChatMessageListener } from '@/hooks/usePusher';
@@ -71,13 +70,24 @@ type Region = {
   name: string;
 };
 
-type Faq = {
-  id: number;
-  name: string;
-  details: string;
+// AI Chat Message type
+type AiMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
 };
 
-type ChatStep = 'register' | 'faq' | 'chat';
+// Stored user type for localStorage
+type StoredUser = {
+  id: number;
+  name: string;
+  email: string;
+  member_number: string | null;
+  region_id: number | null;
+};
+
+type ChatStep = 'register' | 'ai-chat' | 'chat';
 
 // Avatar component with initials or profile picture
 const Avatar = ({ name, profilePicture, className = '' }: { name: string; profilePicture?: string | null; className?: string }) => {
@@ -119,8 +129,8 @@ const Avatar = ({ name, profilePicture, className = '' }: { name: string; profil
 };
 
 // Format message time
-const formatMessageTime = (dateString: string) => {
-  const date = new Date(dateString);
+const formatMessageTime = (dateString: string | Date) => {
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
 
@@ -138,31 +148,9 @@ const formatMessageTime = (dateString: string) => {
   return `${dayStr} ${timeStr}`;
 };
 
-// FAQ Accordion Item
-const FaqItem = ({ faq, isExpanded, onToggle }: { faq: Faq; isExpanded: boolean; onToggle: () => void }) => (
-  <div className="border border-default-200 rounded-lg overflow-hidden">
-    <button
-      onClick={onToggle}
-      className="w-full flex items-center justify-between p-3 text-left bg-default-50 hover:bg-default-100 transition-colors"
-    >
-      <span className="font-medium text-sm text-default-800">{faq.name}</span>
-      {isExpanded ? (
-        <ChevronDown className="size-4 text-default-500 shrink-0" />
-      ) : (
-        <ChevronRight className="size-4 text-default-500 shrink-0" />
-      )}
-    </button>
-    {isExpanded && (
-      <div className="p-3 bg-card text-sm text-default-600 border-t border-default-200">
-        <div dangerouslySetInnerHTML={{ __html: faq.details }} />
-      </div>
-    )}
-  </div>
-);
-
 export default function ChatWidget() {
   const { auth } = usePage<SharedData>().props;
-  const { t } = useLanguageContext();
+  const { t, language } = useLanguageContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -176,10 +164,8 @@ export default function ChatWidget() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Guest registration state
-  const [currentStep, setCurrentStep] = useState<ChatStep>('register');
+  const [currentStep, setCurrentStep] = useState<ChatStep>('ai-chat');
   const [regions, setRegions] = useState<Region[]>([]);
-  const [faqs, setFaqs] = useState<Faq[]>([]);
-  const [expandedFaqId, setExpandedFaqId] = useState<number | null>(null);
   const [guestContactId, setGuestContactId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -188,31 +174,142 @@ export default function ChatWidget() {
     region_id: '',
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [registeredUser, setRegisteredUser] = useState<StoredUser | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  // AI Chat state
+  const [aiMessages, setAiMessages] = useState<AiMessage[]>([]);
+  const [aiInputMessage, setAiInputMessage] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiConversationId, setAiConversationId] = useState<number | null>(null);
+  const [hasLoadedAiHistory, setHasLoadedAiHistory] = useState(false);
+  const aiMessagesEndRef = useRef<HTMLDivElement>(null);
 
   const isLoggedIn = !!auth?.user;
   const userRoles = (auth as Auth & { roles?: string[] })?.roles || [];
   const isContact = userRoles.includes('Contact');
 
-  // Check localStorage for existing guest session
+  // Scroll to bottom of AI chat
+  const scrollAiToBottom = () => {
+    if (aiMessagesEndRef.current) {
+      aiMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    scrollAiToBottom();
+  }, [aiMessages]);
+
+  // Check localStorage for existing guest session and user data
   useEffect(() => {
     if (!isLoggedIn) {
-      const savedContactId = localStorage.getItem('chat_guest_contact_id');
-      if (savedContactId) {
-        setGuestContactId(parseInt(savedContactId));
-        setCurrentStep('chat');
+      // Check for saved user data
+      const savedUserData = localStorage.getItem('chat_guest_user');
+      if (savedUserData) {
+        try {
+          const userData: StoredUser = JSON.parse(savedUserData);
+          setRegisteredUser(userData);
+          setGuestContactId(userData.id);
+          setFormData({
+            name: userData.name,
+            email: userData.email,
+            member_number: userData.member_number || '',
+            region_id: userData.region_id?.toString() || '',
+          });
+          // User is registered, stay on AI chat (default)
+        } catch (e) {
+          // Invalid stored data, clear it
+          localStorage.removeItem('chat_guest_user');
+          localStorage.removeItem('chat_guest_contact_id');
+        }
+      } else {
+        // Fallback: check for old format (just contact_id)
+        const savedContactId = localStorage.getItem('chat_guest_contact_id');
+        if (savedContactId) {
+          setGuestContactId(parseInt(savedContactId));
+        }
       }
     }
   }, [isLoggedIn]);
 
-  // Load regions and FAQs when widget opens for non-logged-in users
+  // Load regions when widget opens for non-logged-in users
   useEffect(() => {
     if (isOpen && !isLoggedIn && currentStep === 'register') {
       loadRegions();
     }
-    if (isOpen && !isLoggedIn && currentStep === 'faq') {
-      loadFaqs();
-    }
   }, [isOpen, isLoggedIn, currentStep]);
+
+  // Load AI conversation history when widget opens or user becomes available
+  const loadAiConversationHistory = async () => {
+    const contactId = isLoggedIn ? auth?.user?.id : (registeredUser?.id || guestContactId);
+
+    if (!contactId || hasLoadedAiHistory) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/chat/ai/conversation?contact_id=${contactId}`);
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.conversation_id && data.messages && data.messages.length > 0) {
+          // Convert backend messages to AiMessage format
+          const loadedMessages: AiMessage[] = data.messages.map((msg: any) => ({
+            id: `${msg.role}-${msg.id}`,
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+            timestamp: new Date(msg.timestamp),
+          }));
+
+          setAiMessages(loadedMessages);
+          setAiConversationId(data.conversation_id);
+        } else {
+          // No previous conversation, show welcome message
+          const welcomeMessage: AiMessage = {
+            id: 'welcome',
+            role: 'assistant',
+            content: t('chatWidget.aiWelcomeMessage'),
+            timestamp: new Date(),
+          };
+          setAiMessages([welcomeMessage]);
+        }
+      }
+    } catch (error) {
+      // On error, show welcome message
+      const welcomeMessage: AiMessage = {
+        id: 'welcome',
+        role: 'assistant',
+        content: t('chatWidget.aiWelcomeMessage'),
+        timestamp: new Date(),
+      };
+      setAiMessages([welcomeMessage]);
+    } finally {
+      setHasLoadedAiHistory(true);
+    }
+  };
+
+  // Initialize AI chat - load history or show welcome message
+  useEffect(() => {
+    const contactId = isLoggedIn ? auth?.user?.id : (registeredUser?.id || guestContactId);
+
+    if (currentStep === 'ai-chat' && isOpen) {
+      if (contactId && !hasLoadedAiHistory) {
+        // User is known, try to load previous AI conversation
+        loadAiConversationHistory();
+      } else if (!contactId && aiMessages.length === 0) {
+        // No user yet, show welcome message
+        const welcomeMessage: AiMessage = {
+          id: 'welcome',
+          role: 'assistant',
+          content: t('chatWidget.aiWelcomeMessage'),
+          timestamp: new Date(),
+        };
+        setAiMessages([welcomeMessage]);
+        setHasLoadedAiHistory(true);
+      }
+    }
+  }, [currentStep, isLoggedIn, registeredUser, guestContactId, hasLoadedAiHistory, t, isOpen]);
 
   const loadRegions = async () => {
     try {
@@ -223,18 +320,6 @@ export default function ChatWidget() {
       }
     } catch (error) {
       console.error('Failed to load regions:', error);
-    }
-  };
-
-  const loadFaqs = async () => {
-    try {
-      const response = await fetch('/chat/faqs');
-      if (response.ok) {
-        const data = await response.json();
-        setFaqs(data);
-      }
-    } catch (error) {
-      console.error('Failed to load FAQs:', error);
     }
   };
 
@@ -334,6 +419,14 @@ export default function ChatWidget() {
 
   // Start a new chat conversation for guest users
   const startGuestChat = async () => {
+    // Use registered user data if available, otherwise use form data
+    const userData = registeredUser || {
+      name: formData.name,
+      email: formData.email,
+      member_number: formData.member_number || null,
+      region_id: formData.region_id ? parseInt(formData.region_id) : null,
+    };
+
     setIsStarting(true);
     try {
       const response = await fetch('/chat/init', {
@@ -343,10 +436,10 @@ export default function ChatWidget() {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          member_number: formData.member_number,
-          region_id: formData.region_id ? parseInt(formData.region_id) : null,
+          name: userData.name,
+          email: userData.email,
+          member_number: userData.member_number,
+          region_id: userData.region_id,
         }),
       });
 
@@ -357,6 +450,19 @@ export default function ChatWidget() {
           if (data.session_contact_id) {
             setGuestContactId(data.session_contact_id);
             localStorage.setItem('chat_guest_contact_id', data.session_contact_id.toString());
+
+            // Also store user data if not already stored
+            if (!registeredUser) {
+              const storedUser: StoredUser = {
+                id: data.session_contact_id,
+                name: userData.name,
+                email: userData.email,
+                member_number: userData.member_number,
+                region_id: userData.region_id,
+              };
+              localStorage.setItem('chat_guest_user', JSON.stringify(storedUser));
+              setRegisteredUser(storedUser);
+            }
           }
           setCurrentStep('chat');
         }
@@ -390,11 +496,121 @@ export default function ChatWidget() {
     return Object.keys(errors).length === 0;
   };
 
-  // Handle registration form submission
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  // Handle registration form submission - creates/finds contact user
+  // Then starts live chat since user clicked "Chat with Live Support"
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      setCurrentStep('faq');
+    if (!validateForm()) return;
+
+    setIsRegistering(true);
+    try {
+      const response = await fetch('/chat/register-guest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          member_number: formData.member_number || null,
+          region_id: formData.region_id ? parseInt(formData.region_id) : null,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          // Store user data in localStorage
+          const userData: StoredUser = data.user;
+          localStorage.setItem('chat_guest_user', JSON.stringify(userData));
+          localStorage.setItem('chat_guest_contact_id', userData.id.toString());
+
+          setRegisteredUser(userData);
+          setGuestContactId(userData.id);
+
+          // Start live chat directly since user clicked "Chat with Live Support"
+          setIsRegistering(false);
+          startGuestChat();
+          return;
+        }
+      } else {
+        console.error('Registration failed');
+      }
+    } catch (error) {
+      console.error('Failed to register:', error);
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  // Send message to Gemini AI
+  const sendAiMessage = async () => {
+    if (!aiInputMessage.trim() || isAiLoading) return;
+
+    const userMessage: AiMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: aiInputMessage.trim(),
+      timestamp: new Date(),
+    };
+
+    setAiMessages(prev => [...prev, userMessage]);
+    setAiInputMessage('');
+    setIsAiLoading(true);
+
+    // Determine contact_id based on login status
+    const contactId = isLoggedIn ? auth?.user?.id : (registeredUser?.id || guestContactId);
+
+    try {
+      const response = await fetch('/chat/gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          message: userMessage.content,
+          locale: language,
+          conversation_id: aiConversationId,
+          contact_id: contactId,
+        }),
+      });
+
+      const data = await response.json();
+
+      // Save the conversation ID for follow-up questions
+      if (data.conversation_id) {
+        setAiConversationId(data.conversation_id);
+      }
+
+      const assistantMessage: AiMessage = {
+        id: data.ai_message_id ? `assistant-${data.ai_message_id}` : `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: data.success ? data.message : t('chatWidget.aiErrorMessage'),
+        timestamp: new Date(),
+      };
+
+      setAiMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('AI chat error:', error);
+      const errorMessage: AiMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: t('chatWidget.aiErrorMessage'),
+        timestamp: new Date(),
+      };
+      setAiMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  // Handle AI chat key press
+  const handleAiKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendAiMessage();
     }
   };
 
@@ -451,19 +667,21 @@ export default function ChatWidget() {
     setIsOpen(true);
     setIsMinimized(false);
 
+    // Reset AI history loaded flag to allow reloading
+    setHasLoadedAiHistory(false);
+
     // Determine initial step based on login status
     if (isLoggedIn && isContact) {
       setCurrentStep('chat');
       if (!conversation && !hasCheckedConversation) {
         checkExistingConversation();
       }
-    } else if (guestContactId) {
-      setCurrentStep('chat');
-      if (!conversation && !hasCheckedConversation) {
-        checkGuestConversation();
-      }
     } else if (!isLoggedIn) {
-      setCurrentStep('register');
+      // For guests, default to AI chat
+      // If they have a conversation already, they can access it from AI chat
+      if (currentStep !== 'register') {
+        setCurrentStep('ai-chat');
+      }
     }
   };
 
@@ -562,14 +780,14 @@ export default function ChatWidget() {
     return message.user_id !== null;
   };
 
-  // Render Registration Form
+  // Render Registration Form (shown when user clicks "Chat with Live Support")
   const renderRegistrationForm = () => (
     <div className="flex-1 overflow-y-auto p-4">
       <div className="text-center mb-6">
         <div className="size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-4">
-          <UserIcon className="size-8 text-primary" />
+          <MessageCircle className="size-8 text-primary" />
         </div>
-        <h4 className="font-semibold text-default-900 mb-2">{t('chatWidget.welcomeToSupport')}</h4>
+        <h4 className="font-semibold text-default-900 mb-2">{t('chatWidget.connectWithSupport')}</h4>
         <p className="text-sm text-default-500">{t('chatWidget.provideDetailsToStart')}</p>
       </div>
 
@@ -645,52 +863,13 @@ export default function ChatWidget() {
 
         <button
           type="submit"
-          className="w-full btn bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-all"
-        >
-          {t('chatWidget.continue')}
-        </button>
-      </form>
-    </div>
-  );
-
-  // Render FAQ Section
-  const renderFaqSection = () => (
-    <div className="flex-1 overflow-y-auto p-4">
-      <div className="text-center mb-6">
-        <div className="size-16 rounded-full bg-gradient-to-br from-info/20 to-info/10 flex items-center justify-center mx-auto mb-4">
-          <HelpCircle className="size-8 text-info" />
-        </div>
-        <h4 className="font-semibold text-default-900 mb-2">{t('chatWidget.faqTitle')}</h4>
-        <p className="text-sm text-default-500">{t('chatWidget.faqSubtitle')}</p>
-      </div>
-
-      {faqs.length > 0 ? (
-        <div className="space-y-2 mb-6">
-          {faqs.map((faq) => (
-            <FaqItem
-              key={faq.id}
-              faq={faq}
-              isExpanded={expandedFaqId === faq.id}
-              onToggle={() => setExpandedFaqId(expandedFaqId === faq.id ? null : faq.id)}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center text-default-500 text-sm mb-6">
-          {t('chatWidget.noFaqsAvailable')}
-        </div>
-      )}
-
-      <div className="space-y-3">
-        <button
-          onClick={startGuestChat}
-          disabled={isStarting}
+          disabled={isRegistering}
           className="w-full btn bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         >
-          {isStarting ? (
+          {isRegistering ? (
             <>
               <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              {t('chatWidget.connecting')}
+              {t('chatWidget.registering')}
             </>
           ) : (
             <>
@@ -701,12 +880,149 @@ export default function ChatWidget() {
         </button>
 
         <button
-          onClick={() => setCurrentStep('register')}
-          className="w-full text-center text-default-500 text-sm hover:text-default-700 flex items-center justify-center gap-1"
+          type="button"
+          onClick={() => setCurrentStep('ai-chat')}
+          className="w-full text-center text-default-500 text-sm hover:text-default-700 flex items-center justify-center gap-1 mt-3"
         >
           <ArrowLeft className="size-3" />
-          {t('chatWidget.backToRegistration')}
+          {t('chatWidget.backToAiChat')}
         </button>
+      </form>
+    </div>
+  );
+
+  // Render AI Chat Section
+  const renderAiChatSection = () => (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* AI Chat Header Banner */}
+      <div className="px-4 py-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-b border-default-200">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+            <Sparkles className="size-4 text-white" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-default-900">{t('chatWidget.aiAssistantTitle')}</h4>
+            <p className="text-xs text-default-500">{t('chatWidget.aiAssistantSubtitle')}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-default-50">
+        {aiMessages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div className={`max-w-[85%] ${message.role === 'assistant' ? 'order-1' : ''}`}>
+              {message.role === 'assistant' && (
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="size-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                    <Bot className="size-3 text-white" />
+                  </div>
+                  <span className="text-xs text-default-500 font-medium">{t('chatWidget.aiAssistant')}</span>
+                </div>
+              )}
+              <div
+                className={`rounded-2xl px-4 py-2.5 ${message.role === 'assistant'
+                  ? 'bg-card border border-default-200 text-default-800 rounded-tl-md'
+                  : 'bg-primary text-white rounded-tr-md'
+                  }`}
+              >
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+              </div>
+              <p className={`text-[10px] text-default-400 mt-1 ${message.role === 'assistant' ? 'text-left' : 'text-right'}`}>
+                {formatMessageTime(message.timestamp)}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {/* AI Loading indicator */}
+        {isAiLoading && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%]">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="size-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                  <Bot className="size-3 text-white" />
+                </div>
+                <span className="text-xs text-default-500 font-medium">{t('chatWidget.aiAssistant')}</span>
+              </div>
+              <div className="rounded-2xl px-4 py-3 bg-card border border-default-200 rounded-tl-md">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <span className="size-2 bg-default-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="size-2 bg-default-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="size-2 bg-default-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                  <span className="text-xs text-default-500">{t('chatWidget.aiTyping')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={aiMessagesEndRef} />
+      </div>
+
+      {/* AI Chat Input */}
+      <div className="p-4 border-t border-default-200 bg-card">
+        <div className="flex items-end gap-2">
+          <div className="flex-1 relative">
+            <textarea
+              value={aiInputMessage}
+              onChange={(e) => setAiInputMessage(e.target.value)}
+              onKeyPress={handleAiKeyPress}
+              placeholder={t('chatWidget.askAiPlaceholder')}
+              className="w-full px-4 py-2.5 pr-12 rounded-xl border border-default-200 bg-default-50 text-sm resize-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+              rows={1}
+              style={{ minHeight: '42px', maxHeight: '100px' }}
+              disabled={isAiLoading}
+            />
+          </div>
+          <button
+            onClick={sendAiMessage}
+            disabled={isAiLoading || !aiInputMessage.trim()}
+            className="flex-shrink-0 p-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            aria-label={t('chatWidget.sendMessage')}
+          >
+            {isAiLoading ? (
+              <div className="size-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Send className="size-5" />
+            )}
+          </button>
+        </div>
+
+        {/* Live Support Button */}
+        <div className="mt-3 pt-3 border-t border-default-200">
+          <button
+            onClick={() => {
+              // If user is registered, start live chat directly
+              // Otherwise, show registration form first
+              if (registeredUser) {
+                startGuestChat();
+              } else {
+                loadRegions();
+                setCurrentStep('register');
+              }
+            }}
+            disabled={isStarting}
+            className="w-full btn bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+          >
+            {isStarting ? (
+              <>
+                <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                {t('chatWidget.connecting')}
+              </>
+            ) : (
+              <>
+                <MessageCircle className="size-4" />
+                {t('chatWidget.chatWithLiveSupport')}
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -898,8 +1214,8 @@ export default function ChatWidget() {
     switch (currentStep) {
       case 'register':
         return renderRegistrationForm();
-      case 'faq':
-        return renderFaqSection();
+      case 'ai-chat':
+        return renderAiChatSection();
       case 'chat':
         return renderChatSection();
       default:
@@ -916,8 +1232,8 @@ export default function ChatWidget() {
     switch (currentStep) {
       case 'register':
         return t('chatWidget.getStarted');
-      case 'faq':
-        return t('chatWidget.faqsAndSupport');
+      case 'ai-chat':
+        return t('chatWidget.aiAssistantTitle');
       case 'chat':
         return t('chatWidget.supportChat');
       default:
@@ -964,7 +1280,11 @@ export default function ChatWidget() {
           <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-full bg-white/20 flex items-center justify-center">
-                <MessageCircle className="size-5" />
+                {currentStep === 'ai-chat' ? (
+                  <Sparkles className="size-5" />
+                ) : (
+                  <MessageCircle className="size-5" />
+                )}
               </div>
               <div>
                 <h3 className="font-semibold text-sm">{getStepTitle()}</h3>

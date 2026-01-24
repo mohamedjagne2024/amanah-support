@@ -13,6 +13,7 @@ class Conversation extends Model
         'title',
         'contact_id',
         'region_id',
+        'is_ai',
     ];
 
     public function resolveRouteBinding($value, $field = null)

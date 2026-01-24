@@ -80,23 +80,35 @@ $router->prefix('/')->group(static function (Router $router): void {
         ->name('ticket.public.store');
 
     // Public Chat Widget Routes (no auth required for guest users)
-    $router->post('chat/init', [ChatController::class, 'init'])
-        ->name('chat.init');
+    // Explicitly wrapped to ensure no auth middleware
+    $router->middleware(['web'])->group(function (Router $router): void {
+        $router->post('chat/init', [ChatController::class, 'init'])
+            ->name('chat.init');
 
-    $router->get('chat/regions', [ChatController::class, 'getRegions'])
-        ->name('chat.regions');
+        $router->get('chat/regions', [ChatController::class, 'getRegions'])
+            ->name('chat.regions');
 
-    $router->get('chat/faqs', [ChatController::class, 'getFaqs'])
-        ->name('chat.faqs');
+        $router->get('chat/faqs', [ChatController::class, 'getFaqs'])
+            ->name('chat.faqs');
 
-    $router->post('chat/sendMessage', [ChatController::class, 'sendPublicMessage'])
-        ->name('chat.send_message');
+        $router->post('chat/sendMessage', [ChatController::class, 'sendPublicMessage'])
+            ->name('chat.send_message');
 
-    $router->get('chat/getConversation/{id}/{contact_id}', [ChatController::class, 'getConversation'])
-        ->name('chat.conversation');
+        $router->get('chat/getConversation/{id}/{contact_id}', [ChatController::class, 'getConversation'])
+            ->name('chat.conversation');
 
-    $router->get('chat/guest/conversation', [ChatController::class, 'getGuestConversation'])
-        ->name('chat.guest_conversation');
+        $router->get('chat/guest/conversation', [ChatController::class, 'getGuestConversation'])
+            ->name('chat.guest_conversation');
+
+        $router->post('chat/gemini', [ChatController::class, 'geminiChat'])
+            ->name('chat.gemini');
+
+        $router->post('chat/register-guest', [ChatController::class, 'registerGuest'])
+            ->name('chat.register_guest');
+
+        $router->get('chat/ai/conversation', [ChatController::class, 'getAiConversation'])
+            ->name('chat.ai_conversation');
+    });
 
     $router->middleware('auth')->group(static function (Router $router): void {
         $router->get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

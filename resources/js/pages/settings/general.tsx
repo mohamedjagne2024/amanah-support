@@ -39,6 +39,7 @@ type GeneralSettingsPageProps = {
     gcs_bucket: string | null;
     gcs_path_prefix: string | null;
     gcs_api_uri: string | null;
+    gemini_api_key: string | null;
     escalate_value: string | null;
     escalate_unit: string | null;
     autoclose_value: string | null;
@@ -71,6 +72,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
     gcs_bucket: string;
     gcs_path_prefix: string;
     gcs_api_uri: string;
+    gemini_api_key: string;
     escalate_value: string;
     escalate_unit: string;
     autoclose_value: string;
@@ -99,6 +101,7 @@ export default function General({ settings, currencies, users }: GeneralSettings
     gcs_bucket: settings.gcs_bucket ?? '',
     gcs_path_prefix: settings.gcs_path_prefix ?? '',
     gcs_api_uri: settings.gcs_api_uri ?? '',
+    gemini_api_key: settings.gemini_api_key ?? '',
     escalate_value: settings.escalate_value ?? '',
     escalate_unit: settings.escalate_unit ?? 'hours',
     autoclose_value: settings.autoclose_value ?? '',
@@ -731,6 +734,34 @@ export default function General({ settings, currencies, users }: GeneralSettings
                     <InputError message={errors.gcs_api_uri} />
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Gemini API Configuration Section */}
+          <div className="card">
+            <div className="card-header">
+              <h6 className="card-title">{t('settings.general.geminiConfig')}</h6>
+              <p className="text-sm text-default-600 mt-1">
+                {t('settings.general.geminiConfigDescription')}
+              </p>
+            </div>
+            <div className="card-body">
+              <div className="w-full md:w-1/2">
+                <label className="block font-medium text-default-900 text-sm mb-2">
+                  {t('settings.general.geminiApiKey')}
+                </label>
+                <input
+                  type="password"
+                  name="gemini_api_key"
+                  value={data.gemini_api_key}
+                  onChange={(e) => setData('gemini_api_key', e.target.value)}
+                  placeholder={t('settings.general.enterGeminiApiKey')}
+                  disabled={processing}
+                  className="form-input"
+                  autoComplete="off"
+                />
+                <InputError message={errors.gemini_api_key} />
               </div>
             </div>
           </div>

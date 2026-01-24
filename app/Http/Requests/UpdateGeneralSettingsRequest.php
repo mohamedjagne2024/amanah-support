@@ -60,6 +60,7 @@ final class UpdateGeneralSettingsRequest extends FormRequest
             'gcs_bucket' => ['nullable', 'string', 'max:255'],
             'gcs_path_prefix' => ['nullable', 'string', 'max:255'],
             'gcs_api_uri' => ['nullable', 'string', 'max:255', 'url'],
+            'gemini_api_key' => ['nullable', 'string', 'max:255'],
             'escalate_value' => ['nullable', 'numeric', 'min:0'],
             'escalate_unit' => ['nullable', 'string', 'in:minutes,hours,days'],
             'autoclose_value' => ['nullable', 'numeric', 'min:0'],

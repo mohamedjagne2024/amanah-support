@@ -180,6 +180,7 @@
   },
   "chatWidget": {
     "welcomeToSupport": "Ku soo dhawoow Taageerada",
+    "connectWithSupport": "La xiriir Taageerada Tooska ah",
     "provideDetailsToStart": "Fadlan bixii faahfaahinaaga si aad ula hadasho kooxdayada.",
     "fullName": "Magaca Buuxa",
     "fullNameRequired": "Magaca buuxa waa waajib",
@@ -215,7 +216,16 @@
     "minimizeChat": "Yaree wadahadalka",
     "closeChat": "Xir wadahadalka",
     "attachFile": "Ku lifaaq fayl",
-    "sendMessage": "Dir fariin"
+    "sendMessage": "Dir fariin",
+    "aiAssistantTitle": "Kaaliyaha AI",
+    "aiAssistantSubtitle": "I weydii wax kasta oo ku saabsan adeegyadayada",
+    "aiAssistant": "Kaaliyaha AI",
+    "aiWelcomeMessage": "Salaan! Waxaan ahay kaaliyahaaga AI. Waxaan ka jawaabi karaa su'aalaha ku saabsan adeegyadayada, siyaasadaha, iyo hab-raacyada. Sideen kugu caawin karaa maanta?",
+    "aiErrorMessage": "Waan ka xumahay, ma awoodi karin inaan codsigaaga habeeyo. Fadlan isku day mar kale ama la hadal kooxda taageerada tooska ah.",
+    "aiTyping": "Waan ka fikireyaa...",
+    "askAiPlaceholder": "Weydii su'aal...",
+    "registering": "Waa la diiwaangelinayaa...",
+    "backToAiChat": "Ku noqo Kaaliyaha AI"
   },
   "kb": {
     "title": "Xogta Aqoonta",
@@ -685,7 +695,11 @@
       "gcsApiUri": "API URI ee GCS",
       "enterGcsApiUri": "Geli API URI ee GCS (ikhtiyaari)",
       "saving": "Kaydinta...",
-      "saveSettings": "Kaydi Dejinta"
+      "saveSettings": "Kaydi Dejinta",
+      "geminiApiKey": "Fureha API-ga Gemini",
+      "geminiConfig": "Qaabaynta Gemini",
+      "geminiConfigDescription": "U habee dejinta Gemini ee jawaabaha tigidhada",
+      "enterGeminiApiKey": "Geli Fureha API-ga Gemini"
     },
     "regions": {
       "title": "Gobolada",
