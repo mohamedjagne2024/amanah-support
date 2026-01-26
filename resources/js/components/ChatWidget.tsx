@@ -297,19 +297,49 @@ export default function ChatWidget() {
       if (contactId && !hasLoadedAiHistory) {
         // User is known, try to load previous AI conversation
         loadAiConversationHistory();
-      } else if (!contactId && aiMessages.length === 0) {
-        // No user yet, show welcome message
-        const welcomeMessage: AiMessage = {
-          id: 'welcome',
-          role: 'assistant',
-          content: t('chatWidget.aiWelcomeMessage'),
-          timestamp: new Date(),
-        };
-        setAiMessages([welcomeMessage]);
-        setHasLoadedAiHistory(true);
+      } else if (!contactId) {
+        // Guest user: Check session storage first
+        const storedHistory = sessionStorage.getItem('amanah_ai_chat_history');
+        if (storedHistory) {
+          try {
+            const parsedHistory = JSON.parse(storedHistory);
+            // Convert string timestamps back to Date objects
+            const hydratedHistory = parsedHistory.map((msg: any) => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp)
+            }));
+            setAiMessages(hydratedHistory);
+            setHasLoadedAiHistory(true);
+          } catch (e) {
+            console.error('Failed to parse stored chat history', e);
+            initializeWelcomeMessage();
+          }
+        } else if (aiMessages.length === 0) {
+          initializeWelcomeMessage();
+        }
       }
     }
   }, [currentStep, isLoggedIn, registeredUser, guestContactId, hasLoadedAiHistory, t, isOpen]);
+
+  // Helper to init welcome message
+  const initializeWelcomeMessage = () => {
+    const welcomeMessage: AiMessage = {
+      id: 'welcome',
+      role: 'assistant',
+      content: t('chatWidget.aiWelcomeMessage'),
+      timestamp: new Date(),
+    };
+    setAiMessages([welcomeMessage]);
+    setHasLoadedAiHistory(true);
+  };
+
+  // Save AI messages to session storage for guests
+  useEffect(() => {
+    const contactId = isLoggedIn ? auth?.user?.id : (registeredUser?.id || guestContactId);
+    if (!contactId && aiMessages.length > 0) {
+      sessionStorage.setItem('amanah_ai_chat_history', JSON.stringify(aiMessages));
+    }
+  }, [aiMessages, isLoggedIn, registeredUser, guestContactId]);
 
   const loadRegions = async () => {
     try {
@@ -562,6 +592,14 @@ export default function ChatWidget() {
     // Determine contact_id based on login status
     const contactId = isLoggedIn ? auth?.user?.id : (registeredUser?.id || guestContactId);
 
+    // Prepare history for guest users
+    const history = aiMessages
+      .filter(msg => !msg.id.startsWith('error-') && msg.id !== 'welcome')
+      .map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
     try {
       const response = await fetch('/chat/gemini', {
         method: 'POST',
@@ -574,6 +612,7 @@ export default function ChatWidget() {
           locale: language,
           conversation_id: aiConversationId,
           contact_id: contactId,
+          history: history, // Send history for guest users
         }),
       });
 

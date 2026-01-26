@@ -168,12 +168,14 @@ class ChatController extends Controller
             'locale' => ['nullable', 'string', 'max:10'],
             'conversation_id' => ['nullable', 'integer', 'exists:conversations,id'],
             'contact_id' => ['nullable', 'integer'],
+            'history' => ['nullable', 'array'],
         ]);
 
         $userMessage = $validated['message'];
         $locale = $validated['locale'] ?? 'en';
         $conversationId = $validated['conversation_id'] ?? null;
         $contactId = $validated['contact_id'] ?? null;
+        $historyInput = $validated['history'] ?? [];
 
         // Get the Gemini API key from settings
         $apiKey = \App\Models\Settings::get('gemini_api_key');
@@ -185,39 +187,56 @@ class ChatController extends Controller
             ], 503);
         }
 
-        // Get or create the AI conversation
         $conversation = null;
-        if ($conversationId) {
-            $conversation = Conversation::where('id', $conversationId)
-                ->where('is_ai', 1)
-                ->first();
+        $userMessageRecord = null;
+        $aiMessageRecord = null;
+        $conversationHistory = [];
+
+        if ($contactId) {
+            // Get or create the AI conversation
+            if ($conversationId) {
+                $conversation = Conversation::where('id', $conversationId)
+                    ->where('is_ai', 1)
+                    ->first();
+            }
+
+            // Create new AI conversation if needed
+            if (!$conversation) {
+                $conversation = Conversation::create([
+                    'title' => mb_substr($userMessage, 0, 50),
+                    'contact_id' => $contactId,
+                    'region_id' => null,
+                    'is_ai' => 1,
+                ]);
+            }
+
+            // Save the user's message
+            $userMessageRecord = new Message();
+            $userMessageRecord->conversation_id = $conversation->id;
+            $userMessageRecord->contact_id = $contactId;
+            $userMessageRecord->message = $userMessage;
+            $userMessageRecord->is_read = 1;
+            $userMessageRecord->save();
+
+            // Get previous messages for conversation context (for follow-up questions)
+            $previousMessages = Message::where('conversation_id', $conversation->id)
+                ->where('id', '!=', $userMessageRecord->id)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            // Build conversation history for Gemini
+            $conversationHistory = $this->buildConversationHistory($previousMessages);
+        } else {
+            // Guest user - build history from request
+            foreach ($historyInput as $msg) {
+                if (isset($msg['role']) && isset($msg['content'])) {
+                    $conversationHistory[] = [
+                        'role' => $msg['role'] === 'assistant' ? 'model' : 'user',
+                        'parts' => [['text' => $msg['content']]],
+                    ];
+                }
+            }
         }
-
-        // Create new AI conversation if needed
-        if (!$conversation) {
-            $conversation = Conversation::create([
-                'title' => mb_substr($userMessage, 0, 50),
-                'contact_id' => $contactId,
-                'region_id' => null,
-                'is_ai' => 1,
-            ]);
-        }
-
-        // Save the user's message
-        $userMessageRecord = new Message();
-        $userMessageRecord->conversation_id = $conversation->id;
-        $userMessageRecord->contact_id = $contactId;
-        $userMessageRecord->message = $userMessage;
-        $userMessageRecord->is_read = 1;
-        $userMessageRecord->save();
-
-        // Get previous messages for conversation context (for follow-up questions)
-        $previousMessages = Message::where('conversation_id', $conversation->id)
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        // Build conversation history for Gemini
-        $conversationHistory = $this->buildConversationHistory($previousMessages);
 
         // Gather FAQ and Knowledge Base content for context
         $faqs = Faq::orderBy('name')->get(['name', 'details']);
@@ -235,24 +254,26 @@ class ChatController extends Controller
         try {
             $response = $this->callGeminiApi($apiKey, $systemPrompt, $userMessage, $conversationHistory);
 
-            // Save the AI's response
-            $aiMessageRecord = new Message();
-            $aiMessageRecord->conversation_id = $conversation->id;
-            $aiMessageRecord->user_id = null; // AI message - no user_id or contact_id
-            $aiMessageRecord->contact_id = null;
-            $aiMessageRecord->message = $response;
-            $aiMessageRecord->is_read = 1;
-            $aiMessageRecord->save();
+            if ($conversation) {
+                // Save the AI's response
+                $aiMessageRecord = new Message();
+                $aiMessageRecord->conversation_id = $conversation->id;
+                $aiMessageRecord->user_id = null; // AI message - no user_id or contact_id
+                $aiMessageRecord->contact_id = null;
+                $aiMessageRecord->message = $response;
+                $aiMessageRecord->is_read = 1;
+                $aiMessageRecord->save();
 
-            // Update conversation title with latest message
-            $conversation->update(['title' => mb_substr($userMessage, 0, 50)]);
+                // Update conversation title with latest message
+                $conversation->update(['title' => mb_substr($userMessage, 0, 50)]);
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => $response,
-                'conversation_id' => $conversation->id,
-                'user_message_id' => $userMessageRecord->id,
-                'ai_message_id' => $aiMessageRecord->id,
+                'conversation_id' => $conversation ? $conversation->id : null,
+                'user_message_id' => $userMessageRecord ? $userMessageRecord->id : null,
+                'ai_message_id' => $aiMessageRecord ? $aiMessageRecord->id : null,
             ]);
         } catch (\Exception $e) {
             \Log::error('Gemini API Error: ' . $e->getMessage());
@@ -260,7 +281,7 @@ class ChatController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to process your request. Please try again or contact support.',
-                'conversation_id' => $conversation->id,
+                'conversation_id' => $conversation ? $conversation->id : null,
             ], 500);
         }
     }

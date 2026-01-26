@@ -99,9 +99,11 @@ final class RolesAndPermissionsSeeder extends Seeder
             'organizations.restore',
 
             // Front Pages
+            'front_pages.view',
             'front_pages.home',
             'front_pages.about',
             'front_pages.contact',
+            'front_pages.services',
             'front_pages.terms',
             'front_pages.privacy',
             'front_pages.footer',
@@ -112,8 +114,15 @@ final class RolesAndPermissionsSeeder extends Seeder
             'reports.support-by-organization',
 
             // Settings
+            'settings.view',
             'settings.general',
             'settings.general.update',
+            'settings.regions',
+            'settings.categories',
+            'settings.types',
+            'settings.templates',
+            'settings.smtp',
+            'settings.pusher',
             'settings.user-management',
 
             // Users
@@ -226,9 +235,11 @@ final class RolesAndPermissionsSeeder extends Seeder
             'organizations.restore',
 
             // Front Pages - Full access
+            'front_pages.view',
             'front_pages.home',
             'front_pages.about',
             'front_pages.contact',
+            'front_pages.services',
             'front_pages.terms',
             'front_pages.privacy',
             'front_pages.footer',
@@ -239,8 +250,15 @@ final class RolesAndPermissionsSeeder extends Seeder
             'reports.support-by-organization',
 
             // Settings - Full access
+            'settings.view',
             'settings.general',
             'settings.general.update',
+            'settings.regions',
+            'settings.categories',
+            'settings.types',
+            'settings.templates',
+            'settings.smtp',
+            'settings.pusher',
             'settings.user-management',
 
             // Users - Full access

@@ -72,9 +72,62 @@ const MenuItem = ({ item, allHrefs, t }: { item: MenuItemType; allHrefs: string[
   );
 };
 
+const filterMenuItems = (items: MenuItemType[], userPermissions: string[]): MenuItemType[] => {
+  // First pass: Filter items based on permissions and children
+  const filtered = items.reduce((acc: MenuItemType[], item) => {
+    // Check if item has permissions restriction
+    if (item.permissions && item.permissions.length > 0) {
+      const hasPermission = item.permissions.some(permission => userPermissions.includes(permission));
+      if (!hasPermission) {
+        return acc;
+      }
+    }
+
+    // If item has children, filter them
+    if (item.children) {
+      const filteredChildren = filterMenuItems(item.children, userPermissions);
+
+      // If children were filtered out and the item itself doesn't have a direct link,
+      // we hide the parent.
+      if (filteredChildren.length === 0 && item.children.length > 0 && !item.href) {
+        return acc;
+      }
+
+      return [...acc, { ...item, children: filteredChildren }];
+    }
+
+    return [...acc, item];
+  }, []);
+
+  // Second pass: Remove titles that have no visible children (siblings in this context)
+  // We iterate backwards to easily check if a title is followed by content
+  const result: MenuItemType[] = [];
+  let hasContentAfterTitle = false;
+
+  for (let i = filtered.length - 1; i >= 0; i--) {
+    const item = filtered[i];
+
+    if (item.isTitle) {
+      if (hasContentAfterTitle) {
+        result.unshift(item);
+        hasContentAfterTitle = false; // Reset for the next title (which is above this one)
+      }
+      // If no content after title, we drop this title
+    } else {
+      result.unshift(item);
+      hasContentAfterTitle = true;
+    }
+  }
+
+  return result;
+};
+
 const AppMenu = () => {
   const { props, url } = usePage<SharedData>();
   const { t } = useLanguageContext();
+  const { auth } = props;
+  const userPermissions: string[] = auth?.permissions || [];
+
   const initialUnreadCount = props.unreadChatCount || 0;
 
   // Use local state for real-time updates
@@ -100,12 +153,11 @@ const AppMenu = () => {
     }
   });
 
-  // Get all hrefs from menu items for proper active state detection
-  const allHrefs = useMemo(() => getAllMenuHrefs(menuItemsData), []);
+  const filteredMenuItems = useMemo(() => filterMenuItems(menuItemsData, userPermissions), [userPermissions]);
 
   // Enhance menu items with dynamic data
   const enhancedMenuItems = useMemo(() => {
-    return menuItemsData.map(item => {
+    return filteredMenuItems.map(item => {
       // Add badge to Chat menu item
       if (item.key === 'Chat') {
         return {
@@ -116,7 +168,10 @@ const AppMenu = () => {
       }
       return item;
     });
-  }, [unreadChatCount]);
+  }, [unreadChatCount, filteredMenuItems]);
+
+  // Get all hrefs from menu items for proper active state detection
+  const allHrefs = useMemo(() => getAllMenuHrefs(enhancedMenuItems), [enhancedMenuItems]);
 
   return (
     <ul className="side-nav p-3 hs-accordion-group">
@@ -136,4 +191,3 @@ const AppMenu = () => {
 };
 
 export default AppMenu;
-
